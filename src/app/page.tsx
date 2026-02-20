@@ -20,7 +20,9 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-          {schools.map((school) => (
+          {schools
+            .filter(s => s.currentDivision === 'Grupo Especial')
+            .map((school) => (
             <button
               key={school.id}
               onClick={() => setPlayerSchool(school.id)}

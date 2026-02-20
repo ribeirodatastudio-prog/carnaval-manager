@@ -1,10 +1,10 @@
 
 import { create } from 'zustand';
 import { GameState, School, StaffMember } from '../types/models';
-// import { INITIAL_SCHOOLS } from '../data/seed';
-import { loadSpecialGroupSchools } from '../data/schoolLoader';
+import { loadAllSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
 import { researchEnredo } from '../services/researchEngine';
+import { runSimulation, SimulationResult } from '../services/simulationService';
 
 /**
  * Calculates the displayed salary expectation adjusted by the school's prestige.
@@ -35,6 +35,7 @@ interface GameStoreState {
   gameState: GameState;
   schools: School[];
   availableStaff: StaffMember[];
+  simulationResults: SimulationResult | null;
 
   // Actions
   /**
@@ -65,6 +66,12 @@ interface GameStoreState {
    * @param budgetInvested The amount of budget to invest in research.
    */
   generateTheme: (schoolId: string, budgetInvested: number) => void;
+
+  /**
+   * Runs the prestige simulation for a specified number of years.
+   * Updates simulationResults in the state.
+   */
+  runPrestigeSimulation: (years: number) => void;
 }
 
 /**
@@ -73,13 +80,14 @@ interface GameStoreState {
  */
 export const useGameStore = create<GameStoreState>((set, get) => ({
   gameState: {
-    currentYear: 1,
+    currentYear: 2026,
     currentWeek: 1,
     currentPhase: 'Market',
     playerSchoolId: null,
   },
-  schools: loadSpecialGroupSchools(),
+  schools: loadAllSchools(),
   availableStaff: INITIAL_MARKET_STAFF,
+  simulationResults: null,
 
   setPlayerSchool: (schoolId) =>
     set((state) => {
@@ -298,5 +306,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     };
 
     set({ schools: updatedSchools });
+  },
+
+  runPrestigeSimulation: (years) => {
+    const state = get();
+    const results = runSimulation(state.schools, state.gameState.currentYear, years);
+    set({ simulationResults: results });
   },
 }));

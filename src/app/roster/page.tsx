@@ -55,7 +55,7 @@ export default function RosterPage() {
               <div className="text-gray-400 mt-1 flex gap-4 text-sm">
                 <span>Prestige: <span className="text-white font-medium">{playerSchool.prestige}</span></span>
                 <span>Fanbase Morale: <span className="text-pink-400 font-medium">{playerSchool.fanbaseMorale}</span></span>
-                <span>History: <span className="text-yellow-200">{playerSchool.history.titles} Titles</span></span>
+                <span>History: <span className="text-yellow-200">{playerSchool.history.totalTitles} Titles</span></span>
               </div>
             </div>
 
@@ -70,6 +70,43 @@ export default function RosterPage() {
 
           <div className="p-0">
             <RosterList staff={playerSchool.staff} />
+          </div>
+
+          {/* History Section */}
+          <div className="p-6 bg-gray-900 border-t border-gray-700">
+             <h3 className="text-xl font-bold text-white mb-4">🏆 Club History</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Titles */}
+                <div>
+                    <h4 className="text-yellow-500 font-bold mb-2 flex items-center gap-2">
+                        Titles ({playerSchool.history.titulos.length})
+                    </h4>
+                    <ul className="space-y-1 text-sm text-gray-300 max-h-60 overflow-auto pr-2 custom-scrollbar">
+                        {playerSchool.history.titulos.length === 0 && <li className="text-gray-600 italic">No titles yet.</li>}
+                        {playerSchool.history.titulos.sort((a,b) => b.ano - a.ano).map((t, i) => (
+                            <li key={i} className="flex justify-between border-b border-gray-800 pb-1">
+                                <span>{t.ano}</span>
+                                <span className="text-gray-500 text-xs">{t.divisao}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                {/* Runner Ups */}
+                <div>
+                    <h4 className="text-gray-400 font-bold mb-2 flex items-center gap-2">
+                        Runner-Ups ({playerSchool.history.vices.length})
+                    </h4>
+                    <ul className="space-y-1 text-sm text-gray-300 max-h-60 overflow-auto pr-2 custom-scrollbar">
+                        {playerSchool.history.vices.length === 0 && <li className="text-gray-600 italic">No runner-up finishes.</li>}
+                        {playerSchool.history.vices.sort((a,b) => b.ano - a.ano).map((t, i) => (
+                            <li key={i} className="flex justify-between border-b border-gray-800 pb-1">
+                                <span>{t.ano}</span>
+                                <span className="text-gray-500 text-xs">{t.divisao}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+             </div>
           </div>
         </div>
       </main>
