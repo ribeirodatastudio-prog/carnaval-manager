@@ -4,12 +4,39 @@
 /**
  * StaffRole defines the key roles in a Samba School.
  * These are the main positions that the player can hire and manage.
- * - 'Carnavalesco': Responsible for the theme, costumes, and overall artistic direction.
- * - 'MestreDeBateria': Leads the percussion section (bateria).
- * - 'Interprete': The main singer who leads the samba-enredo.
- * - 'MestreSalaPortaBandeira': The couple carrying the school's flag, crucial for specific scoring.
  */
-export type StaffRole = 'Carnavalesco' | 'MestreDeBateria' | 'Interprete' | 'MestreSalaPortaBandeira';
+export type StaffRole =
+  | 'DiretorDeCarnaval'
+  | 'Carnavalesco'
+  | 'Interprete'
+  | 'MestreDeBateria'
+  | 'MestreSala'
+  | 'PortaBandeira'
+  | 'RainhaDeBateria'
+  | 'Coreografo'
+  | 'DiretorDeHarmonia'
+  | 'MestreDeBarracao';
+
+/**
+ * StaffSkills defines the granular skill set for a staff member.
+ * All skills are evaluated internally from 1 to 200.
+ */
+export interface StaffSkills {
+  // Technical
+  plastica: number;
+  ritmica: number;
+  expressaoCorporal: number;
+
+  // Mental
+  lideranca: number;
+  criatividade: number;
+  resiliencia: number;
+
+  // Organizational/Other
+  logistica: number;
+  gestaoDeRecursos: number;
+  fama: number; // Mainly for Rainha
+}
 
 /**
  * StaffMember represents an individual hired by a Samba School.
@@ -20,11 +47,13 @@ export interface StaffMember {
   name: string; // Full name of the staff member
   role: StaffRole; // The specific role they fulfill in the school
   salary: number; // The cost per turn/season for this staff member (actual contracted salary)
-  skillLevel: number; // Internal skill value from 1 to 200 (displayed as 1-20 to the player)
+  skills: StaffSkills; // Detailed skill breakdown
   contractYears: number; // Number of years remaining on their contract
   currentSchoolId: string | null; // The ID of the school they currently work for, or null if free agent
   salaryExpectation: number; // The salary they expect when negotiating a new contract
   reputation: number; // The fame/prestige of the staff member (1-200), heavily influences salary expectation
+  partnerId?: string; // ID of the partner (for MestreSala/PortaBandeira couples)
+  synergy?: number; // Synergy level for couples (1-100 or similar scale, TBD)
 }
 
 /**

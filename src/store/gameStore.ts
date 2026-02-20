@@ -194,7 +194,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     // Find Carnavalesco skill
     const carnavalesco = school.staff.find((s) => s.role === 'Carnavalesco');
-    const skill = carnavalesco ? carnavalesco.skillLevel : 50; // Default to 50 if no carnavalesco (or maybe allow research without one but with penalty)
+    // Calculate skill based on Criatividade (primary) and Resiliencia (secondary)
+    let skill = 50;
+    if (carnavalesco) {
+      skill = (carnavalesco.skills.criatividade * 0.7) + (carnavalesco.skills.resiliencia * 0.3);
+    }
 
     // Generate Enredo
     const newEnredo = researchEnredo(skill, budgetInvested);
