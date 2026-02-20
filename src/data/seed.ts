@@ -1,0 +1,119 @@
+
+import { School } from '../types/models';
+
+/**
+ * Initial seed data for the Special Group schools.
+ * This represents the starting state of the league with 12 schools.
+ * Currently using generic names as placeholders.
+ */
+
+export const INITIAL_SCHOOLS: School[] = [
+  {
+    id: 'school-1',
+    name: 'Grêmio Recreativo Escola de Samba A',
+    colors: ['#FF0000', '#FFFFFF'], // Red and White
+    budget: 5000000,
+    fanbaseMorale: 85,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-2',
+    name: 'Grêmio Recreativo Escola de Samba B',
+    colors: ['#0000FF', '#FFFFFF'], // Blue and White
+    budget: 4500000,
+    fanbaseMorale: 75,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-3',
+    name: 'Grêmio Recreativo Escola de Samba C',
+    colors: ['#00FF00', '#FFFFFF', '#FFC0CB'], // Green, White, and Pink
+    budget: 6000000,
+    fanbaseMorale: 90,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-4',
+    name: 'Grêmio Recreativo Escola de Samba D',
+    colors: ['#FFFF00', '#000000'], // Yellow and Black
+    budget: 3500000,
+    fanbaseMorale: 60,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-5',
+    name: 'Grêmio Recreativo Escola de Samba E',
+    colors: ['#800080', '#FFFFFF'], // Purple and White
+    budget: 5500000,
+    fanbaseMorale: 82,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-6',
+    name: 'Grêmio Recreativo Escola de Samba F',
+    colors: ['#FFA500', '#000000'], // Orange and Black
+    budget: 4000000,
+    fanbaseMorale: 65,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-7',
+    name: 'Grêmio Recreativo Escola de Samba G',
+    colors: ['#FF0000', '#000000'], // Red and Black
+    budget: 7000000,
+    fanbaseMorale: 95,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-8',
+    name: 'Grêmio Recreativo Escola de Samba H',
+    colors: ['#0000FF', '#FFFF00'], // Blue and Yellow
+    budget: 3000000,
+    fanbaseMorale: 55,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-9',
+    name: 'Grêmio Recreativo Escola de Samba I',
+    colors: ['#008000', '#FFFF00'], // Green and Yellow
+    budget: 4800000,
+    fanbaseMorale: 78,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-10',
+    name: 'Grêmio Recreativo Escola de Samba J',
+    colors: ['#A52A2A', '#FFFFFF'], // Brown and White
+    budget: 3800000,
+    fanbaseMorale: 70,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-11',
+    name: 'Grêmio Recreativo Escola de Samba K',
+    colors: ['#4B0082', '#FFD700'], // Indigo and Gold
+    budget: 6500000,
+    fanbaseMorale: 88,
+    staff: [],
+    isPlayerControlled: false,
+  },
+  {
+    id: 'school-12',
+    name: 'Grêmio Recreativo Escola de Samba L',
+    colors: ['#FF1493', '#00FFFF'], // Deep Pink and Cyan
+    budget: 4200000,
+    fanbaseMorale: 72,
+    staff: [],
+    isPlayerControlled: false,
+  },
+];
