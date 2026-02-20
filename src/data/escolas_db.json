@@ -6,18 +6,18 @@
       "decaimento_k": 0.04,
       "meia_vida_anos": 17.3,
       "multiplicadores_por_divisao": {
-        "Grupo Especial": 1.0,
+        "Grupo Especial": 1,
         "Série Ouro": 0.25,
         "Série Prata": 0.0625,
         "Série Bronze": 0.015,
         "Grupo de Avaliação": 0.004
       },
       "pesos_titulo_especial": [
-        18.0,
-        6.0
+        18,
+        6
       ],
       "pesos_vice_especial": [
-        10.0,
+        10,
         3.5
       ],
       "escala": "1-195 (top 2 fixas em 195)",
@@ -28,7 +28,7 @@
   "escolas": {
     "Estação Primeira de Mangueira": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 284.4056,
+      "score_bruto": 275.1289886926983,
       "prestige": 195,
       "titulos": 20,
       "titulos_2div": 0,
@@ -223,7 +223,7 @@
     },
     "Beija-Flor de Nilópolis": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 289.5142,
+      "score_bruto": 274.58659639285406,
       "prestige": 195,
       "titulos": 15,
       "titulos_2div": 1,
@@ -386,8 +386,8 @@
     },
     "Portela": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 260.8277,
-      "prestige": 179,
+      "score_bruto": 242.59052840370728,
+      "prestige": 175,
       "titulos": 22,
       "titulos_2div": 0,
       "vices": 13,
@@ -561,8 +561,8 @@
     },
     "Acadêmicos do Salgueiro": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 175.628,
-      "prestige": 141,
+      "score_bruto": 155.24194973575862,
+      "prestige": 134,
       "titulos": 9,
       "titulos_2div": 0,
       "vices": 10,
@@ -668,8 +668,8 @@
     },
     "Imperatriz Leopoldinense": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 161.6032,
-      "prestige": 134,
+      "score_bruto": 152.24628877209398,
+      "prestige": 132,
       "titulos": 9,
       "titulos_2div": 1,
       "vices": 3,
@@ -775,8 +775,8 @@
     },
     "Império Serrano": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 144.258,
-      "prestige": 125,
+      "score_bruto": 142.7580314335121,
+      "prestige": 127,
       "titulos": 9,
       "titulos_2div": 5,
       "vices": 10,
@@ -914,8 +914,8 @@
     },
     "Mocidade Independente de Padre Miguel": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 117.8774,
-      "prestige": 111,
+      "score_bruto": 108.21399048356017,
+      "prestige": 108,
       "titulos": 6,
       "titulos_2div": 1,
       "vices": 5,
@@ -985,8 +985,8 @@
     },
     "Unidos do Viradouro": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 111.8684,
-      "prestige": 108,
+      "score_bruto": 103.57252212380013,
+      "prestige": 105,
       "titulos": 3,
       "titulos_2div": 3,
       "vices": 2,
@@ -1068,8 +1068,8 @@
     },
     "Unidos da Tijuca": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 112.5731,
-      "prestige": 108,
+      "score_bruto": 106.5095239744389,
+      "prestige": 107,
       "titulos": 4,
       "titulos_2div": 3,
       "vices": 6,
@@ -1147,7 +1147,7 @@
     },
     "Acadêmicos do Grande Rio": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 94.1718,
+      "score_bruto": 90.89626971414422,
       "prestige": 97,
       "titulos": 1,
       "titulos_2div": 1,
@@ -1218,8 +1218,8 @@
     },
     "Unidos de Vila Isabel": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 87.7356,
-      "prestige": 93,
+      "score_bruto": 76.70044928068127,
+      "prestige": 88,
       "titulos": 3,
       "titulos_2div": 2,
       "vices": 1,
@@ -1289,8 +1289,8 @@
     },
     "Estácio de Sá": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 46.3643,
-      "prestige": 64,
+      "score_bruto": 42.460454103632,
+      "prestige": 62,
       "titulos": 1,
       "titulos_2div": 8,
       "vices": 0,
@@ -1351,8 +1351,8 @@
     },
     "União da Ilha do Governador": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 35.1183,
-      "prestige": 54,
+      "score_bruto": 29.122809835065436,
+      "prestige": 49,
       "titulos": 0,
       "titulos_2div": 2,
       "vices": 1,
@@ -1394,8 +1394,8 @@
     },
     "São Clemente": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 29.3656,
-      "prestige": 49,
+      "score_bruto": 27.365648316114928,
+      "prestige": 48,
       "titulos": 0,
       "titulos_2div": 4,
       "vices": 0,
@@ -1448,7 +1448,7 @@
     },
     "Unidos do Porto da Pedra": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 24.0326,
+      "score_bruto": 22.699518469791098,
       "prestige": 43,
       "titulos": 0,
       "titulos_2div": 3,
@@ -1479,6 +1479,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 2022
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2015
           }
         ],
         "terceiros": []
@@ -1486,7 +1490,7 @@
     },
     "Unidos de Padre Miguel": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 23.3391,
+      "score_bruto": 21.839117860418312,
       "prestige": 42,
       "titulos": 0,
       "titulos_2div": 2,
@@ -1540,8 +1544,8 @@
     },
     "Caprichosos de Pilares": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 20.8098,
-      "prestige": 40,
+      "score_bruto": 17.84740339256109,
+      "prestige": 37,
       "titulos": 0,
       "titulos_2div": 2,
       "vices": 0,
@@ -1557,6 +1561,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 1982
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2020
           }
         ],
         "vices": [
@@ -1578,8 +1586,8 @@
     },
     "Acadêmicos de Santa Cruz": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 19.5304,
-      "prestige": 38,
+      "score_bruto": 17.030389475892548,
+      "prestige": 36,
       "titulos": 0,
       "titulos_2div": 5,
       "vices": 0,
@@ -1624,7 +1632,7 @@
     },
     "Tradição": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 17.2981,
+      "score_bruto": 16.856531234563384,
       "prestige": 36,
       "titulos": 0,
       "titulos_2div": 3,
@@ -1645,12 +1653,20 @@
           {
             "divisao": "Série Ouro",
             "ano": 1997
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2024
           }
         ],
         "vices": [
           {
             "divisao": "Série Ouro",
             "ano": 1987
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2016
           }
         ],
         "terceiros": []
@@ -1658,8 +1674,8 @@
     },
     "Império da Tijuca": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 17.915,
-      "prestige": 36,
+      "score_bruto": 15.91501522140198,
+      "prestige": 34,
       "titulos": 0,
       "titulos_2div": 4,
       "vices": 0,
@@ -1704,7 +1720,7 @@
     },
     "Paraíso do Tuiuti": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 17.5803,
+      "score_bruto": 16.78029273726893,
       "prestige": 36,
       "titulos": 0,
       "titulos_2div": 1,
@@ -1734,8 +1750,8 @@
     },
     "Inocentes de Belford Roxo": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 10.3455,
-      "prestige": 26,
+      "score_bruto": 8.3454773806164,
+      "prestige": 24,
       "titulos": 0,
       "titulos_2div": 1,
       "vices": 0,
@@ -1760,7 +1776,7 @@
     },
     "Unidos do Jacarezinho": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 10.3397,
+      "score_bruto": 9.935303607245157,
       "prestige": 26,
       "titulos": 0,
       "titulos_2div": 1,
@@ -1773,6 +1789,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 1986
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2025
           }
         ],
         "vices": [
@@ -1794,8 +1814,8 @@
     },
     "Em Cima da Hora": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 9.0272,
-      "prestige": 24,
+      "score_bruto": 7.565547800458374,
+      "prestige": 22,
       "titulos": 0,
       "titulos_2div": 2,
       "vices": 0,
@@ -1813,14 +1833,19 @@
             "ano": 1971
           }
         ],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2020
+          }
+        ],
         "terceiros": []
       }
     },
     "Renascer de Jacarepaguá": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 8.2447,
-      "prestige": 23,
+      "score_bruto": 7.3384535365957335,
+      "prestige": 22,
       "titulos": 0,
       "titulos_2div": 1,
       "vices": 0,
@@ -1838,6 +1863,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 2009
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2024
           }
         ],
         "terceiros": []
@@ -1845,8 +1874,8 @@
     },
     "Lins Imperial": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 7.435,
-      "prestige": 22,
+      "score_bruto": 6.666668684168165,
+      "prestige": 21,
       "titulos": 0,
       "titulos_2div": 1,
       "vices": 0,
@@ -1858,12 +1887,24 @@
           {
             "divisao": "Série Ouro",
             "ano": 1975
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2020
           }
         ],
         "vices": [
           {
             "divisao": "Série Ouro",
             "ano": 1989
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2025
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2017
           }
         ],
         "terceiros": []
@@ -1871,8 +1912,8 @@
     },
     "Vizinha Faladeira": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 7.8413,
-      "prestige": 22,
+      "score_bruto": 8.05192350485663,
+      "prestige": 23,
       "titulos": 1,
       "titulos_2div": 0,
       "vices": 0,
@@ -1884,6 +1925,10 @@
           {
             "divisao": "Grupo Especial",
             "ano": 1937
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2016
           }
         ],
         "vices": [],
@@ -1892,8 +1937,8 @@
     },
     "Acadêmicos da Rocinha": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 7.7255,
-      "prestige": 22,
+      "score_bruto": 9.109359041358267,
+      "prestige": 25,
       "titulos": 0,
       "titulos_2div": 1,
       "vices": 0,
@@ -1905,6 +1950,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 2005
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2015
           }
         ],
         "vices": [
@@ -1915,6 +1964,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 2008
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2019
           }
         ],
         "terceiros": []
@@ -1922,8 +1975,8 @@
     },
     "Unidos de Bangu": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 6.4218,
-      "prestige": 20,
+      "score_bruto": 7.320046770962095,
+      "prestige": 22,
       "titulos": 0,
       "titulos_2div": 2,
       "vices": 0,
@@ -1939,6 +1992,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 1962
+          },
+          {
+            "divisao": "Série Prata",
+            "ano": 2017
           }
         ],
         "vices": [],
@@ -1947,7 +2004,7 @@
     },
     "Acadêmicos de Niterói": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 4.6824,
+      "score_bruto": 4.38236831745697,
       "prestige": 16,
       "titulos": 0,
       "titulos_2div": 1,
@@ -1968,7 +2025,7 @@
     },
     "Unidos de Lucas": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 3.6331,
+      "score_bruto": 3.6330667271614887,
       "prestige": 14,
       "titulos": 0,
       "titulos_2div": 0,
@@ -1993,7 +2050,7 @@
     },
     "Acadêmicos do Cubango": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 3.6031,
+      "score_bruto": 3.603148579865554,
       "prestige": 14,
       "titulos": 0,
       "titulos_2div": 0,
@@ -2014,8 +2071,8 @@
     },
     "Leão de Nova Iguaçu": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 3.5757,
-      "prestige": 14,
+      "score_bruto": 3.910842838654065,
+      "prestige": 15,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2023,11 +2080,20 @@
       "terceiros": 0,
       "anos_no_especial": 2,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2015
+          }
+        ],
         "vices": [
           {
             "divisao": "Série Ouro",
             "ano": 1991
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2020
           }
         ],
         "terceiros": []
@@ -2036,7 +2102,7 @@
     "Arranco do Engenho de Dentro": {
       "divisao_atual": "Série Ouro",
       "score_bruto": 3.4,
-      "prestige": 13,
+      "prestige": 14,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2051,7 +2117,7 @@
     },
     "Acadêmicos do Engenho da Rainha": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 3.1618,
+      "score_bruto": 3.161801061901068,
       "prestige": 13,
       "titulos": 0,
       "titulos_2div": 1,
@@ -2072,8 +2138,8 @@
     },
     "Arrastão de Cascadura": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 3.4226,
-      "prestige": 13,
+      "score_bruto": 3.665961144777053,
+      "prestige": 14,
       "titulos": 0,
       "titulos_2div": 1,
       "vices": 0,
@@ -2085,6 +2151,10 @@
           {
             "divisao": "Série Ouro",
             "ano": 1977
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2022
           }
         ],
         "vices": [],
@@ -2093,8 +2163,8 @@
     },
     "Botafogo Samba Clube": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
-      "prestige": 12,
+      "score_bruto": 4.067337259789976,
+      "prestige": 15,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2102,15 +2172,20 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2024
+          }
+        ],
         "vices": [],
         "terceiros": []
       }
     },
     "União do Parque Acari": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
-      "prestige": 12,
+      "score_bruto": 3.7052503422082785,
+      "prestige": 14,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2119,14 +2194,23 @@
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2023
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2019
+          }
+        ],
         "terceiros": []
       }
     },
     "Acadêmicos de Vigário Geral": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
-      "prestige": 12,
+      "score_bruto": 4.506771220359317,
+      "prestige": 16,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2134,15 +2218,25 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
-        "vices": [],
+        "titulos": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2019
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2022
+          }
+        ],
         "terceiros": []
       }
     },
     "União de Maricá": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
-      "prestige": 12,
+      "score_bruto": 4.260897154211133,
+      "prestige": 16,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2150,15 +2244,24 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2023
+          },
+          {
+            "divisao": "Série Bronze",
+            "ano": 2018
+          }
+        ],
         "vices": [],
         "terceiros": []
       }
     },
     "Chatuba de Mesquita": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
+      "score_bruto": 1.642503843772697,
+      "prestige": 9,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2167,7 +2270,12 @@
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2024
+          }
+        ],
         "terceiros": []
       }
     },
@@ -2205,8 +2313,8 @@
     },
     "Flamanguaça": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
+      "score_bruto": 2.343411694328659,
+      "prestige": 11,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2214,8 +2322,18 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
-        "vices": [],
+        "titulos": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2023
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2024
+          }
+        ],
         "terceiros": []
       }
     },
@@ -2237,8 +2355,8 @@
     },
     "Alegria do Vilar": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
+      "score_bruto": 1.642503843772697,
+      "prestige": 9,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2247,7 +2365,12 @@
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2024
+          }
+        ],
         "terceiros": []
       }
     },
@@ -2269,8 +2392,8 @@
     },
     "Império da Uva": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
+      "score_bruto": 2.3351117831176618,
+      "prestige": 11,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2278,8 +2401,18 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
-        "vices": [],
+        "titulos": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2019
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2025
+          }
+        ],
         "terceiros": []
       }
     },
@@ -2301,8 +2434,8 @@
     },
     "Siri de Ramos": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
+      "score_bruto": 1.623299531114685,
+      "prestige": 9,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2311,7 +2444,12 @@
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2018
+          }
+        ],
         "terceiros": []
       }
     },
@@ -2365,8 +2503,8 @@
     },
     "Tubarão de Mesquita": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
+      "score_bruto": 1.6389747425799228,
+      "prestige": 9,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2375,14 +2513,19 @@
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2023
+          }
+        ],
         "terceiros": []
       }
     },
     "Boi da Ilha do Governador": {
       "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+      "score_bruto": 1.0561609423495946,
+      "prestige": 6,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2390,7 +2533,12 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2024
+          }
+        ],
         "vices": [],
         "terceiros": []
       }
@@ -2509,8 +2657,8 @@
     },
     "Império de Nova Iguaçu": {
       "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+      "score_bruto": 1.0561609423495946,
+      "prestige": 6,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2518,7 +2666,12 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2024
+          }
+        ],
         "vices": [],
         "terceiros": []
       }
@@ -2557,8 +2710,8 @@
     },
     "União do Parque Curicica": {
       "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+      "score_bruto": 1.0629420990474183,
+      "prestige": 6,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2566,7 +2719,12 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2025
+          }
+        ],
         "vices": [],
         "terceiros": []
       }
@@ -2701,8 +2859,8 @@
     },
     "Coroado de Jacarepaguá": {
       "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
+      "score_bruto": 0.4178562044884748,
+      "prestige": 3,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2711,7 +2869,12 @@
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Bronze",
+            "ano": 2016
+          }
+        ],
         "terceiros": []
       }
     },
@@ -2829,8 +2992,8 @@
     },
     "Acadêmicos do Sossego": {
       "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
+      "score_bruto": 1.1777400345267295,
+      "prestige": 7,
       "titulos": 0,
       "titulos_2div": 0,
       "vices": 0,
@@ -2838,7 +3001,12 @@
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Prata",
+            "ano": 2016
+          }
+        ],
         "vices": [],
         "terceiros": []
       }
