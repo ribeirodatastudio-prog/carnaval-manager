@@ -1,1564 +1,2863 @@
 {
   "metadata": {
-    "versao": "2.0",
+    "versao": "3.0",
     "ano_base": 2026,
     "formula": {
       "decaimento_k": 0.04,
       "meia_vida_anos": 17.3,
-      "pesos_titulo": [
-        18,
-        6
+      "multiplicadores_por_divisao": {
+        "Grupo Especial": 1.0,
+        "Série Ouro": 0.25,
+        "Série Prata": 0.0625,
+        "Série Bronze": 0.015,
+        "Grupo de Avaliação": 0.004
+      },
+      "pesos_titulo_especial": [
+        18.0,
+        6.0
       ],
-      "pesos_vice": [
-        10,
+      "pesos_vice_especial": [
+        10.0,
         3.5
       ],
-      "pesos_terceiro": [
-        5.5,
-        2
-      ],
-      "bonus_presenca_especial_por_ano": 0.4,
-      "escala": "1-195 (top 2 fixas em 195, resto normalizado por raiz^0.6)"
+      "escala": "1-195 (top 2 fixas em 195)",
+      "nota": "Título da Série Ouro vale 25% de um título do Especial"
     },
-    "divisoes": [
-      "Grupo Especial",
-      "Série Ouro",
-      "Série Prata",
-      "Série Bronze",
-      "Grupo de Avaliação"
-    ],
     "total_escolas": 84
   },
   "escolas": {
-    "Beija-Flor de Nilópolis": {
-      "divisao_atual": "Grupo Especial",
-      "score_bruto": 285.7752,
-      "prestige": 195,
-      "titulos": 15,
-      "vices": 13,
-      "terceiros": 5,
-      "anos_no_especial": 40,
-      "historico": {
-        "titulos": [
-          1976,
-          1977,
-          1978,
-          1980,
-          1983,
-          1998,
-          2003,
-          2004,
-          2005,
-          2007,
-          2008,
-          2011,
-          2015,
-          2018,
-          2025
-        ],
-        "vices": [
-          1979,
-          1981,
-          1985,
-          1986,
-          1989,
-          1990,
-          1999,
-          2000,
-          2001,
-          2002,
-          2009,
-          2013,
-          2022
-        ],
-        "terceiros": [
-          1988,
-          1993,
-          1995,
-          1996,
-          2010
-        ]
-      },
-      "id": 1
-    },
     "Estação Primeira de Mangueira": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 276.1691,
+      "score_bruto": 284.4056,
       "prestige": 195,
-      "titulos": 19,
+      "titulos": 20,
+      "titulos_2div": 0,
       "vices": 19,
+      "vices_2div": 0,
       "terceiros": 5,
       "anos_no_especial": 40,
       "historico": {
         "titulos": [
-          1932,
-          1933,
-          1934,
-          1940,
-          1949,
-          1950,
-          1954,
-          1960,
-          1961,
-          1967,
-          1968,
-          1973,
-          1984,
-          1986,
-          1987,
-          1998,
-          2002,
-          2016,
-          2019
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1932
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1933
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1934
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1940
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1949
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1950
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1954
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1960
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1961
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1967
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1968
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1973
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1984
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1984
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1986
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1987
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1998
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2002
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2016
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2019
+          }
         ],
         "vices": [
-          1935,
-          1936,
-          1939,
-          1941,
-          1943,
-          1944,
-          1945,
-          1946,
-          1947,
-          1955,
-          1963,
-          1966,
-          1969,
-          1972,
-          1975,
-          1976,
-          1978,
-          1988,
-          2003
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1935
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1936
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1939
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1941
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1943
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1944
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1945
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1946
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1947
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1955
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1963
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1966
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1969
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1972
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1975
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1976
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1978
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1988
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2003
+          }
         ],
         "terceiros": [
-          1997,
-          2001,
-          2004,
-          2007,
-          2011
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1997
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2001
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2004
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2007
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2011
+          }
         ]
-      },
-      "id": 2
+      }
+    },
+    "Beija-Flor de Nilópolis": {
+      "divisao_atual": "Grupo Especial",
+      "score_bruto": 289.5142,
+      "prestige": 195,
+      "titulos": 15,
+      "titulos_2div": 1,
+      "vices": 13,
+      "vices_2div": 2,
+      "terceiros": 5,
+      "anos_no_especial": 40,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1954
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1976
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1977
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1978
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1980
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1983
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1998
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2003
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2004
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2005
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2007
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2008
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2011
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2015
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2018
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2025
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1962
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1973
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1979
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1981
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1985
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1986
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1989
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1990
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1999
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2000
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2001
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2002
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2009
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2013
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2022
+          }
+        ],
+        "terceiros": [
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1988
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1993
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1995
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1996
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2010
+          }
+        ]
+      }
     },
     "Portela": {
       "divisao_atual": "Grupo Especial",
       "score_bruto": 260.8277,
-      "prestige": 182,
+      "prestige": 179,
       "titulos": 22,
+      "titulos_2div": 0,
       "vices": 13,
+      "vices_2div": 0,
       "terceiros": 4,
       "anos_no_especial": 39,
       "historico": {
         "titulos": [
-          1935,
-          1939,
-          1941,
-          1942,
-          1943,
-          1944,
-          1945,
-          1946,
-          1947,
-          1951,
-          1953,
-          1957,
-          1958,
-          1959,
-          1960,
-          1962,
-          1964,
-          1966,
-          1970,
-          1980,
-          1984,
-          2017
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1935
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1939
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1941
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1942
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1943
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1944
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1945
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1946
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1947
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1951
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1953
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1957
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1958
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1959
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1960
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1962
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1964
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1966
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1970
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1980
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1984
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2017
+          }
         ],
         "vices": [
-          1932,
-          1934,
-          1937,
-          1949,
-          1950,
-          1956,
-          1971,
-          1974,
-          1977,
-          1982,
-          1983,
-          1984,
-          1995
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1932
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1934
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1937
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1949
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1950
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1956
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1971
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1974
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1977
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1982
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1983
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1984
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1995
+          }
         ],
         "terceiros": [
-          1987,
-          2009,
-          2014,
-          2016
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1987
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2009
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2014
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2016
+          }
         ]
-      },
-      "id": 3
+      }
     },
     "Acadêmicos do Salgueiro": {
       "divisao_atual": "Grupo Especial",
       "score_bruto": 175.628,
-      "prestige": 143,
+      "prestige": 141,
       "titulos": 9,
+      "titulos_2div": 0,
       "vices": 10,
+      "vices_2div": 0,
       "terceiros": 3,
       "anos_no_especial": 40,
       "historico": {
         "titulos": [
-          1960,
-          1963,
-          1965,
-          1969,
-          1971,
-          1974,
-          1975,
-          1993,
-          2009
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1960
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1963
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1965
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1969
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1971
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1974
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1975
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1993
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2009
+          }
         ],
         "vices": [
-          1959,
-          1961,
-          1964,
-          1970,
-          1991,
-          1994,
-          2008,
-          2012,
-          2014,
-          2015
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1959
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1961
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1964
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1970
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1991
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1994
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2008
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2012
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2014
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2015
+          }
         ],
         "terceiros": [
-          1990,
-          2017,
-          2018
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1990
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2017
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2018
+          }
         ]
-      },
-      "id": 4
+      }
     },
     "Imperatriz Leopoldinense": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 153.5619,
-      "prestige": 132,
+      "score_bruto": 161.6032,
+      "prestige": 134,
       "titulos": 9,
+      "titulos_2div": 1,
       "vices": 3,
+      "vices_2div": 4,
       "terceiros": 5,
       "anos_no_especial": 39,
       "historico": {
         "titulos": [
-          1980,
-          1981,
-          1989,
-          1994,
-          1995,
-          1999,
-          2000,
-          2001,
-          2023
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1980
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1981
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1989
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1994
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1995
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1999
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2000
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2001
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2020
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2023
+          }
         ],
         "vices": [
-          1993,
-          1996,
-          2024
+          {
+            "divisao": "Série Ouro",
+            "ano": 1964
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1966
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1968
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1978
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1993
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1996
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2024
+          }
         ],
         "terceiros": [
-          1991,
-          1992,
-          1998,
-          2002,
-          2025
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1991
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1992
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1998
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2002
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2025
+          }
         ]
-      },
-      "id": 5
+      }
     },
     "Império Serrano": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 121.9988,
-      "prestige": 115,
+      "score_bruto": 144.258,
+      "prestige": 125,
       "titulos": 9,
+      "titulos_2div": 5,
       "vices": 10,
+      "vices_2div": 4,
       "terceiros": 2,
       "anos_no_especial": 23,
       "historico": {
         "titulos": [
-          1948,
-          1949,
-          1950,
-          1951,
-          1955,
-          1956,
-          1960,
-          1972,
-          1982
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1948
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1949
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1950
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1951
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1955
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1956
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1960
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1972
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1982
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1998
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2000
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2008
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2017
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2022
+          }
         ],
         "vices": [
-          1953,
-          1954,
-          1957,
-          1958,
-          1962,
-          1965,
-          1967,
-          1968,
-          1973,
-          1984
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1953
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1954
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1957
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1958
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1962
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1965
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1967
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1968
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1973
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1979
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1984
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1993
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2012
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2024
+          }
         ],
         "terceiros": [
-          1986,
-          1987
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1986
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1987
+          }
         ]
-      },
-      "id": 6
+      }
     },
     "Mocidade Independente de Padre Miguel": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 116.1798,
-      "prestige": 112,
+      "score_bruto": 117.8774,
+      "prestige": 111,
       "titulos": 6,
+      "titulos_2div": 1,
       "vices": 5,
+      "vices_2div": 0,
       "terceiros": 1,
       "anos_no_especial": 40,
       "historico": {
         "titulos": [
-          1979,
-          1985,
-          1990,
-          1991,
-          1996,
-          2017
+          {
+            "divisao": "Série Ouro",
+            "ano": 1958
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1979
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1985
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1990
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1991
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1996
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2017
+          }
         ],
         "vices": [
-          1980,
-          1984,
-          1987,
-          1992,
-          1997
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1980
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1984
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1987
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1992
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1997
+          }
         ],
         "terceiros": [
-          2020
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2020
+          }
         ]
-      },
-      "id": 7
+      }
+    },
+    "Unidos do Viradouro": {
+      "divisao_atual": "Grupo Especial",
+      "score_bruto": 111.8684,
+      "prestige": 108,
+      "titulos": 3,
+      "titulos_2div": 3,
+      "vices": 2,
+      "vices_2div": 3,
+      "terceiros": 5,
+      "anos_no_especial": 27,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1990
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1997
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2014
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2018
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2020
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2024
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2011
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2013
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2017
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2019
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2023
+          }
+        ],
+        "terceiros": [
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1994
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1999
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2000
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2006
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2022
+          }
+        ]
+      }
     },
     "Unidos da Tijuca": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 104.7573,
-      "prestige": 105,
+      "score_bruto": 112.5731,
+      "prestige": 108,
       "titulos": 4,
+      "titulos_2div": 3,
       "vices": 6,
+      "vices_2div": 1,
       "terceiros": 1,
       "anos_no_especial": 37,
       "historico": {
         "titulos": [
-          1936,
-          2010,
-          2012,
-          2014
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1936
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1980
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1987
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1999
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2010
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2012
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2014
+          }
         ],
         "vices": [
-          1934,
-          1948,
-          2004,
-          2005,
-          2011,
-          2016
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1934
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1948
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1985
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2004
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2005
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2011
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2016
+          }
         ],
         "terceiros": [
-          2013
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2013
+          }
         ]
-      },
-      "id": 8
-    },
-    "Unidos do Viradouro": {
-      "divisao_atual": "Grupo Especial",
-      "score_bruto": 97.0062,
-      "prestige": 101,
-      "titulos": 3,
-      "vices": 2,
-      "terceiros": 5,
-      "anos_no_especial": 27,
-      "historico": {
-        "titulos": [
-          1997,
-          2020,
-          2024
-        ],
-        "vices": [
-          2019,
-          2023
-        ],
-        "terceiros": [
-          1994,
-          1999,
-          2000,
-          2006,
-          2022
-        ]
-      },
-      "id": 9
+      }
     },
     "Acadêmicos do Grande Rio": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 90.6418,
+      "score_bruto": 94.1718,
       "prestige": 97,
       "titulos": 1,
+      "titulos_2div": 1,
       "vices": 5,
+      "vices_2div": 1,
       "terceiros": 5,
       "anos_no_especial": 32,
       "historico": {
         "titulos": [
-          2022
+          {
+            "divisao": "Série Ouro",
+            "ano": 1992
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2022
+          }
         ],
         "vices": [
-          2006,
-          2007,
-          2010,
-          2020,
-          2025
+          {
+            "divisao": "Série Ouro",
+            "ano": 1990
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2006
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2007
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2010
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2020
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2025
+          }
         ],
         "terceiros": [
-          2003,
-          2005,
-          2008,
-          2015,
-          2024
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2003
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2005
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2008
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2015
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2024
+          }
         ]
-      },
-      "id": 10
+      }
     },
     "Unidos de Vila Isabel": {
       "divisao_atual": "Grupo Especial",
-      "score_bruto": 79.5458,
-      "prestige": 89,
+      "score_bruto": 87.7356,
+      "prestige": 93,
       "titulos": 3,
+      "titulos_2div": 2,
       "vices": 1,
+      "vices_2div": 3,
       "terceiros": 4,
       "anos_no_especial": 36,
       "historico": {
         "titulos": [
-          1988,
-          2006,
-          2013
+          {
+            "divisao": "Série Ouro",
+            "ano": 1979
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1988
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2004
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2006
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2013
+          }
         ],
         "vices": [
-          1980
+          {
+            "divisao": "Série Ouro",
+            "ano": 1956
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1965
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1980
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2002
+          }
         ],
         "terceiros": [
-          1985,
-          2012,
-          2019,
-          2023
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1985
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2012
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2019
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2023
+          }
         ]
-      },
-      "id": 11
-    },
-    "União da Ilha do Governador": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 27.1246,
-      "prestige": 47,
-      "titulos": 0,
-      "vices": 1,
-      "terceiros": 1,
-      "anos_no_especial": 27,
-      "historico": {
-        "titulos": [],
-        "vices": [
-          1980
-        ],
-        "terceiros": [
-          1989
-        ]
-      },
-      "id": 12
+      }
     },
     "Estácio de Sá": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 22.3837,
-      "prestige": 42,
+      "score_bruto": 46.3643,
+      "prestige": 64,
       "titulos": 1,
+      "titulos_2div": 8,
       "vices": 0,
+      "vices_2div": 2,
       "terceiros": 0,
       "anos_no_especial": 16,
       "historico": {
         "titulos": [
-          1992
+          {
+            "divisao": "Série Ouro",
+            "ano": 1967
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1973
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1978
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1981
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1983
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1992
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2006
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2015
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2019
+          }
         ],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 13
-    },
-    "Caprichosos de Pilares": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 13.094,
-      "prestige": 31,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 21,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 14
-    },
-    "Paraíso do Tuiuti": {
-      "divisao_atual": "Grupo Especial",
-      "score_bruto": 12.62,
-      "prestige": 30,
-      "titulos": 0,
-      "vices": 1,
-      "terceiros": 0,
-      "anos_no_especial": 9,
-      "historico": {
-        "titulos": [],
         "vices": [
-          2018
+          {
+            "divisao": "Série Ouro",
+            "ano": 2014
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2025
+          }
         ],
         "terceiros": []
-      },
-      "id": 15
+      }
+    },
+    "União da Ilha do Governador": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 35.1183,
+      "prestige": 54,
+      "titulos": 0,
+      "titulos_2div": 2,
+      "vices": 1,
+      "vices_2div": 2,
+      "terceiros": 1,
+      "anos_no_especial": 27,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1974
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2009
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1980
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2003
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2005
+          }
+        ],
+        "terceiros": [
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1989
+          }
+        ]
+      }
     },
     "São Clemente": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 11.9,
-      "prestige": 29,
+      "score_bruto": 29.3656,
+      "prestige": 49,
       "titulos": 0,
+      "titulos_2div": 4,
       "vices": 0,
+      "vices_2div": 5,
       "terceiros": 0,
       "anos_no_especial": 21,
       "historico": {
-        "titulos": [],
-        "vices": [],
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1966
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2003
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2007
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2010
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1986
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1994
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1998
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2001
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2006
+          }
+        ],
         "terceiros": []
-      },
-      "id": 16
+      }
     },
     "Unidos do Porto da Pedra": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 10.2135,
-      "prestige": 26,
+      "score_bruto": 24.0326,
+      "prestige": 43,
       "titulos": 0,
+      "titulos_2div": 3,
       "vices": 0,
+      "vices_2div": 2,
       "terceiros": 0,
       "anos_no_especial": 16,
       "historico": {
-        "titulos": [],
-        "vices": [],
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1995
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2001
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2023
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1999
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2022
+          }
+        ],
         "terceiros": []
-      },
-      "id": 17
+      }
+    },
+    "Unidos de Padre Miguel": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 23.3391,
+      "prestige": 42,
+      "titulos": 0,
+      "titulos_2div": 2,
+      "vices": 0,
+      "vices_2div": 7,
+      "terceiros": 0,
+      "anos_no_especial": 1,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1959
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2024
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1963
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1970
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2015
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2016
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2018
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2020
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2023
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Caprichosos de Pilares": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 20.8098,
+      "prestige": 40,
+      "titulos": 0,
+      "titulos_2div": 2,
+      "vices": 0,
+      "vices_2div": 3,
+      "terceiros": 0,
+      "anos_no_especial": 21,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1960
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1982
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1954
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1997
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2007
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Acadêmicos de Santa Cruz": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 19.5304,
+      "prestige": 38,
+      "titulos": 0,
+      "titulos_2div": 5,
+      "vices": 0,
+      "vices_2div": 2,
+      "terceiros": 0,
+      "anos_no_especial": 5,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1965
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1969
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1989
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1996
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2002
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1984
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2004
+          }
+        ],
+        "terceiros": []
+      }
     },
     "Tradição": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 9.1,
-      "prestige": 25,
+      "score_bruto": 17.2981,
+      "prestige": 36,
       "titulos": 0,
+      "titulos_2div": 3,
       "vices": 0,
+      "vices_2div": 1,
       "terceiros": 0,
       "anos_no_especial": 14,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1991
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1993
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1997
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1987
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Império da Tijuca": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 17.915,
+      "prestige": 36,
+      "titulos": 0,
+      "titulos_2div": 4,
+      "vices": 0,
+      "vices_2div": 3,
+      "terceiros": 0,
+      "anos_no_especial": 5,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1964
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1970
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1976
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2013
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1981
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1983
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1995
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Paraíso do Tuiuti": {
+      "divisao_atual": "Grupo Especial",
+      "score_bruto": 17.5803,
+      "prestige": 36,
+      "titulos": 0,
+      "titulos_2div": 1,
+      "vices": 1,
+      "vices_2div": 1,
+      "terceiros": 0,
+      "anos_no_especial": 9,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2016
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2000
+          },
+          {
+            "divisao": "Grupo Especial",
+            "ano": 2018
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Inocentes de Belford Roxo": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 10.3455,
+      "prestige": 26,
+      "titulos": 0,
+      "titulos_2div": 1,
+      "vices": 0,
+      "vices_2div": 1,
+      "terceiros": 0,
+      "anos_no_especial": 1,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2012
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2010
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Unidos do Jacarezinho": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 10.3397,
+      "prestige": 26,
+      "titulos": 0,
+      "titulos_2div": 1,
+      "vices": 0,
+      "vices_2div": 3,
+      "terceiros": 0,
+      "anos_no_especial": 1,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1986
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1969
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1972
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1988
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Em Cima da Hora": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 9.0272,
+      "prestige": 24,
+      "titulos": 0,
+      "titulos_2div": 2,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 1,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1968
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1971
+          }
+        ],
         "vices": [],
         "terceiros": []
-      },
-      "id": 18
+      }
+    },
+    "Renascer de Jacarepaguá": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 8.2447,
+      "prestige": 23,
+      "titulos": 0,
+      "titulos_2div": 1,
+      "vices": 0,
+      "vices_2div": 1,
+      "terceiros": 0,
+      "anos_no_especial": 1,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2011
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2009
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Lins Imperial": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 7.435,
+      "prestige": 22,
+      "titulos": 0,
+      "titulos_2div": 1,
+      "vices": 0,
+      "vices_2div": 1,
+      "terceiros": 0,
+      "anos_no_especial": 2,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1975
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1989
+          }
+        ],
+        "terceiros": []
+      }
     },
     "Vizinha Faladeira": {
       "divisao_atual": "Série Prata",
       "score_bruto": 7.8413,
-      "prestige": 23,
+      "prestige": 22,
       "titulos": 1,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [
-          1937
+          {
+            "divisao": "Grupo Especial",
+            "ano": 1937
+          }
         ],
         "vices": [],
         "terceiros": []
-      },
-      "id": 19
+      }
     },
-    "Inocentes de Belford Roxo": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 5.4,
-      "prestige": 18,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 1,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 20
-    },
-    "Império da Tijuca": {
+    "Acadêmicos da Rocinha": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 5.5,
-      "prestige": 18,
+      "score_bruto": 7.7255,
+      "prestige": 22,
       "titulos": 0,
+      "titulos_2div": 1,
       "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 5,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 21
-    },
-    "Em Cima da Hora": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 5.4,
-      "prestige": 18,
-      "titulos": 0,
-      "vices": 0,
+      "vices_2div": 2,
       "terceiros": 0,
       "anos_no_especial": 1,
       "historico": {
-        "titulos": [],
-        "vices": [],
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2005
+          }
+        ],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1996
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 2008
+          }
+        ],
         "terceiros": []
-      },
-      "id": 22
+      }
     },
-    "Unidos de Padre Miguel": {
+    "Unidos de Bangu": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 4.9,
-      "prestige": 17,
+      "score_bruto": 6.4218,
+      "prestige": 20,
       "titulos": 0,
+      "titulos_2div": 2,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
-      "anos_no_especial": 1,
+      "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1957
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1962
+          }
+        ],
         "vices": [],
         "terceiros": []
-      },
-      "id": 23
+      }
     },
-    "Unidos do Jacarezinho": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 4.9,
-      "prestige": 17,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 1,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 24
-    },
-    "Lins Imperial": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 4.3,
+    "Acadêmicos de Niterói": {
+      "divisao_atual": "Grupo Especial",
+      "score_bruto": 4.6824,
       "prestige": 16,
       "titulos": 0,
+      "titulos_2div": 1,
       "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2025
+          }
+        ],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Unidos de Lucas": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 3.6331,
+      "prestige": 14,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 2,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1971
+          },
+          {
+            "divisao": "Série Ouro",
+            "ano": 1974
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Acadêmicos do Cubango": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 3.6031,
+      "prestige": 14,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 1,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 2019
+          }
+        ],
+        "terceiros": []
+      }
+    },
+    "Leão de Nova Iguaçu": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 3.5757,
+      "prestige": 14,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 1,
       "terceiros": 0,
       "anos_no_especial": 2,
       "historico": {
         "titulos": [],
-        "vices": [],
+        "vices": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1991
+          }
+        ],
         "terceiros": []
-      },
-      "id": 25
+      }
     },
     "Arranco do Engenho de Dentro": {
       "divisao_atual": "Série Ouro",
       "score_bruto": 3.4,
-      "prestige": 14,
+      "prestige": 13,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 1,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 26
+      }
     },
-    "Acadêmicos de Santa Cruz": {
+    "Acadêmicos do Engenho da Rainha": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 3.5,
-      "prestige": 14,
+      "score_bruto": 3.1618,
+      "prestige": 13,
       "titulos": 0,
+      "titulos_2div": 1,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
-      "anos_no_especial": 5,
+      "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1953
+          }
+        ],
         "vices": [],
         "terceiros": []
-      },
-      "id": 27
+      }
     },
-    "Renascer de Jacarepaguá": {
+    "Arrastão de Cascadura": {
       "divisao_atual": "Série Prata",
-      "score_bruto": 3.4,
-      "prestige": 14,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 1,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 28
-    },
-    "União de Maricá": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 3,
+      "score_bruto": 3.4226,
       "prestige": 13,
       "titulos": 0,
+      "titulos_2div": 1,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
-        "titulos": [],
+        "titulos": [
+          {
+            "divisao": "Série Ouro",
+            "ano": 1977
+          }
+        ],
         "vices": [],
         "terceiros": []
-      },
-      "id": 29
-    },
-    "Acadêmicos de Vigário Geral": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 3,
-      "prestige": 13,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 30
-    },
-    "Unidos de Bangu": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 3,
-      "prestige": 13,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 31
-    },
-    "União do Parque Acari": {
-      "divisao_atual": "Série Ouro",
-      "score_bruto": 3,
-      "prestige": 13,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 32
+      }
     },
     "Botafogo Samba Clube": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3,
-      "prestige": 13,
+      "score_bruto": 3.0,
+      "prestige": 12,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 33
+      }
     },
-    "Leão de Nova Iguaçu": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 2.3,
-      "prestige": 11,
+    "União do Parque Acari": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 3.0,
+      "prestige": 12,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 2,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 34
-    },
-    "Acadêmicos da Rocinha": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.9,
-      "prestige": 10,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 1,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 35
-    },
-    "Mocidade Unida do Santa Marta": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 36
+      }
+    },
+    "Acadêmicos de Vigário Geral": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 3.0,
+      "prestige": 12,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "União de Maricá": {
+      "divisao_atual": "Série Ouro",
+      "score_bruto": 3.0,
+      "prestige": 12,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
     },
     "Chatuba de Mesquita": {
       "divisao_atual": "Série Prata",
       "score_bruto": 1.5,
       "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 37
-    },
-    "Acadêmicos do Cubango": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 38
+      }
     },
     "Unidos de Santa Tereza": {
       "divisao_atual": "Série Prata",
       "score_bruto": 1.5,
       "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 39
-    },
-    "Acadêmicos da Abolição": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 40
-    },
-    "Tubarão de Mesquita": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 41
-    },
-    "Império da Uva": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 42
-    },
-    "Alegria do Vilar": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 43
-    },
-    "Unidos de Lucas": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 44
-    },
-    "Arrastão de Cascadura": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 45
-    },
-    "Feitiço Carioca": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 46
-    },
-    "Siri de Ramos": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 47
-    },
-    "Flamanguaça": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 48
-    },
-    "Independente da Praça da Bandeira": {
-      "divisao_atual": "Série Prata",
-      "score_bruto": 1.5,
-      "prestige": 8,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 49
+      }
     },
     "Independentes de Olaria": {
       "divisao_atual": "Série Prata",
       "score_bruto": 1.5,
       "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 50
+      }
     },
-    "Acadêmicos do Engenho da Rainha": {
+    "Flamanguaça": {
       "divisao_atual": "Série Prata",
       "score_bruto": 1.5,
       "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 51
+      }
     },
-    "Alegria de Copacabana": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+    "Feitiço Carioca": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 52
+      }
     },
-    "Acadêmicos do Viradouro": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+    "Alegria do Vilar": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 53
-    },
-    "Flor da Mina do Andaraí": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 54
-    },
-    "Unidos da Vila Rica": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 55
-    },
-    "Raça Rubro-Negra": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 56
-    },
-    "Unidos do Realengo": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 57
-    },
-    "Império de Nova Iguaçu": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 58
-    },
-    "Imperadores Rubro-Negro": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 59
-    },
-    "Mocidade Unida de Jacarepaguá": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 60
+      }
     },
     "Acadêmicos do Dendê": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 61
+      }
     },
-    "Acadêmicos de Jacarepaguá": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+    "Império da Uva": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 62
+      }
     },
-    "Concentra Imperial": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+    "Mocidade Unida do Santa Marta": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 63
+      }
     },
-    "Sereno de Campo Grande": {
-      "divisao_atual": "Série Bronze",
-      "score_bruto": 0.8,
-      "prestige": 5,
+    "Siri de Ramos": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 64
+      }
+    },
+    "Independente da Praça da Bandeira": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Acadêmicos do Engenho Novo": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Acadêmicos da Abolição": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Tubarão de Mesquita": {
+      "divisao_atual": "Série Prata",
+      "score_bruto": 1.5,
+      "prestige": 8,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
     },
     "Boi da Ilha do Governador": {
       "divisao_atual": "Série Bronze",
       "score_bruto": 0.8,
       "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 65
+      }
     },
-    "Gato de Bonsucesso": {
+    "Sereno de Campo Grande": {
       "divisao_atual": "Série Bronze",
       "score_bruto": 0.8,
       "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 66
+      }
     },
-    "União de Cosmos": {
+    "Imperadores Rubro-Negro": {
       "divisao_atual": "Série Bronze",
       "score_bruto": 0.8,
       "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 67
+      }
     },
-    "Unidos da Barra da Tijuca": {
+    "Flor da Mina do Andaraí": {
       "divisao_atual": "Série Bronze",
       "score_bruto": 0.8,
       "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 68
+      }
     },
     "Bangay": {
       "divisao_atual": "Série Bronze",
       "score_bruto": 0.8,
       "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 69
+      }
+    },
+    "Acadêmicos do Viradouro": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Unidos da Barra da Tijuca": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Alegria de Copacabana": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Império de Nova Iguaçu": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Unidos do Realengo": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Concentra Imperial": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
     },
     "União do Parque Curicica": {
       "divisao_atual": "Série Bronze",
       "score_bruto": 0.8,
       "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 70
+      }
     },
-    "Acadêmicos de Niterói": {
-      "divisao_atual": "Grupo Especial",
-      "score_bruto": 0.3,
-      "prestige": 1,
+    "Unidos da Vila Rica": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 71
+      }
     },
-    "Acadêmicos do Sossego": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
+    "Mocidade Unida de Jacarepaguá": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 72
+      }
     },
-    "Império Ricardense": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
+    "Acadêmicos de Jacarepaguá": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 73
+      }
     },
-    "Arame de Ricardo": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
+    "União de Cosmos": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 74
+      }
     },
-    "Unidos de São Carlos": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
+    "Raça Rubro-Negra": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 75
+      }
     },
-    "Rosa de Ouro": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
+    "Gato de Bonsucesso": {
+      "divisao_atual": "Série Bronze",
+      "score_bruto": 0.8,
+      "prestige": 5,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 76
-    },
-    "Flor da Cidade": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 77
-    },
-    "Mocidade Unida da Cidade de Deus": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 78
-    },
-    "Mocidade Independente do Estácio": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 79
-    },
-    "Coroado de Jacarepaguá": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 80
-    },
-    "Acadêmicos do Engenho Novo": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 81
-    },
-    "Juventude Imperial": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 82
-    },
-    "Novo Império": {
-      "divisao_atual": "Grupo de Avaliação",
-      "score_bruto": 0.3,
-      "prestige": 1,
-      "titulos": 0,
-      "vices": 0,
-      "terceiros": 0,
-      "anos_no_especial": 0,
-      "historico": {
-        "titulos": [],
-        "vices": [],
-        "terceiros": []
-      },
-      "id": 83
+      }
     },
     "Império de Padre Miguel": {
       "divisao_atual": "Grupo de Avaliação",
       "score_bruto": 0.3,
       "prestige": 1,
       "titulos": 0,
+      "titulos_2div": 0,
       "vices": 0,
+      "vices_2div": 0,
       "terceiros": 0,
       "anos_no_especial": 0,
       "historico": {
         "titulos": [],
         "vices": [],
         "terceiros": []
-      },
-      "id": 84
+      }
+    },
+    "Rosa de Ouro": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Coroado de Jacarepaguá": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Flor da Cidade": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Mocidade Unida da Cidade de Deus": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Arame de Ricardo": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Novo Império": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Juventude Imperial": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Império Ricardense": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Mocidade Independente do Estácio": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Acadêmicos do Sossego": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
+    },
+    "Unidos de São Carlos": {
+      "divisao_atual": "Grupo de Avaliação",
+      "score_bruto": 0.3,
+      "prestige": 1,
+      "titulos": 0,
+      "titulos_2div": 0,
+      "vices": 0,
+      "vices_2div": 0,
+      "terceiros": 0,
+      "anos_no_especial": 0,
+      "historico": {
+        "titulos": [],
+        "vices": [],
+        "terceiros": []
+      }
     }
   }
 }
