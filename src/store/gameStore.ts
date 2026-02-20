@@ -7,6 +7,27 @@ import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
 import { researchEnredo } from '../services/researchEngine';
 
 /**
+ * Calculates the displayed salary expectation adjusted by the school's prestige.
+ * Higher prestige schools see a lower "effective price" because staff want to work there.
+ */
+export const calculateAdjustedSalary = (staff: StaffMember, schoolPrestige: number): number => {
+  if (staff.role === 'RainhaDeBateria' && staff.archetype !== 'CriaDaComunidade') {
+    return 0; // Celebrity and PostoPago don't have salary negotiation in the same way
+  }
+
+  // Formula matching the hiring logic:
+  // EffectiveOffer = Offered * PrestigeMultiplier
+  // We want to find Offered such that EffectiveOffer == Expectation
+  // Offered = Expectation / PrestigeMultiplier
+
+  const prestigeMultiplier = 1 + ((schoolPrestige - 100) / 500);
+  // Avoid division by zero or negative multipliers (unlikely with this formula but good to be safe)
+  const safeMultiplier = Math.max(0.1, prestigeMultiplier);
+
+  return Math.ceil(staff.salaryExpectation / safeMultiplier);
+};
+
+/**
  * GameStoreState defines the shape of the global game state managed by Zustand.
  * It includes the current game status, the list of schools, and actions to modify the state.
  */
@@ -122,35 +143,68 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const school = state.schools[schoolIndex];
     const staff = state.availableStaff[staffIndex];
 
-    // Check if school has enough budget
-    if (school.budget < offeredSalary) {
-      return 'Insufficient budget.';
+    // Special Logic for Rainha de Bateria
+    if (staff.role === 'RainhaDeBateria') {
+       if (staff.archetype === 'Celebridade' && school.prestige < 180) {
+         return 'Celebrity Rainha requires a Historical Reputation (180+).';
+       }
+       // Posto Pago adds money, so we don't check budget for it (assuming offeredSalary is 0 or ignored)
+       if (staff.archetype !== 'PostoPago' && school.budget < offeredSalary) {
+         return 'Insufficient budget.';
+       }
+    } else {
+       // Standard Budget Check
+       if (school.budget < offeredSalary) {
+         return 'Insufficient budget.';
+       }
     }
 
     // Negotiation Logic
-    // 1. Calculate the "Effective Offer Value"
-    // Prestige Multiplier: Historical schools (200) get a 20% boost to the perceived value of the offer.
-    // Low prestige schools might need to overpay.
-    // Formula: Multiplier = 1 + ((Prestige - 100) / 500)
-    // Examples:
-    // Prestige 200 -> 1 + (100/500) = 1.2 (+20%)
-    // Prestige 100 -> 1 + (0) = 1.0
-    // Prestige 50  -> 1 + (-50/500) = 0.9 (-10%)
-    const prestigeMultiplier = 1 + ((school.prestige - 100) / 500);
-    const effectiveOffer = offeredSalary * prestigeMultiplier;
+    let accepted = false;
 
-    // 2. RNG Factor (0.9 to 1.1) to add unpredictability
-    const rngFactor = 0.9 + (Math.random() * 0.2);
+    if (staff.role === 'RainhaDeBateria') {
+      // Rainhas always accept if criteria met (Celebrity rep check already done above)
+      accepted = true;
+    } else {
+        // 1. Calculate the "Effective Offer Value"
+        const prestigeMultiplier = 1 + ((school.prestige - 100) / 500);
+        const effectiveOffer = offeredSalary * prestigeMultiplier;
 
-    // 3. Acceptance Check
-    // If the effective offer (adjusted by prestige and RNG) meets the expectation.
-    // We compare EffectiveOffer * RNG vs SalaryExpectation
-    // If EffectiveOffer * RNG >= SalaryExpectation, they accept.
-    const perceivedValue = effectiveOffer * rngFactor;
+        // 2. RNG Factor (0.9 to 1.1)
+        const rngFactor = 0.9 + (Math.random() * 0.2);
 
-    if (perceivedValue >= staff.salaryExpectation) {
-      // Accepted!
-      // Update State
+        // 3. Acceptance Check
+        const perceivedValue = effectiveOffer * rngFactor;
+
+        if (perceivedValue >= staff.salaryExpectation) {
+            accepted = true;
+        }
+    }
+
+    if (accepted) {
+      // Handle Existing Staff in Role (Replacement)
+      // Check if school already has someone in this role
+      // Exception: Maybe some roles allow multiples? Prompt says "only one of each person can be hired" -> implies unique roles.
+      const existingStaffIndex = school.staff.findIndex(s => s.role === staff.role);
+      let releasedStaff: StaffMember | null = null;
+
+      const newSchoolStaff = [...school.staff];
+
+      if (existingStaffIndex !== -1) {
+        // Remove existing staff
+        releasedStaff = newSchoolStaff[existingStaffIndex];
+        newSchoolStaff.splice(existingStaffIndex, 1);
+
+        // Reset released staff state
+        releasedStaff = {
+            ...releasedStaff,
+            currentSchoolId: null,
+            salary: 0,
+            contractYears: 0
+        };
+      }
+
+      // Prepare New Staff Member
       const updatedStaffMember = {
         ...staff,
         currentSchoolId: school.id,
@@ -161,12 +215,39 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const newAvailableStaff = [...state.availableStaff];
       newAvailableStaff.splice(staffIndex, 1);
 
-      // Update School: Add staff, deduct budget
+      // Add released staff back to available pool
+      if (releasedStaff) {
+          newAvailableStaff.push(releasedStaff);
+      }
+
+      // Update School Budget & Stats
+      let newBudget = school.budget;
+      let newFanbaseMorale = school.fanbaseMorale;
+
+      if (staff.role === 'RainhaDeBateria') {
+          if (staff.archetype === 'PostoPago') {
+              // Add 100k-500k
+              const injection = Math.floor(Math.random() * 400000) + 100000;
+              newBudget += injection;
+              // Note: Could add a message about the injection amount
+          } else if (staff.archetype === 'CriaDaComunidade') {
+              // Buff Morale
+              newFanbaseMorale = Math.min(100, newFanbaseMorale + 10); // +10 morale
+              newBudget -= offeredSalary;
+          } else {
+             // Celebrity - Cost 0 usually
+             newBudget -= offeredSalary;
+          }
+      } else {
+          newBudget -= offeredSalary;
+      }
+
       const updatedSchools = [...state.schools];
       updatedSchools[schoolIndex] = {
         ...school,
-        budget: school.budget - offeredSalary,
-        staff: [...school.staff, updatedStaffMember],
+        budget: newBudget,
+        fanbaseMorale: newFanbaseMorale,
+        staff: [...newSchoolStaff, updatedStaffMember],
       };
 
       set({
@@ -174,7 +255,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         availableStaff: newAvailableStaff,
       });
 
-      return `Offer accepted! ${staff.name} has joined ${school.name}.`;
+      let successMsg = `Offer accepted! ${staff.name} has joined ${school.name}.`;
+      if (releasedStaff) {
+          successMsg += ` (Replaced ${releasedStaff.name})`;
+      }
+      return successMsg;
     } else {
       // Rejected
       return `${staff.name} has rejected the offer.`;
