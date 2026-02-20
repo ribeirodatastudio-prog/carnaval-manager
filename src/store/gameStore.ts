@@ -20,11 +20,10 @@ interface GameStoreState {
   setPlayerSchool: (schoolId: string) => void;
 
   /**
-   * Advances the game to the next phase.
-   * Logic for phase progression (Planning -> Market -> Parade -> Results -> Planning) will be implemented here.
-   * (Placeholder for future implementation)
+   * Advances the game to the next week.
+   * Updates currentWeek, increments currentYear if necessary, and updates currentPhase based on week thresholds.
    */
-  advancePhase: () => void;
+  advanceWeek: () => void;
 }
 
 /**
@@ -33,8 +32,9 @@ interface GameStoreState {
  */
 export const useGameStore = create<GameStoreState>((set) => ({
   gameState: {
-    currentYear: 2024,
-    currentPhase: 'Planning',
+    currentYear: 1,
+    currentWeek: 1,
+    currentPhase: 'Market',
     playerSchoolId: null,
   },
   schools: INITIAL_SCHOOLS,
@@ -55,8 +55,38 @@ export const useGameStore = create<GameStoreState>((set) => ({
       };
     }),
 
-  advancePhase: () => {
-    // Placeholder implementation
-    console.log('Advance phase called');
-  },
+  advanceWeek: () =>
+    set((state) => {
+      let { currentYear, currentWeek } = state.gameState;
+      let nextWeek = currentWeek + 1;
+      let nextYear = currentYear;
+
+      // Reset week and increment year if we exceed 52 weeks
+      if (nextWeek > 52) {
+        nextWeek = 1;
+        nextYear += 1;
+      }
+
+      // Determine phase based on the new week
+      let nextPhase: GameState['currentPhase'] = 'Market';
+      if (nextWeek >= 1 && nextWeek <= 12) {
+        nextPhase = 'Market';
+      } else if (nextWeek >= 13 && nextWeek <= 44) {
+        nextPhase = 'Preparation';
+      } else if (nextWeek === 45) {
+        nextPhase = 'Parade';
+      } else {
+        // Weeks 46-52
+        nextPhase = 'Results/Offseason';
+      }
+
+      return {
+        gameState: {
+          ...state.gameState,
+          currentYear: nextYear,
+          currentWeek: nextWeek,
+          currentPhase: nextPhase,
+        },
+      };
+    }),
 }));
