@@ -1,7 +1,8 @@
 
 import { create } from 'zustand';
 import { GameState, School, StaffMember } from '../types/models';
-import { INITIAL_SCHOOLS } from '../data/seed';
+// import { INITIAL_SCHOOLS } from '../data/seed';
+import { loadSpecialGroupSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
 import { researchEnredo } from '../services/researchEngine';
 
@@ -56,7 +57,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     currentPhase: 'Market',
     playerSchoolId: null,
   },
-  schools: INITIAL_SCHOOLS,
+  schools: loadSpecialGroupSchools(),
   availableStaff: INITIAL_MARKET_STAFF,
 
   setPlayerSchool: (schoolId) =>

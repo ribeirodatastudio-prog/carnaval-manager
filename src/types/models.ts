@@ -86,6 +86,11 @@ export interface School {
   staff: StaffMember[]; // Collection of staff members currently hired by the school
   isPlayerControlled: boolean; // Flag indicating if this is the school managed by the player
   prestige: number; // The school's historical importance and reputation (1-200). 180-200 = Historical.
+  currentDivision: string; // The current league/division the school is competing in (e.g., 'Grupo Especial').
+  history: {
+    titles: number; // Total number of championships won
+    runnerUps: number; // Total number of second-place finishes
+  };
   enredo: Enredo | null; // The current year's theme. Null if not yet researched/chosen.
 }
 

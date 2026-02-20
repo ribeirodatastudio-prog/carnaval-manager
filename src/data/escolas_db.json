@@ -6,16 +6,16 @@
       "decaimento_k": 0.04,
       "meia_vida_anos": 17.3,
       "pesos_titulo": [
-        18.0,
-        6.0
+        18,
+        6
       ],
       "pesos_vice": [
-        10.0,
+        10,
         3.5
       ],
       "pesos_terceiro": [
         5.5,
-        2.0
+        2
       ],
       "bonus_presenca_especial_por_ano": 0.4,
       "escala": "1-195 (top 2 fixas em 195, resto normalizado por raiz^0.6)"
@@ -78,7 +78,8 @@
           1996,
           2010
         ]
-      }
+      },
+      "id": 1
     },
     "Estação Primeira de Mangueira": {
       "divisao_atual": "Grupo Especial",
@@ -138,7 +139,8 @@
           2007,
           2011
         ]
-      }
+      },
+      "id": 2
     },
     "Portela": {
       "divisao_atual": "Grupo Especial",
@@ -194,7 +196,8 @@
           2014,
           2016
         ]
-      }
+      },
+      "id": 3
     },
     "Acadêmicos do Salgueiro": {
       "divisao_atual": "Grupo Especial",
@@ -233,7 +236,8 @@
           2017,
           2018
         ]
-      }
+      },
+      "id": 4
     },
     "Imperatriz Leopoldinense": {
       "divisao_atual": "Grupo Especial",
@@ -267,7 +271,8 @@
           2002,
           2025
         ]
-      }
+      },
+      "id": 5
     },
     "Império Serrano": {
       "divisao_atual": "Série Ouro",
@@ -305,7 +310,8 @@
           1986,
           1987
         ]
-      }
+      },
+      "id": 6
     },
     "Mocidade Independente de Padre Miguel": {
       "divisao_atual": "Série Ouro",
@@ -334,7 +340,8 @@
         "terceiros": [
           2020
         ]
-      }
+      },
+      "id": 7
     },
     "Unidos da Tijuca": {
       "divisao_atual": "Grupo Especial",
@@ -362,7 +369,8 @@
         "terceiros": [
           2013
         ]
-      }
+      },
+      "id": 8
     },
     "Unidos do Viradouro": {
       "divisao_atual": "Grupo Especial",
@@ -389,7 +397,8 @@
           2006,
           2022
         ]
-      }
+      },
+      "id": 9
     },
     "Acadêmicos do Grande Rio": {
       "divisao_atual": "Grupo Especial",
@@ -417,7 +426,8 @@
           2015,
           2024
         ]
-      }
+      },
+      "id": 10
     },
     "Unidos de Vila Isabel": {
       "divisao_atual": "Grupo Especial",
@@ -442,7 +452,8 @@
           2019,
           2023
         ]
-      }
+      },
+      "id": 11
     },
     "União da Ilha do Governador": {
       "divisao_atual": "Série Ouro",
@@ -460,7 +471,8 @@
         "terceiros": [
           1989
         ]
-      }
+      },
+      "id": 12
     },
     "Estácio de Sá": {
       "divisao_atual": "Série Ouro",
@@ -476,7 +488,8 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 13
     },
     "Caprichosos de Pilares": {
       "divisao_atual": "Série Prata",
@@ -490,7 +503,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 14
     },
     "Paraíso do Tuiuti": {
       "divisao_atual": "Grupo Especial",
@@ -506,7 +520,8 @@
           2018
         ],
         "terceiros": []
-      }
+      },
+      "id": 15
     },
     "São Clemente": {
       "divisao_atual": "Série Prata",
@@ -520,7 +535,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 16
     },
     "Unidos do Porto da Pedra": {
       "divisao_atual": "Série Ouro",
@@ -534,7 +550,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 17
     },
     "Tradição": {
       "divisao_atual": "Série Prata",
@@ -548,7 +565,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 18
     },
     "Vizinha Faladeira": {
       "divisao_atual": "Série Prata",
@@ -564,7 +582,8 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 19
     },
     "Inocentes de Belford Roxo": {
       "divisao_atual": "Série Ouro",
@@ -578,7 +597,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 20
     },
     "Império da Tijuca": {
       "divisao_atual": "Série Prata",
@@ -592,7 +612,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 21
     },
     "Em Cima da Hora": {
       "divisao_atual": "Série Ouro",
@@ -606,7 +627,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 22
     },
     "Unidos de Padre Miguel": {
       "divisao_atual": "Série Ouro",
@@ -620,7 +642,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 23
     },
     "Unidos do Jacarezinho": {
       "divisao_atual": "Série Ouro",
@@ -634,7 +657,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 24
     },
     "Lins Imperial": {
       "divisao_atual": "Série Prata",
@@ -648,7 +672,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 25
     },
     "Arranco do Engenho de Dentro": {
       "divisao_atual": "Série Ouro",
@@ -662,7 +687,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 26
     },
     "Acadêmicos de Santa Cruz": {
       "divisao_atual": "Série Prata",
@@ -676,7 +702,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 27
     },
     "Renascer de Jacarepaguá": {
       "divisao_atual": "Série Prata",
@@ -690,11 +717,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 28
     },
     "União de Maricá": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 13,
       "titulos": 0,
       "vices": 0,
@@ -704,11 +732,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 29
     },
     "Acadêmicos de Vigário Geral": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 13,
       "titulos": 0,
       "vices": 0,
@@ -718,11 +747,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 30
     },
     "Unidos de Bangu": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 13,
       "titulos": 0,
       "vices": 0,
@@ -732,11 +762,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 31
     },
     "União do Parque Acari": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 13,
       "titulos": 0,
       "vices": 0,
@@ -746,11 +777,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 32
     },
     "Botafogo Samba Clube": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 13,
       "titulos": 0,
       "vices": 0,
@@ -760,7 +792,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 33
     },
     "Leão de Nova Iguaçu": {
       "divisao_atual": "Série Prata",
@@ -774,7 +807,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 34
     },
     "Acadêmicos da Rocinha": {
       "divisao_atual": "Série Prata",
@@ -788,7 +822,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 35
     },
     "Mocidade Unida do Santa Marta": {
       "divisao_atual": "Série Prata",
@@ -802,7 +837,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 36
     },
     "Chatuba de Mesquita": {
       "divisao_atual": "Série Prata",
@@ -816,7 +852,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 37
     },
     "Acadêmicos do Cubango": {
       "divisao_atual": "Série Prata",
@@ -830,7 +867,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 38
     },
     "Unidos de Santa Tereza": {
       "divisao_atual": "Série Prata",
@@ -844,7 +882,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 39
     },
     "Acadêmicos da Abolição": {
       "divisao_atual": "Série Prata",
@@ -858,7 +897,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 40
     },
     "Tubarão de Mesquita": {
       "divisao_atual": "Série Prata",
@@ -872,7 +912,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 41
     },
     "Império da Uva": {
       "divisao_atual": "Série Prata",
@@ -886,7 +927,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 42
     },
     "Alegria do Vilar": {
       "divisao_atual": "Série Prata",
@@ -900,7 +942,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 43
     },
     "Unidos de Lucas": {
       "divisao_atual": "Série Prata",
@@ -914,7 +957,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 44
     },
     "Arrastão de Cascadura": {
       "divisao_atual": "Série Prata",
@@ -928,7 +972,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 45
     },
     "Feitiço Carioca": {
       "divisao_atual": "Série Prata",
@@ -942,7 +987,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 46
     },
     "Siri de Ramos": {
       "divisao_atual": "Série Prata",
@@ -956,7 +1002,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 47
     },
     "Flamanguaça": {
       "divisao_atual": "Série Prata",
@@ -970,7 +1017,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 48
     },
     "Independente da Praça da Bandeira": {
       "divisao_atual": "Série Prata",
@@ -984,7 +1032,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 49
     },
     "Independentes de Olaria": {
       "divisao_atual": "Série Prata",
@@ -998,7 +1047,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 50
     },
     "Acadêmicos do Engenho da Rainha": {
       "divisao_atual": "Série Prata",
@@ -1012,7 +1062,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 51
     },
     "Alegria de Copacabana": {
       "divisao_atual": "Série Bronze",
@@ -1026,7 +1077,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 52
     },
     "Acadêmicos do Viradouro": {
       "divisao_atual": "Série Bronze",
@@ -1040,7 +1092,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 53
     },
     "Flor da Mina do Andaraí": {
       "divisao_atual": "Série Bronze",
@@ -1054,7 +1107,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 54
     },
     "Unidos da Vila Rica": {
       "divisao_atual": "Série Bronze",
@@ -1068,7 +1122,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 55
     },
     "Raça Rubro-Negra": {
       "divisao_atual": "Série Bronze",
@@ -1082,7 +1137,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 56
     },
     "Unidos do Realengo": {
       "divisao_atual": "Série Bronze",
@@ -1096,7 +1152,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 57
     },
     "Império de Nova Iguaçu": {
       "divisao_atual": "Série Bronze",
@@ -1110,7 +1167,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 58
     },
     "Imperadores Rubro-Negro": {
       "divisao_atual": "Série Bronze",
@@ -1124,7 +1182,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 59
     },
     "Mocidade Unida de Jacarepaguá": {
       "divisao_atual": "Série Bronze",
@@ -1138,7 +1197,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 60
     },
     "Acadêmicos do Dendê": {
       "divisao_atual": "Série Bronze",
@@ -1152,7 +1212,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 61
     },
     "Acadêmicos de Jacarepaguá": {
       "divisao_atual": "Série Bronze",
@@ -1166,7 +1227,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 62
     },
     "Concentra Imperial": {
       "divisao_atual": "Série Bronze",
@@ -1180,7 +1242,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 63
     },
     "Sereno de Campo Grande": {
       "divisao_atual": "Série Bronze",
@@ -1194,7 +1257,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 64
     },
     "Boi da Ilha do Governador": {
       "divisao_atual": "Série Bronze",
@@ -1208,7 +1272,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 65
     },
     "Gato de Bonsucesso": {
       "divisao_atual": "Série Bronze",
@@ -1222,7 +1287,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 66
     },
     "União de Cosmos": {
       "divisao_atual": "Série Bronze",
@@ -1236,7 +1302,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 67
     },
     "Unidos da Barra da Tijuca": {
       "divisao_atual": "Série Bronze",
@@ -1250,7 +1317,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 68
     },
     "Bangay": {
       "divisao_atual": "Série Bronze",
@@ -1264,7 +1332,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 69
     },
     "União do Parque Curicica": {
       "divisao_atual": "Série Bronze",
@@ -1278,7 +1347,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 70
     },
     "Acadêmicos de Niterói": {
       "divisao_atual": "Grupo Especial",
@@ -1292,7 +1362,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 71
     },
     "Acadêmicos do Sossego": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1306,7 +1377,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 72
     },
     "Império Ricardense": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1320,7 +1392,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 73
     },
     "Arame de Ricardo": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1334,7 +1407,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 74
     },
     "Unidos de São Carlos": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1348,7 +1422,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 75
     },
     "Rosa de Ouro": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1362,7 +1437,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 76
     },
     "Flor da Cidade": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1376,7 +1452,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 77
     },
     "Mocidade Unida da Cidade de Deus": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1390,7 +1467,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 78
     },
     "Mocidade Independente do Estácio": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1404,7 +1482,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 79
     },
     "Coroado de Jacarepaguá": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1418,7 +1497,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 80
     },
     "Acadêmicos do Engenho Novo": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1432,7 +1512,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 81
     },
     "Juventude Imperial": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1446,7 +1527,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 82
     },
     "Novo Império": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1460,7 +1542,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 83
     },
     "Império de Padre Miguel": {
       "divisao_atual": "Grupo de Avaliação",
@@ -1474,7 +1557,8 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "id": 84
     }
   }
 }

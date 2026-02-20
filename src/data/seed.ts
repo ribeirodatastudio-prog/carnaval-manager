@@ -24,7 +24,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 85,
     staff: [],
     isPlayerControlled: false,
-    prestige: 175, // Elite
+    prestige: 175,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Elite
     enredo: null,
   },
   {
@@ -35,7 +37,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 75,
     staff: [],
     isPlayerControlled: false,
-    prestige: 150, // Traditional
+    prestige: 150,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Traditional
     enredo: null,
   },
   {
@@ -46,7 +50,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 90,
     staff: [],
     isPlayerControlled: false,
-    prestige: 195, // Historical
+    prestige: 195,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Historical
     enredo: null,
   },
   {
@@ -57,7 +63,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 60,
     staff: [],
     isPlayerControlled: false,
-    prestige: 120, // Established
+    prestige: 120,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Established
     enredo: null,
   },
   {
@@ -68,7 +76,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 82,
     staff: [],
     isPlayerControlled: false,
-    prestige: 170, // Elite
+    prestige: 170,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Elite
     enredo: null,
   },
   {
@@ -79,7 +89,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 65,
     staff: [],
     isPlayerControlled: false,
-    prestige: 130, // Established
+    prestige: 130,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Established
     enredo: null,
   },
   {
@@ -90,7 +102,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 95,
     staff: [],
     isPlayerControlled: false,
-    prestige: 198, // Historical
+    prestige: 198,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Historical
     enredo: null,
   },
   {
@@ -101,7 +115,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 55,
     staff: [],
     isPlayerControlled: false,
-    prestige: 110, // Rising
+    prestige: 110,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Rising
     enredo: null,
   },
   {
@@ -112,7 +128,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 78,
     staff: [],
     isPlayerControlled: false,
-    prestige: 165, // Elite
+    prestige: 165,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Elite
     enredo: null,
   },
   {
@@ -123,7 +141,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 70,
     staff: [],
     isPlayerControlled: false,
-    prestige: 140, // Traditional
+    prestige: 140,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Traditional
     enredo: null,
   },
   {
@@ -134,7 +154,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 88,
     staff: [],
     isPlayerControlled: false,
-    prestige: 185, // Historical
+    prestige: 185,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Historical
     enredo: null,
   },
   {
@@ -145,7 +167,9 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 72,
     staff: [],
     isPlayerControlled: false,
-    prestige: 145, // Traditional
+    prestige: 145,
+    currentDivision: 'Grupo Especial',
+    history: { titles: 0, runnerUps: 0 }, // Traditional
     enredo: null,
   },
 ];
