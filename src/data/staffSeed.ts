@@ -1,12 +1,8 @@
 
-import { StaffMember, StaffRole, StaffSkills } from '../types/models';
+import { StaffMember, StaffRole, StaffSkills, RainhaArchetype } from '../types/models';
 
 // Helper to generate simple IDs
 const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
-
-// Salary Calculation Constants
-const SKILL_SALARY_MULTIPLIER = 15;
-const REPUTATION_SALARY_MULTIPLIER = 45;
 
 const ROLES: StaffRole[] = [
   'DiretorDeCarnaval',
@@ -17,12 +13,29 @@ const ROLES: StaffRole[] = [
   'Coreografo',
   'DiretorDeHarmonia',
   'MestreDeBarracao',
-  // MS and PB are handled separately for coupling
 ];
 
-const COUPLE_ROLES = ['MestreSala', 'PortaBandeira'];
+const getSalaryRange = (role: StaffRole, isElite: boolean): [number, number] => {
+  switch (role) {
+    case 'Carnavalesco': return isElite ? [100000, 150000] : [20000, 50000];
+    case 'DiretorDeCarnaval': return isElite ? [20000, 35000] : [10000, 18000];
+    case 'MestreDeBateria': return isElite ? [15000, 25000] : [8000, 12000];
+    case 'Interprete': return isElite ? [20000, 30000] : [10000, 15000];
+    case 'DiretorDeHarmonia': return isElite ? [10000, 15000] : [5000, 8000];
+    case 'MestreSala': return isElite ? [10000, 15000] : [5000, 8000];
+    case 'PortaBandeira': return isElite ? [10000, 15000] : [5000, 8000];
+    case 'Coreografo': return isElite ? [10000, 15000] : [5000, 8000];
+    case 'MestreDeBarracao': return isElite ? [8000, 12000] : [4000, 7000];
+    case 'RainhaDeBateria': return [0, 0]; // Special handling
+    default: return [2000, 5000];
+  }
+};
 
-// Helper to calculate average of primary skills
+const getRandomSalary = (min: number, max: number) => {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+// Helper to calculate average of primary skills (used for reference, not strictly salary anymore)
 const getPrimarySkillValue = (role: StaffRole, skills: StaffSkills): number => {
   switch (role) {
     case 'Carnavalesco':
@@ -49,9 +62,19 @@ const getPrimarySkillValue = (role: StaffRole, skills: StaffSkills): number => {
   }
 };
 
-const calculateSalaryExpectation = (role: StaffRole, skills: StaffSkills, reputation: number): number => {
-  const primarySkillVal = getPrimarySkillValue(role, skills);
-  return Math.floor((primarySkillVal * SKILL_SALARY_MULTIPLIER) + (reputation * REPUTATION_SALARY_MULTIPLIER));
+const calculateSalaryExpectation = (role: StaffRole, skills: StaffSkills, reputation: number, archetype?: RainhaArchetype): number => {
+  if (role === 'RainhaDeBateria') {
+    if (archetype === 'Celebridade' || archetype === 'PostoPago') return 0;
+    if (archetype === 'CriaDaComunidade') return getRandomSalary(2000, 5000);
+    return 0;
+  }
+
+  // Elite definition: Reputation > 180 AND High Skills
+  // Simplification: If Reputation > 180, we consider them Elite for salary purposes
+  const isElite = reputation > 180;
+  const [min, max] = getSalaryRange(role, isElite);
+
+  return getRandomSalary(min, max);
 };
 
 const generateSkills = (baseLevel: number): StaffSkills => {
@@ -67,7 +90,7 @@ const generateSkills = (baseLevel: number): StaffSkills => {
     resiliencia: clamp(baseLevel + variance()),
     logistica: clamp(baseLevel + variance()),
     gestaoDeRecursos: clamp(baseLevel + variance()),
-    fama: clamp(baseLevel + variance()), // Reputation might be different from fame skill, but keeping them related
+    fama: clamp(baseLevel + variance()),
   };
 };
 
@@ -183,12 +206,13 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
       // Create MestreSala
       const msId = generateId('staff-ms');
       const pbId = generateId('staff-pb');
-      const baseSkill = Math.floor(Math.random() * 101) + 50;
+      // Division 1 average: 160-180
+      const baseSkill = Math.floor(Math.random() * 21) + 160;
       const synergy = Math.floor(Math.random() * 50) + 50; // 50-100 synergy
 
       const msName = getRandomName();
       const msSkills = generateSkills(baseSkill);
-      let msRep = baseSkill + (Math.floor(Math.random() * 41) - 20);
+      let msRep = baseSkill + (Math.floor(Math.random() * 21) - 10);
       msRep = Math.max(1, Math.min(200, msRep));
 
       staff.push({
@@ -207,8 +231,8 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
 
       // Create PortaBandeira
       const pbName = getRandomName();
-      const pbSkills = generateSkills(baseSkill); // Similar skill level
-      let pbRep = baseSkill + (Math.floor(Math.random() * 41) - 20);
+      const pbSkills = generateSkills(baseSkill);
+      let pbRep = baseSkill + (Math.floor(Math.random() * 21) - 10);
       pbRep = Math.max(1, Math.min(200, pbRep));
 
       staff.push({
@@ -225,21 +249,36 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         synergy,
       });
 
-      // We added 2 staff
-      // If loop counter increment is just i++, we effectively skip one iteration count if we increment i here
-      // But actually, we just added 2 items. The loop condition is based on `i < count`.
-      // We should increment i an extra time, or just let the loop run and maybe exceed count slightly or handle it.
-      // Better to check staff.length
       if (staff.length >= count) break;
-      i++; // Skip next iteration count
+      i++;
 
     } else {
       // Single staff
       const role = ROLES[Math.floor(Math.random() * ROLES.length)];
-      const baseSkill = Math.floor(Math.random() * 101) + 50;
+      // Division 1 average: 160-180
+      const baseSkill = Math.floor(Math.random() * 21) + 160;
       const skills = generateSkills(baseSkill);
-      let reputation = baseSkill + (Math.floor(Math.random() * 41) - 20);
+      let reputation = baseSkill + (Math.floor(Math.random() * 21) - 10);
       reputation = Math.max(1, Math.min(200, reputation));
+
+      let archetype: RainhaArchetype | undefined;
+      if (role === 'RainhaDeBateria') {
+        const rand = Math.random();
+        if (rand < 0.2) archetype = 'Celebridade'; // Rare
+        else if (rand < 0.6) archetype = 'PostoPago'; // Common
+        else archetype = 'CriaDaComunidade'; // Common
+
+        // Adjust stats/reputation based on archetype
+        if (archetype === 'Celebridade') {
+          reputation = Math.max(180, reputation); // High rep
+          skills.fama = Math.max(180, skills.fama);
+        } else if (archetype === 'PostoPago') {
+          // Penalize stats slightly
+          skills.ritmica = Math.max(1, skills.ritmica - 20);
+          skills.expressaoCorporal = Math.max(1, skills.expressaoCorporal - 20);
+        }
+        // Community has normal stats but low cost
+      }
 
       staff.push({
         id: generateId('staff'),
@@ -250,7 +289,8 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         reputation,
         contractYears: 0,
         currentSchoolId: null,
-        salaryExpectation: calculateSalaryExpectation(role, skills, reputation),
+        salaryExpectation: calculateSalaryExpectation(role, skills, reputation, archetype),
+        archetype,
       });
     }
 
@@ -265,5 +305,5 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
  */
 export const INITIAL_MARKET_STAFF = [
   ...TIER_S_STAFF,
-  ...generateRandomStaff(30) // Generating 30 random staff members to fill the market
+  ...generateRandomStaff(30)
 ];

@@ -39,6 +39,11 @@ export interface StaffSkills {
 }
 
 /**
+ * Archetypes for Rainha de Bateria.
+ */
+export type RainhaArchetype = 'Celebridade' | 'PostoPago' | 'CriaDaComunidade';
+
+/**
  * StaffMember represents an individual hired by a Samba School.
  * Each staff member has specific skills and costs associated with them.
  */
@@ -54,6 +59,7 @@ export interface StaffMember {
   reputation: number; // The fame/prestige of the staff member (1-200), heavily influences salary expectation
   partnerId?: string; // ID of the partner (for MestreSala/PortaBandeira couples)
   synergy?: number; // Synergy level for couples (1-100 or similar scale, TBD)
+  archetype?: RainhaArchetype; // Specific archetype for Rainha de Bateria
 }
 
 /**

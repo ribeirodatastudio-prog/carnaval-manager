@@ -2,79 +2,70 @@
 "use client";
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useGameStore } from '../store/gameStore';
-import { StaffRole, StaffMember, StaffSkills } from '../types/models';
-
-const SKILL_DISPLAY_DIVISOR = 10;
-
-const formatMoney = (amount: number) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(amount);
-};
-
-const getKeySkills = (role: StaffRole, skills: StaffSkills): { name: string; value: number }[] => {
-  const allSkills = {
-    'Plástica': skills.plastica,
-    'Rítmica': skills.ritmica,
-    'Expressão': skills.expressaoCorporal,
-    'Liderança': skills.lideranca,
-    'Criatividade': skills.criatividade,
-    'Resiliência': skills.resiliencia,
-    'Logística': skills.logistica,
-    'Gestão': skills.gestaoDeRecursos,
-    'Fama': skills.fama,
-  };
-
-  const selectSkills = (keys: (keyof typeof allSkills)[]) => keys.map(k => ({ name: k, value: Math.ceil(allSkills[k] / SKILL_DISPLAY_DIVISOR) }));
-
-  switch (role) {
-    case 'Carnavalesco':
-      return selectSkills(['Criatividade', 'Plástica', 'Resiliência']);
-    case 'MestreDeBateria':
-      return selectSkills(['Rítmica', 'Liderança']);
-    case 'Interprete':
-      return selectSkills(['Rítmica', 'Expressão', 'Fama']);
-    case 'MestreSala':
-    case 'PortaBandeira':
-      return selectSkills(['Expressão', 'Plástica', 'Rítmica']);
-    case 'RainhaDeBateria':
-      return selectSkills(['Fama', 'Expressão']);
-    case 'Coreografo':
-      return selectSkills(['Expressão', 'Criatividade']);
-    case 'DiretorDeCarnaval':
-      return selectSkills(['Gestão', 'Liderança', 'Logística']);
-    case 'DiretorDeHarmonia':
-      return selectSkills(['Liderança', 'Rítmica']);
-    case 'MestreDeBarracao':
-      return selectSkills(['Logística', 'Gestão']);
-    default:
-      return selectSkills(['Liderança']);
-  }
-};
+import { StaffRole, StaffMember } from '../types/models';
+import { calculateAdjustedSalary } from '../store/gameStore';
+import { formatMoney, formatRole } from '../utils/textUtils';
+import { getKeySkills } from '../utils/helpers';
+import RosterList from './RosterList';
 
 export default function MarketDashboard() {
   const { gameState, schools, availableStaff, makeHiringOffer } = useGameStore();
   const { playerSchoolId } = gameState;
   const [filterRole, setFilterRole] = useState<StaffRole | 'All'>('All');
   const [message, setMessage] = useState<string | null>(null);
+  const [isRosterOpen, setIsRosterOpen] = useState(false);
+  const [hoveredPartnerId, setHoveredPartnerId] = useState<string | null>(null);
 
   const playerSchool = schools.find(s => s.id === playerSchoolId);
 
-  const handleHire = (staffId: string, salaryExpectation: number) => {
+  const handleHire = (staffId: string, offeredSalary: number) => {
     if (!playerSchoolId) {
       setMessage("You must select a school first.");
       return;
     }
-    const result = makeHiringOffer(playerSchoolId, staffId, salaryExpectation);
+    const result = makeHiringOffer(playerSchoolId, staffId, offeredSalary);
     setMessage(result);
     setTimeout(() => setMessage(null), 3000);
   };
 
   const filteredStaff = availableStaff.filter(staff => filterRole === 'All' || staff.role === filterRole);
-
   const uniqueRoles = Array.from(new Set(availableStaff.map(s => s.role)));
 
+  const findPartner = (partnerId: string): StaffMember | null => {
+    const inMarket = availableStaff.find(s => s.id === partnerId);
+    if (inMarket) return inMarket;
+    for (const school of schools) {
+      const inSchool = school.staff.find(s => s.id === partnerId);
+      if (inSchool) return inSchool;
+    }
+    return null;
+  };
+
+  const renderPartnerTooltip = (partnerId: string) => {
+    const partner = findPartner(partnerId);
+    if (!partner) return null;
+
+    const skills = getKeySkills(partner.role, partner.skills);
+
+    return (
+      <div className="absolute bottom-full left-0 mb-2 w-64 bg-black/90 border border-pink-500 rounded p-3 shadow-xl z-50 pointer-events-none">
+        <div className="text-pink-300 font-bold text-sm mb-1">Partner: {partner.name}</div>
+        <div className="text-xs text-gray-400 mb-2">{formatRole(partner.role)}</div>
+        <div className="flex flex-wrap gap-1">
+          {skills.map(s => (
+            <span key={s.name} className="text-[10px] bg-gray-800 px-1 rounded border border-gray-600">
+              {s.name}: <span className="text-white">{s.value}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
+    <div className="flex flex-col h-screen bg-gray-900 text-gray-100 relative">
       {/* Top Bar / Header */}
       <header className="bg-gray-800 p-4 shadow-md flex justify-between items-center">
         <div>
@@ -84,17 +75,36 @@ export default function MarketDashboard() {
           </div>
         </div>
 
-        {playerSchool ? (
-          <div className="bg-gray-700 px-4 py-2 rounded-lg border border-gray-600">
-             <div className="text-xs text-gray-400">School Budget</div>
-             <div className="text-xl font-mono text-green-400">{formatMoney(playerSchool.budget)}</div>
-             <div className="text-xs text-gray-400 mt-1">{playerSchool.name}</div>
-          </div>
-        ) : (
-          <div className="bg-red-900/50 px-4 py-2 rounded-lg border border-red-700 text-red-200">
-            No School Selected
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+            {playerSchool && (
+              <div className="flex gap-2">
+                 <button
+                    onClick={() => setIsRosterOpen(true)}
+                    className="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded text-sm text-white"
+                 >
+                    View Roster (Modal)
+                 </button>
+                 <Link
+                    href="/roster"
+                    className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm text-white flex items-center"
+                 >
+                    View Roster (Page)
+                 </Link>
+              </div>
+            )}
+
+            {playerSchool ? (
+              <div className="bg-gray-700 px-4 py-2 rounded-lg border border-gray-600 text-right">
+                <div className="text-xs text-gray-400">School Budget</div>
+                <div className="text-xl font-mono text-green-400">{formatMoney(playerSchool.budget)}</div>
+                <div className="text-xs text-gray-400 mt-1">{playerSchool.name}</div>
+              </div>
+            ) : (
+              <div className="bg-red-900/50 px-4 py-2 rounded-lg border border-red-700 text-red-200">
+                No School Selected
+              </div>
+            )}
+        </div>
       </header>
 
       {/* Main Content */}
@@ -111,7 +121,7 @@ export default function MarketDashboard() {
              >
                <option value="All">All Roles</option>
                {uniqueRoles.map(role => (
-                 <option key={role} value={role}>{role}</option>
+                 <option key={role} value={role}>{formatRole(role)}</option>
                ))}
              </select>
            </div>
@@ -131,7 +141,7 @@ export default function MarketDashboard() {
                 <th className="p-4 font-semibold border-b border-gray-700">Name</th>
                 <th className="p-4 font-semibold border-b border-gray-700">Role</th>
                 <th className="p-4 font-semibold border-b border-gray-700 w-1/3">Key Attributes (1-20)</th>
-                <th className="p-4 font-semibold border-b border-gray-700">Salary Expectation</th>
+                <th className="p-4 font-semibold border-b border-gray-700">Estimated Cost</th>
                 <th className="p-4 font-semibold border-b border-gray-700 text-center">Action</th>
               </tr>
             </thead>
@@ -141,44 +151,98 @@ export default function MarketDashboard() {
                   <td colSpan={5} className="p-8 text-center text-gray-500">No staff members found matching criteria.</td>
                 </tr>
               ) : (
-                filteredStaff.map((staff) => (
-                  <tr key={staff.id} className="hover:bg-gray-700/50 transition-colors">
-                    <td className="p-4 font-medium text-white">
-                      {staff.name}
-                      {staff.partnerId && <span className="ml-2 text-xs bg-pink-900 text-pink-200 px-1 rounded">Has Partner</span>}
-                    </td>
-                    <td className="p-4 text-gray-300">{staff.role}</td>
-                    <td className="p-4">
-                      <div className="flex flex-wrap gap-2">
-                        {getKeySkills(staff.role, staff.skills).map((skill) => (
-                          <div key={skill.name} className="flex flex-col bg-gray-900 px-2 py-1 rounded border border-gray-600 min-w-[60px] text-center">
-                            <span className="text-[10px] text-gray-500 uppercase">{skill.name}</span>
-                            <span className={`font-bold ${skill.value >= 18 ? 'text-yellow-400' : skill.value >= 15 ? 'text-green-400' : 'text-gray-200'}`}>
-                              {skill.value}
+                filteredStaff.map((staff) => {
+                  // Calculate dynamic salary based on player's school prestige
+                  const prestige = playerSchool ? playerSchool.prestige : 100; // Default to 100 if no school selected
+                  const adjustedSalary = calculateAdjustedSalary(staff, prestige);
+                  const isRainha = staff.role === 'RainhaDeBateria';
+
+                  return (
+                    <tr key={staff.id} className="hover:bg-gray-700/50 transition-colors group">
+                      <td className="p-4 font-medium text-white relative">
+                        <div className="flex items-center">
+                            {staff.name}
+                            {staff.partnerId && (
+                            <span
+                                className="ml-2 text-xs bg-pink-900 text-pink-200 px-1 rounded cursor-help"
+                                onMouseEnter={() => setHoveredPartnerId(staff.partnerId!)}
+                                onMouseLeave={() => setHoveredPartnerId(null)}
+                            >
+                                Partner
                             </span>
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-4 font-mono text-gray-300">
-                      {formatMoney(staff.salaryExpectation)} / season
-                    </td>
-                    <td className="p-4 text-center">
-                      <button
-                        onClick={() => handleHire(staff.id, staff.salaryExpectation)}
-                        className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled={!playerSchool || playerSchool.budget < staff.salaryExpectation}
-                      >
-                        Hire
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                            )}
+                            {staff.archetype && (
+                                <span className="ml-2 text-xs bg-purple-900 text-purple-200 px-1 rounded">
+                                    {staff.archetype}
+                                </span>
+                            )}
+                        </div>
+                        {staff.partnerId && hoveredPartnerId === staff.partnerId && renderPartnerTooltip(staff.partnerId)}
+                      </td>
+                      <td className="p-4 text-gray-300">{formatRole(staff.role)}</td>
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-2">
+                          {getKeySkills(staff.role, staff.skills).map((skill) => (
+                            <div key={skill.name} className="flex flex-col bg-gray-900 px-2 py-1 rounded border border-gray-600 min-w-[60px] text-center">
+                              <span className="text-[10px] text-gray-500 uppercase">{skill.name}</span>
+                              <span className={`font-bold ${skill.value >= 18 ? 'text-yellow-400' : skill.value >= 15 ? 'text-green-400' : 'text-gray-200'}`}>
+                                {skill.value}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="p-4 font-mono text-gray-300">
+                        {isRainha ? (
+                             staff.archetype === 'PostoPago' ? <span className="text-green-400">Injects Money</span> :
+                             staff.archetype === 'Celebridade' ? <span className="text-yellow-400">R$ 0 (Requires Fame)</span> :
+                             formatMoney(adjustedSalary)
+                        ) : (
+                            <span>{formatMoney(adjustedSalary)} <span className="text-xs text-gray-500">/ season</span></span>
+                        )}
+                      </td>
+                      <td className="p-4 text-center">
+                        <button
+                          onClick={() => handleHire(staff.id, adjustedSalary)}
+                          className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={
+                              !playerSchool ||
+                              (staff.role !== 'RainhaDeBateria' && playerSchool.budget < adjustedSalary) ||
+                              (staff.archetype === 'Celebridade' && playerSchool.prestige < 180)
+                          }
+                          title={staff.archetype === 'Celebridade' && playerSchool && playerSchool.prestige < 180 ? "Requires Historical Prestige (180+)" : "Hire Staff"}
+                        >
+                          Hire
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </main>
+
+      {/* Roster Modal */}
+      {isRosterOpen && playerSchool && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700">
+                <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-lg">
+                    <h2 className="text-xl font-bold text-white">Current Roster: <span className="text-yellow-500">{playerSchool.name}</span></h2>
+                    <button
+                        onClick={() => setIsRosterOpen(false)}
+                        className="text-gray-400 hover:text-white"
+                    >
+                        ✕ Close
+                    </button>
+                </div>
+                <div className="p-4 overflow-auto flex-1">
+                    <RosterList staff={playerSchool.staff} />
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 }
