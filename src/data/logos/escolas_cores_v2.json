@@ -1,0 +1,417 @@
+[
+    {
+        "escola": "Acadêmicos Da Abolição",
+        "cor_principal": "#dcdce6",
+        "cor_secundaria": "#033f10"
+    },
+    {
+        "escola": "Acadêmicos Da Rocinha",
+        "cor_principal": "#e4e6ef",
+        "cor_secundaria": "#009614"
+    },
+    {
+        "escola": "Acadêmicos De Jacarepaguá",
+        "cor_principal": "#00532f",
+        "cor_secundaria": "#363581"
+    },
+    {
+        "escola": "Acadêmicos De Niterói",
+        "cor_principal": "#006dc8",
+        "cor_secundaria": "#b5d2e2"
+    },
+    {
+        "escola": "Acadêmicos De Santa Cruz",
+        "cor_principal": "#009a39",
+        "cor_secundaria": "#00731a"
+    },
+    {
+        "escola": "Acadêmicos De Vigário Geral",
+        "cor_principal": "#df0303",
+        "cor_secundaria": "#0309b2"
+    },
+    {
+        "escola": "Acadêmicos Do Cubango",
+        "cor_principal": "#008f26",
+        "cor_secundaria": "#006f08"
+    },
+    {
+        "escola": "Acadêmicos Do Dendê",
+        "cor_principal": "#0a0daa",
+        "cor_secundaria": "#1312db"
+    },
+    {
+        "escola": "Acadêmicos Do Engenho Da Rainha",
+        "cor_principal": "#ce0000",
+        "cor_secundaria": "#dcdce6"
+    },
+    {
+        "escola": "Acadêmicos Do Grande Rio",
+        "cor_principal": "#00ac33",
+        "cor_secundaria": "#cf0403"
+    },
+    {
+        "escola": "Acadêmicos Do Salgueiro",
+        "cor_principal": "#e3e3eb",
+        "cor_secundaria": "#d1090b"
+    },
+    {
+        "escola": "Acadêmicos Do Viradouro",
+        "cor_principal": "#eb0207",
+        "cor_secundaria": "#000000"
+    },
+    {
+        "escola": "Alegria De Copacabana",
+        "cor_principal": "#a00000",
+        "cor_secundaria": "#ec3237"
+    },
+    {
+        "escola": "Alegria Do Vilar",
+        "cor_principal": "#ffff00",
+        "cor_secundaria": "#fd0000"
+    },
+    {
+        "escola": "Arame De Ricardo",
+        "cor_principal": "#0387e8",
+        "cor_secundaria": "#e5e6ef"
+    },
+    {
+        "escola": "Arrastão De Cascadura",
+        "cor_principal": "#e0e4f3",
+        "cor_secundaria": "#0d6a18"
+    },
+    {
+        "escola": "Bandeira Beija-Flor De Nilópolis",
+        "cor_principal": "#0000cc",
+        "cor_secundaria": "#adadee"
+    },
+    {
+        "escola": "Bandeira Do Gres Acadêmicos Do Sossego",
+        "cor_principal": "#0a1a9e",
+        "cor_secundaria": "#e6e6ed"
+    },
+    {
+        "escola": "Bandeira Do Gres Arranco",
+        "cor_principal": "#060bce",
+        "cor_secundaria": "#e5e6e4"
+    },
+    {
+        "escola": "Bandeira Do Gres Estácio De Sá",
+        "cor_principal": "#ed0005",
+        "cor_secundaria": "#e3e8ee"
+    },
+    {
+        "escola": "Bandeira Do Gres Unidos Da Vila Santa Tereza",
+        "cor_principal": "#0008ba",
+        "cor_secundaria": "#041ce0"
+    },
+    {
+        "escola": "Bandeira Do Gres Unidos Da Villa Rica",
+        "cor_principal": "#000a80",
+        "cor_secundaria": "#fff115"
+    },
+    {
+        "escola": "Bandeira Do Gres Unidos De Cosmos",
+        "cor_principal": "#087609",
+        "cor_secundaria": "#e0e0f0"
+    },
+    {
+        "escola": "Bangay",
+        "cor_principal": "#000000",
+        "cor_secundaria": "#fd018a"
+    },
+    {
+        "escola": "Boi Da Ilha Do Governador",
+        "cor_principal": "#000000",
+        "cor_secundaria": "#e6e7f0"
+    },
+    {
+        "escola": "Botafogo Samba Clube",
+        "cor_principal": "#000000",
+        "cor_secundaria": "#262626"
+    },
+    {
+        "escola": "Caprichosos De Pilares",
+        "cor_principal": "#e2e4ed",
+        "cor_secundaria": "#000032"
+    },
+    {
+        "escola": "Chatuba De Mesquita",
+        "cor_principal": "#e1e4ed",
+        "cor_secundaria": "#006000"
+    },
+    {
+        "escola": "Concentra Imperial",
+        "cor_principal": "#cb0610",
+        "cor_secundaria": "#cd9a31"
+    },
+    {
+        "escola": "Coroado De Jacarepaguá",
+        "cor_principal": "#f3e00c",
+        "cor_secundaria": "#272421"
+    },
+    {
+        "escola": "Em Cima Da Hora",
+        "cor_principal": "#e6e6e6",
+        "cor_secundaria": "#010ce2"
+    },
+    {
+        "escola": "Estação Primeira De Mangueira",
+        "cor_principal": "#e4267c",
+        "cor_secundaria": "#02401b"
+    },
+    {
+        "escola": "Feitiço Carioca",
+        "cor_principal": "#19a3ee",
+        "cor_secundaria": "#2f98cb"
+    },
+    {
+        "escola": "Fla Manguaça",
+        "cor_principal": "#010101",
+        "cor_secundaria": "#363435"
+    },
+    {
+        "escola": "Flor Da Cidade",
+        "cor_principal": "#d10415",
+        "cor_secundaria": "#cabba4"
+    },
+    {
+        "escola": "Flor Da Mina Do Andaraí",
+        "cor_principal": "#d70304",
+        "cor_secundaria": "#00aa34"
+    },
+    {
+        "escola": "Gato De Bonsucesso",
+        "cor_principal": "#0004c0",
+        "cor_secundaria": "#dedeea"
+    },
+    {
+        "escola": "Gres Tradição",
+        "cor_principal": "#aadcf5",
+        "cor_secundaria": "#2081c6"
+    },
+    {
+        "escola": "Imperadores Rubro Negro",
+        "cor_principal": "#080808",
+        "cor_secundaria": "#7d0c0e"
+    },
+    {
+        "escola": "Imperatriz Leopoldinense",
+        "cor_principal": "#207f07",
+        "cor_secundaria": "#eae6ed"
+    },
+    {
+        "escola": "Imperio De Nova Iguaçu",
+        "cor_principal": "#1c9bbc",
+        "cor_secundaria": "#ce943e"
+    },
+    {
+        "escola": "Imperio De Padre Miguel",
+        "cor_principal": "#009900",
+        "cor_secundaria": "#e4e4e4"
+    },
+    {
+        "escola": "Império Da Tijuca",
+        "cor_principal": "#00721a",
+        "cor_secundaria": "#009f38"
+    },
+    {
+        "escola": "Império Da Uva",
+        "cor_principal": "#054c00",
+        "cor_secundaria": "#e1dcf2"
+    },
+    {
+        "escola": "Império Ricardense",
+        "cor_principal": "#e5c200",
+        "cor_secundaria": "#d8dcf0"
+    },
+    {
+        "escola": "Império Serrano",
+        "cor_principal": "#008001",
+        "cor_secundaria": "#8dbe8e"
+    },
+    {
+        "escola": "Independentes De Olaria",
+        "cor_principal": "#e6d5df",
+        "cor_secundaria": "#24348c"
+    },
+    {
+        "escola": "Independente Da Praça Da Bandeira",
+        "cor_principal": "#cfc5bb",
+        "cor_secundaria": "#012a00"
+    },
+    {
+        "escola": "Inocentes De Belford Roxo",
+        "cor_principal": "#e5e7f0",
+        "cor_secundaria": "#bd0303"
+    },
+    {
+        "escola": "Juventude Imperial",
+        "cor_principal": "#005200",
+        "cor_secundaria": "#e6e5e3"
+    },
+    {
+        "escola": "Leão De Nova Iguaçu",
+        "cor_principal": "#fee003",
+        "cor_secundaria": "#e40000"
+    },
+    {
+        "escola": "Lins Imperial",
+        "cor_principal": "#008e3f",
+        "cor_secundaria": "#007020"
+    },
+    {
+        "escola": "Mocidade Independente De Padre Miguel",
+        "cor_principal": "#00a03c",
+        "cor_secundaria": "#00701a"
+    },
+    {
+        "escola": "Mocidade Unida Da Cidade De Deus",
+        "cor_principal": "#0e0e8f",
+        "cor_secundaria": "#d7d8e6"
+    },
+    {
+        "escola": "Mocidade Unida Do Santa Marta",
+        "cor_principal": "#000000",
+        "cor_secundaria": "#03a0f0"
+    },
+    {
+        "escola": "Novo Imperio",
+        "cor_principal": "#003dba",
+        "cor_secundaria": "#dfdfdf"
+    },
+    {
+        "escola": "Paraíso Do Tuiuti",
+        "cor_principal": "#f1e70d",
+        "cor_secundaria": "#0006d5"
+    },
+    {
+        "escola": "Portela",
+        "cor_principal": "#002580",
+        "cor_secundaria": "#d7d7e3"
+    },
+    {
+        "escola": "Raça Rubro Negra",
+        "cor_principal": "#d92b34",
+        "cor_secundaria": "#000000"
+    },
+    {
+        "escola": "Renascer De Jacarepaguá",
+        "cor_principal": "#d60204",
+        "cor_secundaria": "#f9fa00"
+    },
+    {
+        "escola": "Rosa De Ouro",
+        "cor_principal": "#ad7173",
+        "cor_secundaria": "#a5999d"
+    },
+    {
+        "escola": "Sereno De Campo Grande",
+        "cor_principal": "#e6e6f3",
+        "cor_secundaria": "#0c1ccc"
+    },
+    {
+        "escola": "Siri De Ramos",
+        "cor_principal": "#e0e0de",
+        "cor_secundaria": "#039533"
+    },
+    {
+        "escola": "São Clemente",
+        "cor_principal": "#000000",
+        "cor_secundaria": "#f3e500"
+    },
+    {
+        "escola": "Tubarão De Mesquita",
+        "cor_principal": "#060809",
+        "cor_secundaria": "#e5e5e5"
+    },
+    {
+        "escola": "Unidos Da Barra Da Tijuca",
+        "cor_principal": "#01a54e",
+        "cor_secundaria": "#0268b3"
+    },
+    {
+        "escola": "Unidos Da Tijuca",
+        "cor_principal": "#ffff00",
+        "cor_secundaria": "#0000cc"
+    },
+    {
+        "escola": "Unidos De Bangu",
+        "cor_principal": "#dd0102",
+        "cor_secundaria": "#f48482"
+    },
+    {
+        "escola": "Unidos De Jacarepagua",
+        "cor_principal": "#07723a",
+        "cor_secundaria": "#d1e4da"
+    },
+    {
+        "escola": "Unidos De Lucas",
+        "cor_principal": "#fb060f",
+        "cor_secundaria": "#ffe5e6"
+    },
+    {
+        "escola": "Unidos De Padre Miguel",
+        "cor_principal": "#d50000",
+        "cor_secundaria": "#efb0b0"
+    },
+    {
+        "escola": "Unidos De Vila Isabel",
+        "cor_principal": "#009de0",
+        "cor_secundaria": "#03c9f6"
+    },
+    {
+        "escola": "Unidos Do Engenho Novo",
+        "cor_principal": "#feef0a",
+        "cor_secundaria": "#322f87"
+    },
+    {
+        "escola": "Unidos Do Jacarezinho",
+        "cor_principal": "#dee8f3",
+        "cor_secundaria": "#ff8cca"
+    },
+    {
+        "escola": "Unidos Do Porto Da Pedra",
+        "cor_principal": "#c60001",
+        "cor_secundaria": "#ef0512"
+    },
+    {
+        "escola": "Unidos Do Realengo",
+        "cor_principal": "#0306c2",
+        "cor_secundaria": "#e2d855"
+    },
+    {
+        "escola": "Unidos Do Viradouro",
+        "cor_principal": "#eb0207",
+        "cor_secundaria": "#000000"
+    },
+    {
+        "escola": "União Da Ilha Do Governador",
+        "cor_principal": "#e70f12",
+        "cor_secundaria": "#e4e7f0"
+    },
+    {
+        "escola": "União De Maricá",
+        "cor_principal": "#f8cd1c",
+        "cor_secundaria": "#de0d2c"
+    },
+    {
+        "escola": "União De São Carlos",
+        "cor_principal": "#000000",
+        "cor_secundaria": "#d8d8d8"
+    },
+    {
+        "escola": "União Do Parque Acari",
+        "cor_principal": "#ffcb00",
+        "cor_secundaria": "#dee8f1"
+    },
+    {
+        "escola": "União Do Parque Curicica",
+        "cor_principal": "#e6e4ea",
+        "cor_secundaria": "#0001b9"
+    },
+    {
+        "escola": "Vizinha Faladeira",
+        "cor_principal": "#e3e7f7",
+        "cor_secundaria": "#0836f0"
+    }
+]
