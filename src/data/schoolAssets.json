@@ -1,0 +1,587 @@
+{
+  "estacao-primeira-de-mangueira": {
+    "colors": [
+      "#e4267c",
+      "#02401b"
+    ],
+    "logo": "/logos/estacao-primeira-de-mangueira.jpg"
+  },
+  "beija-flor-de-nilopolis": {
+    "colors": [
+      "#0000cc",
+      "#adadee"
+    ],
+    "logo": "/logos/beija-flor-de-nilopolis.png"
+  },
+  "portela": {
+    "colors": [
+      "#002580",
+      "#d7d7e3"
+    ],
+    "logo": "/logos/portela.jpg"
+  },
+  "academicos-do-salgueiro": {
+    "colors": [
+      "#e3e3eb",
+      "#d1090b"
+    ],
+    "logo": "/logos/academicos-do-salgueiro.jpg"
+  },
+  "imperatriz-leopoldinense": {
+    "colors": [
+      "#207f07",
+      "#eae6ed"
+    ],
+    "logo": "/logos/imperatriz-leopoldinense.jpg"
+  },
+  "imperio-serrano": {
+    "colors": [
+      "#008001",
+      "#8dbe8e"
+    ],
+    "logo": "/logos/imperio-serrano.jpg"
+  },
+  "mocidade-independente-de-padre-miguel": {
+    "colors": [
+      "#00a03c",
+      "#00701a"
+    ],
+    "logo": "/logos/mocidade-independente-de-padre-miguel.jpg"
+  },
+  "unidos-do-viradouro": {
+    "colors": [
+      "#eb0207",
+      "#000000"
+    ],
+    "logo": "/logos/unidos-do-viradouro.png"
+  },
+  "unidos-da-tijuca": {
+    "colors": [
+      "#ffff00",
+      "#0000cc"
+    ],
+    "logo": "/logos/unidos-da-tijuca.png"
+  },
+  "academicos-do-grande-rio": {
+    "colors": [
+      "#00ac33",
+      "#cf0403"
+    ],
+    "logo": "/logos/academicos-do-grande-rio.png"
+  },
+  "unidos-de-vila-isabel": {
+    "colors": [
+      "#009de0",
+      "#03c9f6"
+    ],
+    "logo": "/logos/unidos-de-vila-isabel.jpg"
+  },
+  "estacio-de-sa": {
+    "colors": [
+      "#ed0005",
+      "#e3e8ee"
+    ],
+    "logo": "/logos/estacio-de-sa.png"
+  },
+  "uniao-da-ilha-do-governador": {
+    "colors": [
+      "#e70f12",
+      "#e4e7f0"
+    ],
+    "logo": "/logos/uniao-da-ilha-do-governador.jpg"
+  },
+  "sao-clemente": {
+    "colors": [
+      "#000000",
+      "#f3e500"
+    ],
+    "logo": "/logos/sao-clemente.png"
+  },
+  "unidos-do-porto-da-pedra": {
+    "colors": [
+      "#c60001",
+      "#ef0512"
+    ],
+    "logo": "/logos/unidos-do-porto-da-pedra.jpg"
+  },
+  "unidos-de-padre-miguel": {
+    "colors": [
+      "#d50000",
+      "#efb0b0"
+    ],
+    "logo": "/logos/unidos-de-padre-miguel.png"
+  },
+  "caprichosos-de-pilares": {
+    "colors": [
+      "#e2e4ed",
+      "#000032"
+    ],
+    "logo": "/logos/caprichosos-de-pilares.png"
+  },
+  "academicos-de-santa-cruz": {
+    "colors": [
+      "#009a39",
+      "#00731a"
+    ],
+    "logo": "/logos/academicos-de-santa-cruz.png"
+  },
+  "tradicao": {
+    "colors": [
+      "#aadcf5",
+      "#2081c6"
+    ],
+    "logo": "/logos/tradicao.jpg"
+  },
+  "imperio-da-tijuca": {
+    "colors": [
+      "#00721a",
+      "#009f38"
+    ],
+    "logo": "/logos/imperio-da-tijuca.jpg"
+  },
+  "paraiso-do-tuiuti": {
+    "colors": [
+      "#f1e70d",
+      "#0006d5"
+    ],
+    "logo": "/logos/paraiso-do-tuiuti.png"
+  },
+  "inocentes-de-belford-roxo": {
+    "colors": [
+      "#e5e7f0",
+      "#bd0303"
+    ],
+    "logo": "/logos/inocentes-de-belford-roxo.png"
+  },
+  "unidos-do-jacarezinho": {
+    "colors": [
+      "#dee8f3",
+      "#ff8cca"
+    ],
+    "logo": "/logos/unidos-do-jacarezinho.png"
+  },
+  "em-cima-da-hora": {
+    "colors": [
+      "#e6e6e6",
+      "#010ce2"
+    ],
+    "logo": "/logos/em-cima-da-hora.png"
+  },
+  "renascer-de-jacarepagua": {
+    "colors": [
+      "#d60204",
+      "#f9fa00"
+    ],
+    "logo": "/logos/renascer-de-jacarepagua.png"
+  },
+  "lins-imperial": {
+    "colors": [
+      "#008e3f",
+      "#007020"
+    ],
+    "logo": "/logos/lins-imperial.png"
+  },
+  "vizinha-faladeira": {
+    "colors": [
+      "#e3e7f7",
+      "#0836f0"
+    ],
+    "logo": "/logos/vizinha-faladeira.png"
+  },
+  "academicos-da-rocinha": {
+    "colors": [
+      "#e4e6ef",
+      "#009614"
+    ],
+    "logo": "/logos/academicos-da-rocinha.png"
+  },
+  "unidos-de-bangu": {
+    "colors": [
+      "#dd0102",
+      "#f48482"
+    ],
+    "logo": "/logos/unidos-de-bangu.png"
+  },
+  "academicos-de-niteroi": {
+    "colors": [
+      "#006dc8",
+      "#b5d2e2"
+    ],
+    "logo": "/logos/academicos-de-niteroi.jpg"
+  },
+  "unidos-de-lucas": {
+    "colors": [
+      "#fb060f",
+      "#ffe5e6"
+    ],
+    "logo": "/logos/unidos-de-lucas.png"
+  },
+  "academicos-do-cubango": {
+    "colors": [
+      "#008f26",
+      "#006f08"
+    ],
+    "logo": "/logos/academicos-do-cubango.jpg"
+  },
+  "leao-de-nova-iguacu": {
+    "colors": [
+      "#fee003",
+      "#e40000"
+    ],
+    "logo": "/logos/leao-de-nova-iguacu.png"
+  },
+  "arranco-do-engenho-de-dentro": {
+    "colors": [
+      "#060bce",
+      "#e5e6e4"
+    ],
+    "logo": "/logos/arranco-do-engenho-de-dentro.png"
+  },
+  "academicos-do-engenho-da-rainha": {
+    "colors": [
+      "#ce0000",
+      "#dcdce6"
+    ],
+    "logo": "/logos/academicos-do-engenho-da-rainha.jpg"
+  },
+  "arrastao-de-cascadura": {
+    "colors": [
+      "#e0e4f3",
+      "#0d6a18"
+    ],
+    "logo": "/logos/arrastao-de-cascadura.png"
+  },
+  "botafogo-samba-clube": {
+    "colors": [
+      "#000000",
+      "#262626"
+    ],
+    "logo": "/logos/botafogo-samba-clube.png"
+  },
+  "uniao-do-parque-acari": {
+    "colors": [
+      "#ffcb00",
+      "#dee8f1"
+    ],
+    "logo": "/logos/uniao-do-parque-acari.jpg"
+  },
+  "academicos-de-vigario-geral": {
+    "colors": [
+      "#df0303",
+      "#0309b2"
+    ],
+    "logo": "/logos/academicos-de-vigario-geral.png"
+  },
+  "uniao-de-marica": {
+    "colors": [
+      "#f8cd1c",
+      "#de0d2c"
+    ],
+    "logo": "/logos/uniao-de-marica.png"
+  },
+  "chatuba-de-mesquita": {
+    "colors": [
+      "#e1e4ed",
+      "#006000"
+    ],
+    "logo": "/logos/chatuba-de-mesquita.png"
+  },
+  "unidos-de-santa-tereza": {
+    "colors": [
+      "#0008ba",
+      "#041ce0"
+    ],
+    "logo": "/logos/unidos-de-santa-tereza.png"
+  },
+  "independentes-de-olaria": {
+    "colors": [
+      "#e6d5df",
+      "#24348c"
+    ],
+    "logo": "/logos/independentes-de-olaria.jpg"
+  },
+  "flamanguaca": {
+    "colors": [
+      "#010101",
+      "#363435"
+    ],
+    "logo": "/logos/flamanguaca.jpg"
+  },
+  "feitico-carioca": {
+    "colors": [
+      "#19a3ee",
+      "#2f98cb"
+    ],
+    "logo": "/logos/feitico-carioca.jpg"
+  },
+  "alegria-do-vilar": {
+    "colors": [
+      "#ffff00",
+      "#fd0000"
+    ],
+    "logo": "/logos/alegria-do-vilar.png"
+  },
+  "academicos-do-dende": {
+    "colors": [
+      "#0a0daa",
+      "#1312db"
+    ],
+    "logo": "/logos/academicos-do-dende.png"
+  },
+  "imperio-da-uva": {
+    "colors": [
+      "#054c00",
+      "#e1dcf2"
+    ],
+    "logo": "/logos/imperio-da-uva.jpg"
+  },
+  "mocidade-unida-do-santa-marta": {
+    "colors": [
+      "#000000",
+      "#03a0f0"
+    ],
+    "logo": "/logos/mocidade-unida-do-santa-marta.png"
+  },
+  "siri-de-ramos": {
+    "colors": [
+      "#e0e0de",
+      "#039533"
+    ],
+    "logo": "/logos/siri-de-ramos.jpg"
+  },
+  "independente-da-praca-da-bandeira": {
+    "colors": [
+      "#cfc5bb",
+      "#012a00"
+    ],
+    "logo": "/logos/independente-da-praca-da-bandeira.png"
+  },
+  "academicos-do-engenho-novo": {
+    "colors": [
+      "#feef0a",
+      "#322f87"
+    ],
+    "logo": "/logos/academicos-do-engenho-novo.png"
+  },
+  "academicos-da-abolicao": {
+    "colors": [
+      "#dcdce6",
+      "#033f10"
+    ],
+    "logo": "/logos/academicos-da-abolicao.png"
+  },
+  "tubarao-de-mesquita": {
+    "colors": [
+      "#060809",
+      "#e5e5e5"
+    ],
+    "logo": "/logos/tubarao-de-mesquita.png"
+  },
+  "boi-da-ilha-do-governador": {
+    "colors": [
+      "#000000",
+      "#e6e7f0"
+    ],
+    "logo": "/logos/boi-da-ilha-do-governador.png"
+  },
+  "sereno-de-campo-grande": {
+    "colors": [
+      "#e6e6f3",
+      "#0c1ccc"
+    ],
+    "logo": "/logos/sereno-de-campo-grande.png"
+  },
+  "imperadores-rubro-negro": {
+    "colors": [
+      "#080808",
+      "#7d0c0e"
+    ],
+    "logo": "/logos/imperadores-rubro-negro.png"
+  },
+  "flor-da-mina-do-andarai": {
+    "colors": [
+      "#d70304",
+      "#00aa34"
+    ],
+    "logo": "/logos/flor-da-mina-do-andarai.png"
+  },
+  "bangay": {
+    "colors": [
+      "#000000",
+      "#fd018a"
+    ],
+    "logo": "/logos/bangay.png"
+  },
+  "academicos-do-viradouro": {
+    "colors": [
+      "#eb0207",
+      "#000000"
+    ],
+    "logo": "/logos/academicos-do-viradouro.png"
+  },
+  "unidos-da-barra-da-tijuca": {
+    "colors": [
+      "#01a54e",
+      "#0268b3"
+    ],
+    "logo": "/logos/unidos-da-barra-da-tijuca.jpg"
+  },
+  "alegria-de-copacabana": {
+    "colors": [
+      "#a00000",
+      "#ec3237"
+    ],
+    "logo": "/logos/alegria-de-copacabana.jpeg"
+  },
+  "imperio-de-nova-iguacu": {
+    "colors": [
+      "#1c9bbc",
+      "#ce943e"
+    ],
+    "logo": "/logos/imperio-de-nova-iguacu.jpg"
+  },
+  "unidos-do-realengo": {
+    "colors": [
+      "#0306c2",
+      "#e2d855"
+    ],
+    "logo": "/logos/unidos-do-realengo.png"
+  },
+  "concentra-imperial": {
+    "colors": [
+      "#cb0610",
+      "#cd9a31"
+    ],
+    "logo": "/logos/concentra-imperial.jpg"
+  },
+  "uniao-do-parque-curicica": {
+    "colors": [
+      "#e6e4ea",
+      "#0001b9"
+    ],
+    "logo": "/logos/uniao-do-parque-curicica.png"
+  },
+  "unidos-da-vila-rica": {
+    "colors": [
+      "#000a80",
+      "#fff115"
+    ],
+    "logo": "/logos/unidos-da-vila-rica.png"
+  },
+  "mocidade-unida-de-jacarepagua": {
+    "colors": [
+      "#07723a",
+      "#d1e4da"
+    ],
+    "logo": "/logos/mocidade-unida-de-jacarepagua.jpg"
+  },
+  "academicos-de-jacarepagua": {
+    "colors": [
+      "#00532f",
+      "#363581"
+    ],
+    "logo": "/logos/academicos-de-jacarepagua.png"
+  },
+  "uniao-de-cosmos": {
+    "colors": [
+      "#087609",
+      "#e0e0f0"
+    ],
+    "logo": "/logos/uniao-de-cosmos.png"
+  },
+  "raca-rubro-negra": {
+    "colors": [
+      "#d92b34",
+      "#000000"
+    ],
+    "logo": "/logos/raca-rubro-negra.png"
+  },
+  "gato-de-bonsucesso": {
+    "colors": [
+      "#0004c0",
+      "#dedeea"
+    ],
+    "logo": "/logos/gato-de-bonsucesso.png"
+  },
+  "imperio-de-padre-miguel": {
+    "colors": [
+      "#009900",
+      "#e4e4e4"
+    ],
+    "logo": "/logos/imperio-de-padre-miguel.jpg"
+  },
+  "rosa-de-ouro": {
+    "colors": [
+      "#ad7173",
+      "#a5999d"
+    ],
+    "logo": "/logos/rosa-de-ouro.jpg"
+  },
+  "coroado-de-jacarepagua": {
+    "colors": [
+      "#f3e00c",
+      "#272421"
+    ],
+    "logo": "/logos/coroado-de-jacarepagua.png"
+  },
+  "flor-da-cidade": {
+    "colors": [
+      "#d10415",
+      "#cabba4"
+    ],
+    "logo": "/logos/flor-da-cidade.jpg"
+  },
+  "mocidade-unida-da-cidade-de-deus": {
+    "colors": [
+      "#0e0e8f",
+      "#d7d8e6"
+    ],
+    "logo": "/logos/mocidade-unida-da-cidade-de-deus.png"
+  },
+  "arame-de-ricardo": {
+    "colors": [
+      "#0387e8",
+      "#e5e6ef"
+    ],
+    "logo": "/logos/arame-de-ricardo.png"
+  },
+  "novo-imperio": {
+    "colors": [
+      "#003dba",
+      "#dfdfdf"
+    ],
+    "logo": "/logos/novo-imperio.jpg"
+  },
+  "juventude-imperial": {
+    "colors": [
+      "#005200",
+      "#e6e5e3"
+    ],
+    "logo": "/logos/juventude-imperial.jpeg"
+  },
+  "imperio-ricardense": {
+    "colors": [
+      "#e5c200",
+      "#d8dcf0"
+    ],
+    "logo": "/logos/imperio-ricardense.png"
+  },
+  "mocidade-independente-do-estacio": {
+    "colors": [],
+    "logo": null
+  },
+  "academicos-do-sossego": {
+    "colors": [
+      "#0a1a9e",
+      "#e6e6ed"
+    ],
+    "logo": "/logos/academicos-do-sossego.png"
+  },
+  "unidos-de-sao-carlos": {
+    "colors": [
+      "#000000",
+      "#d8d8d8"
+    ],
+    "logo": "/logos/unidos-de-sao-carlos.jpg"
+  }
+}

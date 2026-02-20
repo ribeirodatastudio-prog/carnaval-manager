@@ -1,4 +1,5 @@
 import escolasData from './escolas_db.json';
+import assetsData from './schoolAssets.json';
 import { School, SchoolHistory, SchoolHistoryEntry, Division } from '../types/models';
 
 interface EscolaRaw {
@@ -20,11 +21,33 @@ interface EscolaRaw {
 }
 
 interface EscolasDB {
-  metadata: any;
+  metadata: unknown;
   escolas: Record<string, EscolaRaw>;
 }
 
+interface SchoolAssetData {
+  colors: string[];
+  logo: string | null;
+}
+
 const db = escolasData as unknown as EscolasDB;
+const assets = assetsData as unknown as Record<string, SchoolAssetData>;
+
+/**
+ * Slugify helper to generate consistent keys for asset lookup.
+ * Must match the logic used in scripts/migrate_assets.js
+ */
+function slugify(text: string): string {
+  return text
+    .toString()
+    .normalize('NFD') // Normalize to NFD form (decompose accents)
+    .replace(/[\u0300-\u036f]/g, '') // Remove accent marks
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+    .replace(/\-\-+/g, '-'); // Replace multiple - with single -
+}
 
 /**
  * Loads all schools from the JSON database.
@@ -39,10 +62,6 @@ export function loadAllSchools(): School[] {
     const id = data.id ? data.id.toString() : `generated-${generatedIdCounter++}`;
 
     // Calculate dynamic budget: Base 2M + (Prestige * 25k)
-    // Adjust for lower divisions to be realistic?
-    // For now, use the same formula but maybe scale down base for lower divisions?
-    // The prompt only specified: "Initial School Budget is calculated as 2,000,000 + (Prestige * 25,000)."
-    // I will stick to that formula as it scales with prestige anyway.
     const calculatedBudget = 2000000 + (data.prestige * 25000);
 
     // Calculate dynamic morale: Prestige / 2, capped at 100
@@ -59,10 +78,25 @@ export function loadAllSchools(): School[] {
       quintos: data.historico.quintos || [],
     };
 
+    // Lookup Assets
+    const slug = slugify(name);
+    const assetData = assets[slug];
+
+    const colors = (assetData && assetData.colors && assetData.colors.length > 0)
+      ? assetData.colors
+      : ['#CCCCCC', '#333333']; // Default fallback colors (Grey)
+
+    // If no logo is found, use a placeholder or null string if UI handles it
+    // Using a default placeholder path for now
+    const logo = (assetData && assetData.logo)
+      ? assetData.logo
+      : '/logos/default_shield.png';
+
     const school: School = {
       id: id,
       name: name,
-      colors: [], // Placeholder, maybe add random colors later
+      colors: colors,
+      logo: logo,
       budget: calculatedBudget,
       fanbaseMorale: calculatedMorale,
       staff: [],
@@ -71,7 +105,7 @@ export function loadAllSchools(): School[] {
       currentDivision: data.divisao_atual as Division,
       score_bruto: data.score_bruto,
       anos_no_especial: data.anos_no_especial || 0,
-      anos_em_acesso: 0, // Default to 0 as it's not in the JSON
+      anos_em_acesso: 0,
       history: history,
       enredo: null,
     };

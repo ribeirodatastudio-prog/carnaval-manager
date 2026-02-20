@@ -19,6 +19,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-1',
     name: 'Grêmio Recreativo Escola de Samba A',
+    logo: '/logos/default_shield.png',
     colors: ['#FF0000', '#FFFFFF'], // Red and White
     budget: 5000000,
     fanbaseMorale: 85,
@@ -42,6 +43,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-2',
     name: 'Grêmio Recreativo Escola de Samba B',
+    logo: '/logos/default_shield.png',
     colors: ['#0000FF', '#FFFFFF'], // Blue and White
     budget: 4500000,
     fanbaseMorale: 75,
@@ -65,6 +67,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-3',
     name: 'Grêmio Recreativo Escola de Samba C',
+    logo: '/logos/default_shield.png',
     colors: ['#00FF00', '#FFFFFF', '#FFC0CB'], // Green, White, and Pink
     budget: 6000000,
     fanbaseMorale: 90,
@@ -88,6 +91,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-4',
     name: 'Grêmio Recreativo Escola de Samba D',
+    logo: '/logos/default_shield.png',
     colors: ['#FFFF00', '#000000'], // Yellow and Black
     budget: 3500000,
     fanbaseMorale: 60,
@@ -111,6 +115,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-5',
     name: 'Grêmio Recreativo Escola de Samba E',
+    logo: '/logos/default_shield.png',
     colors: ['#800080', '#FFFFFF'], // Purple and White
     budget: 5500000,
     fanbaseMorale: 82,
@@ -134,6 +139,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-6',
     name: 'Grêmio Recreativo Escola de Samba F',
+    logo: '/logos/default_shield.png',
     colors: ['#FFA500', '#000000'], // Orange and Black
     budget: 4000000,
     fanbaseMorale: 65,
@@ -157,6 +163,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-7',
     name: 'Grêmio Recreativo Escola de Samba G',
+    logo: '/logos/default_shield.png',
     colors: ['#FF0000', '#000000'], // Red and Black
     budget: 7000000,
     fanbaseMorale: 95,
@@ -180,6 +187,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-8',
     name: 'Grêmio Recreativo Escola de Samba H',
+    logo: '/logos/default_shield.png',
     colors: ['#0000FF', '#FFFF00'], // Blue and Yellow
     budget: 3000000,
     fanbaseMorale: 55,
@@ -203,6 +211,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-9',
     name: 'Grêmio Recreativo Escola de Samba I',
+    logo: '/logos/default_shield.png',
     colors: ['#008000', '#FFFF00'], // Green and Yellow
     budget: 4800000,
     fanbaseMorale: 78,
@@ -226,6 +235,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-10',
     name: 'Grêmio Recreativo Escola de Samba J',
+    logo: '/logos/default_shield.png',
     colors: ['#A52A2A', '#FFFFFF'], // Brown and White
     budget: 3800000,
     fanbaseMorale: 70,
@@ -249,6 +259,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-11',
     name: 'Grêmio Recreativo Escola de Samba K',
+    logo: '/logos/default_shield.png',
     colors: ['#4B0082', '#FFD700'], // Indigo and Gold
     budget: 6500000,
     fanbaseMorale: 88,
@@ -272,6 +283,7 @@ export const INITIAL_SCHOOLS: School[] = [
   {
     id: 'school-12',
     name: 'Grêmio Recreativo Escola de Samba L',
+    logo: '/logos/default_shield.png',
     colors: ['#FF1493', '#00FFFF'], // Deep Pink and Cyan
     budget: 4200000,
     fanbaseMorale: 72,
