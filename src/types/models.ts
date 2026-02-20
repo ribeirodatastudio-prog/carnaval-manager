@@ -80,6 +80,40 @@ export interface Enredo {
 }
 
 /**
+ * Division defines the league tiers in the carnival.
+ */
+export type Division =
+  | 'Grupo Especial'
+  | 'Série Ouro'
+  | 'Série Prata'
+  | 'Série Bronze'
+  | 'Grupo de Avaliação';
+
+/**
+ * Represents a specific achievement in a school's history.
+ */
+export interface SchoolHistoryEntry {
+  divisao: Division;
+  ano: number;
+}
+
+/**
+ * Detailed history of a school's performance.
+ */
+export interface SchoolHistory {
+  // Counts (for quick display)
+  totalTitles: number;
+  totalRunnerUps: number;
+
+  // Detailed lists
+  titulos: SchoolHistoryEntry[];
+  vices: SchoolHistoryEntry[];
+  terceiros: SchoolHistoryEntry[];
+  quartos: SchoolHistoryEntry[];
+  quintos: SchoolHistoryEntry[];
+}
+
+/**
  * School represents a Samba School in the game.
  * It holds all data related to the school's resources, personnel, and status.
  */
@@ -92,11 +126,15 @@ export interface School {
   staff: StaffMember[]; // Collection of staff members currently hired by the school
   isPlayerControlled: boolean; // Flag indicating if this is the school managed by the player
   prestige: number; // The school's historical importance and reputation (1-200). 180-200 = Historical.
-  currentDivision: string; // The current league/division the school is competing in (e.g., 'Grupo Especial').
-  history: {
-    titles: number; // Total number of championships won
-    runnerUps: number; // Total number of second-place finishes
-  };
+  currentDivision: Division; // The current league/division the school is competing in.
+
+  // Prestige Calculation Metrics
+  score_bruto?: number; // Raw score from the prestige formula (for simulation/debugging)
+  anos_no_especial: number; // Consecutive/Total years in Special Group
+  anos_em_acesso: number; // Years outside Special Group
+
+  history: SchoolHistory; // Detailed history
+
   enredo: Enredo | null; // The current year's theme. Null if not yet researched/chosen.
 }
 
@@ -105,7 +143,7 @@ export interface School {
  * It manages the timeline and the player's current context.
  */
 export interface GameState {
-  currentYear: number; // The current year in the game simulation (starts at 1)
+  currentYear: number; // The current year in the game simulation (starts at 1 or 2026)
   currentWeek: number; // The current week of the year (1-52)
   currentPhase: 'Market' | 'Preparation' | 'Parade' | 'Results/Offseason'; // The current phase of the game loop
   playerSchoolId: string | null; // The ID of the school the player is currently managing
