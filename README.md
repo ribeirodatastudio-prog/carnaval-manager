@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Carnival Manager
+
+## Overview
+Carnival Manager is a simulation game focused on managing a Samba School in Rio de Janeiro's Special Group. Built with Next.js, React, and TypeScript, the game challenges players to manage resources, hire staff, and lead their school to victory in the Carnaval parade.
+
+## Game Mechanics
+
+### Time Engine
+The game operates on a weekly turn-based system.
+- **Year**: Starts at Year 1 (displayed as 2024).
+- **Week**: 52 weeks per year.
+- **Phases**: The year is divided into distinct phases based on the week number.
+
+### Phases
+1. **Market (Weeks 1-12)**
+   - Focus: Hiring staff, securing contracts, and initial planning.
+   - Strategy: Manage budget wisely to secure top talent.
+
+2. **Preparation (Weeks 13-44)**
+   - Focus: Developing the theme (enredo), costumes, floats, and rehearsing.
+   - Strategy: Balance quality vs. cost, manage staff morale and skill progression.
+
+3. **Parade (Week 45)**
+   - Focus: The main event! The school parades at the Sambadrome.
+   - Strategy: Execution of the planned elements. Staff skills and school morale directly impact performance.
+
+4. **Results/Offseason (Weeks 46-52)**
+   - Focus: Scoring, rankings, promotion/relegation, and end-of-year review.
+   - Strategy: Analyze performance and prepare for the next season.
+
+### Staff & Skills
+- **Roles**: Carnavalesco, Mestre de Bateria, Intérprete, Mestre-Sala & Porta-Bandeira.
+- **Skill Scale**:
+  - **Internal**: 1-200 (for precise simulation).
+  - **Display**: 1-20 (Football Manager style).
+  - **Mapping**:
+    - 1-19 -> 1
+    - 20-29 -> 2
+    - ...
+    - 200 -> 20
+
+### Schools
+- The game simulates the "Grupo Especial" with 12 schools.
+- Players control one school, while the AI manages the others.
+
+## Tech Stack
+- **Frontend**: Next.js (App Router), React, Tailwind CSS.
+- **State Management**: Zustand.
+- **Language**: TypeScript.
 
 ## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Install dependencies: `npm install`
+2. Run development server: `npm run dev`
+3. Build for production: `npm run build`

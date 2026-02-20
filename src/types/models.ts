@@ -43,7 +43,8 @@ export interface School {
  * It manages the timeline and the player's current context.
  */
 export interface GameState {
-  currentYear: number; // The current year in the game simulation
-  currentPhase: 'Planning' | 'Market' | 'Parade' | 'Results'; // The current phase of the game loop
+  currentYear: number; // The current year in the game simulation (starts at 1)
+  currentWeek: number; // The current week of the year (1-52)
+  currentPhase: 'Market' | 'Preparation' | 'Parade' | 'Results/Offseason'; // The current phase of the game loop
   playerSchoolId: string | null; // The ID of the school the player is currently managing
 }
