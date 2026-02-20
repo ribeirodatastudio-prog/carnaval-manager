@@ -31,7 +31,7 @@ export const formatRole = (role: StaffRole): string => {
       return 'Coreógrafo'; // Add accent
     default:
       // Fallback for any unknown roles or if they are already formatted
-      return role.replace(/([A-Z])/g, ' $1').trim();
+      return (role as string).replace(/([A-Z])/g, ' $1').trim();
   }
 };
 
