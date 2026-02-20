@@ -19,9 +19,29 @@ export interface StaffMember {
   id: string; // Unique identifier for the staff member
   name: string; // Full name of the staff member
   role: StaffRole; // The specific role they fulfill in the school
-  salary: number; // The cost per turn/season for this staff member
+  salary: number; // The cost per turn/season for this staff member (actual contracted salary)
   skillLevel: number; // Internal skill value from 1 to 200 (displayed as 1-20 to the player)
   contractYears: number; // Number of years remaining on their contract
+  currentSchoolId: string | null; // The ID of the school they currently work for, or null if free agent
+  salaryExpectation: number; // The salary they expect when negotiating a new contract
+  reputation: number; // The fame/prestige of the staff member (1-200), heavily influences salary expectation
+}
+
+/**
+ * EnredoCategory defines the thematic classification of an Enredo.
+ */
+export type EnredoCategory = 'History' | 'Culture' | 'Abstract' | 'Political' | 'Religious';
+
+/**
+ * Enredo represents the theme (Samba-Enredo) chosen by a school for the year.
+ * A good Enredo is crucial for high scores in multiple categories.
+ */
+export interface Enredo {
+  id: string; // Unique identifier for the Enredo
+  title: string; // The title of the theme
+  category: EnredoCategory; // The thematic category
+  complexity: number; // How difficult the theme is to execute (1-100). Higher complexity requires higher staff skill.
+  potentialScore: number; // The theoretical maximum score this theme can achieve (1-100) if executed perfectly.
 }
 
 /**
@@ -36,6 +56,8 @@ export interface School {
   fanbaseMorale: number; // Represents the happiness/engagement of the fans (0-100)
   staff: StaffMember[]; // Collection of staff members currently hired by the school
   isPlayerControlled: boolean; // Flag indicating if this is the school managed by the player
+  prestige: number; // The school's historical importance and reputation (1-200). 180-200 = Historical.
+  enredo: Enredo | null; // The current year's theme. Null if not yet researched/chosen.
 }
 
 /**

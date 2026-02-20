@@ -39,6 +39,26 @@ The game operates on a weekly turn-based system.
     - ...
     - 200 -> 20
 
+### Hiring & Negotiation
+- **Market Dynamics**:
+  - Staff have **Salary Expectations** based on their Skill and **Reputation**.
+  - **School Prestige** (1-200) plays a crucial role. Historical schools (180+) can attract talent for lower offers.
+  - Offers are evaluated using a non-deterministic formula involving money, prestige, and a small RNG factor.
+- **Prestige Tiers**:
+  - **Historical (180-200)**: Legends of the carnival.
+  - **Elite (160-179)**: Consistent top contenders.
+  - **Traditional (140-159)**: Strong history.
+  - **Established (120-139)**: Solid fixtures.
+  - **Rising (100-119)**: Up-and-comers.
+
+### Enredo (Theme) Research
+- **Research Engine**:
+  - Players must invest budget to research a new Enredo.
+  - **Mechanics**:
+    - **Budget**: Raises the floor of the Potential Score.
+    - **Carnavalesco Skill**: Raises the ceiling and optimizes Complexity.
+    - **Result**: An Enredo with a specific `Category`, `Complexity` (difficulty), and `Potential Score` (max possible score).
+
 ### Schools
 - The game simulates the "Grupo Especial" with 12 schools.
 - Players control one school, while the AI manages the others.

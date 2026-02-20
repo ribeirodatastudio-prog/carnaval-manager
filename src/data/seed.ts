@@ -5,6 +5,14 @@ import { School } from '../types/models';
  * Initial seed data for the Special Group schools.
  * This represents the starting state of the league with 12 schools.
  * Currently using generic names as placeholders.
+ *
+ * Prestige Tiers (approximate):
+ * 180-200: Historical - Legendary status, household names.
+ * 160-179: Elite - Consistent top contenders.
+ * 140-159: Traditional - Strong history, but maybe fluctuating recently.
+ * 120-139: Established - Solid fixture in the Special Group.
+ * 100-119: Rising - Improving, aiming for the top.
+ * 80-99: Aspiring/Average - Fighting to stay in the group or break through.
  */
 
 export const INITIAL_SCHOOLS: School[] = [
@@ -16,6 +24,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 85,
     staff: [],
     isPlayerControlled: false,
+    prestige: 175, // Elite
+    enredo: null,
   },
   {
     id: 'school-2',
@@ -25,6 +35,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 75,
     staff: [],
     isPlayerControlled: false,
+    prestige: 150, // Traditional
+    enredo: null,
   },
   {
     id: 'school-3',
@@ -34,6 +46,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 90,
     staff: [],
     isPlayerControlled: false,
+    prestige: 195, // Historical
+    enredo: null,
   },
   {
     id: 'school-4',
@@ -43,6 +57,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 60,
     staff: [],
     isPlayerControlled: false,
+    prestige: 120, // Established
+    enredo: null,
   },
   {
     id: 'school-5',
@@ -52,6 +68,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 82,
     staff: [],
     isPlayerControlled: false,
+    prestige: 170, // Elite
+    enredo: null,
   },
   {
     id: 'school-6',
@@ -61,6 +79,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 65,
     staff: [],
     isPlayerControlled: false,
+    prestige: 130, // Established
+    enredo: null,
   },
   {
     id: 'school-7',
@@ -70,6 +90,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 95,
     staff: [],
     isPlayerControlled: false,
+    prestige: 198, // Historical
+    enredo: null,
   },
   {
     id: 'school-8',
@@ -79,6 +101,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 55,
     staff: [],
     isPlayerControlled: false,
+    prestige: 110, // Rising
+    enredo: null,
   },
   {
     id: 'school-9',
@@ -88,6 +112,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 78,
     staff: [],
     isPlayerControlled: false,
+    prestige: 165, // Elite
+    enredo: null,
   },
   {
     id: 'school-10',
@@ -97,6 +123,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 70,
     staff: [],
     isPlayerControlled: false,
+    prestige: 140, // Traditional
+    enredo: null,
   },
   {
     id: 'school-11',
@@ -106,6 +134,8 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 88,
     staff: [],
     isPlayerControlled: false,
+    prestige: 185, // Historical
+    enredo: null,
   },
   {
     id: 'school-12',
@@ -115,5 +145,7 @@ export const INITIAL_SCHOOLS: School[] = [
     fanbaseMorale: 72,
     staff: [],
     isPlayerControlled: false,
+    prestige: 145, // Traditional
+    enredo: null,
   },
 ];
