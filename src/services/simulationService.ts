@@ -73,6 +73,29 @@ function calculateParadeScore(school: School): number {
     const animacaoBonus = (enredo.appeal / 100) * (school.fanbaseMorale / 100) * 20;
     score += animacaoBonus; // Max 20
 
+    // 3. Samba-Enredo Score (NEW)
+    let sambaScoreValue = 0;
+    if (school.sambaEnredo) {
+        const s = school.sambaEnredo;
+        const weightedAvg =
+            (s.melodia * 0.18) +
+            (s.letra * 0.12) +
+            (s.ritmo * 0.15) +
+            (s.sinergiaBateria * 0.10) +
+            (s.grito * 0.15) +
+            (s.emocao * 0.10) +
+            (s.apeloComunidade * 0.08) +
+            (s.aderenciaAoEnredo * 0.07) +
+            (s.versatilidade * 0.05);
+
+        sambaScoreValue = weightedAvg * 0.4; // Scale to ~40 points max
+    } else {
+        // Fallback for AI schools (simulated)
+        // Assume average 60-80
+        sambaScoreValue = (60 + Math.random() * 20) * 0.4;
+    }
+    score += sambaScoreValue;
+
     // Hidden Risks/Bonuses
     const riskRoll = (enredo.hiddenRisk && Math.random() * 100 < enredo.hiddenRisk) ? -(Math.random() * 8 + 2) : 0;
     const bonusRoll = (enredo.hiddenBonus && Math.random() * 100 < enredo.hiddenBonus) ? (Math.random() * 10 + 3) : 0;

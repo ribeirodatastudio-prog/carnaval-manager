@@ -12,6 +12,8 @@ import { getKeySkills } from '../utils/helpers';
 import { ALL_ROLES } from '../utils/staffUtils';
 import RosterList from './RosterList';
 import EnredoSelectionModal from './EnredoSelectionModal';
+import EnredoDeadlineScreen from './EnredoDeadlineScreen';
+import SambaEnredoModal from './SambaEnredoModal';
 
 // Helper for contrast
 function getContrastColor(hex: string | undefined): string {
@@ -204,9 +206,11 @@ export default function MarketDashboard() {
                  <button onClick={() => setIsRosterOpen(true)} className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors">
                     My Roster
                  </button>
-                 <button onClick={() => setIsEnredoModalOpen(true)} className="bg-purple-900/50 hover:bg-purple-800 text-purple-100 border border-purple-500 px-3 py-1 rounded text-sm backdrop-blur-sm transition-colors">
-                    {playerSchool?.enredo ? '📜 Enredo' : '🧪 Research'}
-                 </button>
+                 {currentPhase === 'Market' && (
+                    <button onClick={() => setIsEnredoModalOpen(true)} className="bg-purple-900/50 hover:bg-purple-800 text-purple-100 border border-purple-500 px-3 py-1 rounded text-sm backdrop-blur-sm transition-colors">
+                        {playerSchool?.enredo ? '📜 Enredo' : '🧪 Research'}
+                    </button>
+                 )}
                   {/* Next Week Button */}
                  {currentPhase === 'Market' && (
                     <button
@@ -632,6 +636,28 @@ export default function MarketDashboard() {
             </div>
         </div>
       )}
+
+      {/* Roster Modal */}
+      {isRosterOpen && playerSchool && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700">
+                <div className="p-4 border-b flex justify-between items-center rounded-t-lg bg-gray-900">
+                        <h2 className="text-xl font-bold text-white">My Roster</h2>
+                        <button onClick={() => setIsRosterOpen(false)} className="text-gray-400 hover:text-white">✕</button>
+                </div>
+                <div className="p-4 overflow-auto">
+                        <RosterList staff={playerSchool.staff} />
+                </div>
+            </div>
+        </div>
+      )}
+
+      {/* Enredo Deadline Screen (Blocks Advancement) */}
+      {gameState.showEnredoDeadlineScreen && <EnredoDeadlineScreen />}
+
+      {/* Samba Enredo Selection Modal (Blocks Advancement) */}
+      {gameState.pendingSambaSelection && !gameState.chosenSambaEnredo && gameState.currentWeek >= 9 && <SambaEnredoModal />}
+
     </div>
   );
 }

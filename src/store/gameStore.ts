@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameState, School, StaffMember, TransferOffer, Enredo, EnredoCategory } from '../types/models';
+import { GameState, School, StaffMember, TransferOffer, Enredo, EnredoCategory, SambaSelectionProcess, SambaEnredo } from '../types/models';
 import { loadAllSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
 import { calculateSalaryExpectation, ALL_ROLES } from '../utils/staffUtils';
@@ -13,6 +13,7 @@ import {
   weightedRandomCategory,
   calculateTrendMap
 } from '../services/researchEngine';
+import { generateSambaSelectionProcess } from '../services/sambaEnredoEngine';
 import { runSimulation, SimulationResult } from '../services/simulationService';
 import { resolveOffer, processAITransfers } from '../services/transferService';
 import { formatMoney } from '../utils/textUtils';
@@ -167,6 +168,7 @@ interface GameStoreState {
   // Enredo Actions
   focusResearch: (enredoId: string) => void;
   lockInEnredo: (enredoId: string) => void;
+  chooseSamba: (sambaId: string) => void;
 }
 
 /**
@@ -182,7 +184,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     pendingOffers: [],
     resolvedOffers: [],
     transferNews: [],
-    hallOfFame: []
+    hallOfFame: [],
+    showEnredoDeadlineScreen: false,
+    pendingSambaSelection: null,
+    chosenSambaEnredo: null
   },
   schools: initialSchools,
   availableStaff: initialStaff,
@@ -330,6 +335,29 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         nextYear += 1;
       }
 
+      // Check for Enredo Deadline Block (Week 8 -> 9)
+      let blockAdvancement = false;
+      let showDeadline = false;
+      let pendingSambaSelection = state.gameState.pendingSambaSelection;
+
+      if (state.gameState.playerSchoolId && currentWeek === 8 && nextWeek === 9) {
+          const pSchool = updatedSchools.find(s => s.id === state.gameState.playerSchoolId);
+          if (pSchool) {
+             if (!pSchool.enredo) {
+                 // BLOCK: No enredo chosen
+                 blockAdvancement = true;
+                 showDeadline = true;
+                 nextWeek = currentWeek; // Stay in week 8
+                 nextYear = currentYear;
+             } else {
+                 // Enredo chosen: Ensure Samba Selection is generated
+                 if (!pendingSambaSelection && !state.gameState.chosenSambaEnredo) {
+                     pendingSambaSelection = generateSambaSelectionProcess(pSchool.enredo, pSchool);
+                 }
+             }
+          }
+      }
+
       let nextPhase: GameState['currentPhase'] = 'Market';
       if (nextWeek >= 1 && nextWeek <= 8) {
         nextPhase = 'Market';
@@ -369,18 +397,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             }
 
             // 2. Market Deadline / Preparation Start (Week 8 -> 9)
-            if (currentWeek === 8 && nextWeek === 9) {
-                 if (!pSchool.enredo && pSchool.enredoCandidates && pSchool.enredoCandidates.length > 0) {
-                     const randomPick = pSchool.enredoCandidates[0];
-                     pSchool = {
-                         ...pSchool,
-                         enredo: randomPick,
-                         enredoCandidates: [],
-                         researchFocusId: null
-                     };
-                     newTransferNews.push(`Deadline passed! "${randomPick.title}" selected as enredo.`);
-                 }
-
+            // Note: We handled the BLOCK logic above. Here we handle the transition effects if we ARE advancing.
+            if (!blockAdvancement && currentWeek === 8 && nextWeek === 9) {
                  if (pSchool.enredo) {
                      let budgetAdd = 0;
                      if (pSchool.enredo.sponsorValue > 0) {
@@ -666,10 +684,52 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       school.enredoCandidates = []; // Clear pool
       school.researchFocusId = null;
 
+      // Generate Samba Selection Process immediately
+      const pendingSambaSelection = generateSambaSelectionProcess(selected, school);
+
       const updatedSchools = [...state.schools];
       updatedSchools[playerSchoolIndex] = school;
 
-      return { schools: updatedSchools };
+      return {
+        schools: updatedSchools,
+        gameState: {
+            ...state.gameState,
+            showEnredoDeadlineScreen: false,
+            pendingSambaSelection
+        }
+      };
+    }),
+
+  chooseSamba: (sambaId) =>
+    set((state) => {
+      if (!state.gameState.pendingSambaSelection) return {};
+
+      const chosen = state.gameState.pendingSambaSelection.candidates.find(s => s.id === sambaId);
+      if (!chosen) return {};
+
+      const playerSchoolIndex = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (playerSchoolIndex === -1) return {};
+
+      const school = {
+          ...state.schools[playerSchoolIndex],
+          sambaEnredo: chosen
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[playerSchoolIndex] = school;
+
+      return {
+        schools: updatedSchools,
+        gameState: {
+          ...state.gameState,
+          chosenSambaEnredo: chosen,
+          pendingSambaSelection: null,
+          transferNews: [
+            ...state.gameState.transferNews,
+            `🎵 Samba-Enredo escolhido: "${chosen.title}"!`
+          ]
+        }
+      };
     }),
 
   runPrestigeSimulation: (years) => {

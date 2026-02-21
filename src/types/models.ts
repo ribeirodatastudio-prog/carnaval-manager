@@ -196,6 +196,37 @@ export interface School {
   enredo: Enredo | null; // The current year's theme. Null if not yet researched/chosen.
   enredoCandidates?: Enredo[]; // The pool of available themes to research/choose from.
   researchFocusId?: string | null; // The ID of the candidate currently being researched.
+  sambaEnredo?: SambaEnredo | null; // The chosen samba-enredo for the year.
+}
+
+/**
+ * SambaEnredo represents a candidate or chosen samba for the school.
+ */
+export interface SambaEnredo {
+  id: string;
+  title: string; // e.g. "Canto Livre das Pedras"
+  compositors: string[]; // names of the parceria members
+
+  // All stats 1–100
+  // Visible from the start:
+  melodia: number;           // How catchy/memorable the tune is
+  grito: number;             // The crowd singalong factor — "everybody screams this part"
+  apeloComunidade: number;   // Did the quadra embrace it at the eliminatória nights?
+
+  // Revealed only after the player picks this samba (post-competition):
+  letra: number;             // Lyric quality and enredo narrative faithfulness
+  ritmo: number;             // Rhythmic drive — fits the bateria's pulse
+  sinergiaBateria: number;   // Was it written for THIS school's bateria style?
+  emocao: number;            // Emotional depth (nostalgia, pride, tears)
+  aderenciaAoEnredo: number; // How faithfully it translates the carnavalesco's vision
+  versatilidade: number;     // Can the intérprete/bateria adapt it live?
+
+  isEncomendado: boolean;    // Commissioned samba vs competition entry
+}
+
+export interface SambaSelectionProcess {
+  candidates: SambaEnredo[]; // Always exactly 3
+  chosen: SambaEnredo | null;
 }
 
 /**
@@ -211,4 +242,9 @@ export interface GameState {
   resolvedOffers: TransferOffer[]; // Offers resolved this week
   transferNews: string[]; // Market activity log
   hallOfFame: StaffMember[]; // Retired legends with >= 200 reputation
+
+  // Enredo & Samba Flow Control
+  showEnredoDeadlineScreen: boolean; // true = block UI, show enredo selection
+  pendingSambaSelection: SambaSelectionProcess | null;
+  chosenSambaEnredo: SambaEnredo | null;
 }
