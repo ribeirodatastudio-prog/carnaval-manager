@@ -6,6 +6,7 @@ import { useGameStore } from '../store/gameStore';
 import { StaffRole, StaffMember, TransferOffer } from '../types/models';
 import { calculateAdjustedSalary } from '../store/gameStore';
 import { calculateOfferProbability } from '../services/transferService';
+import { getPotentialDescriptor } from '../services/staffService';
 import { formatMoney, formatRole } from '../utils/textUtils';
 import { getKeySkills } from '../utils/helpers';
 import { ALL_ROLES } from '../utils/staffUtils';
@@ -295,6 +296,7 @@ export default function MarketDashboard() {
                   const isRainha = staff.role === 'RainhaDeBateria';
 
                   const isRoleFilled = playerSchool?.staff.some(s => s.role === staff.role);
+                  const potentialDesc = getPotentialDescriptor(staff.reputation, staff.potential);
 
                   // Check if offer pending
                   const isPending = pendingOffers.some(o => o.toStaffId === staff.id && o.status === 'Pending');
@@ -344,9 +346,12 @@ export default function MarketDashboard() {
                         </div>
                       </td>
                       <td className="p-4 text-center">
-                         <span className={`px-2 py-1 rounded text-xs font-bold ${staff.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-800 text-gray-300 border border-gray-700'}`}>
-                            {staff.reputation}
-                         </span>
+                         <div className="flex flex-col items-center gap-1">
+                             <span className={`px-2 py-1 rounded text-xs font-bold ${staff.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-800 text-gray-300 border border-gray-700'}`}>
+                                {staff.reputation}
+                             </span>
+                             <span className="text-[10px] text-gray-500 uppercase tracking-tight">{potentialDesc}</span>
+                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex flex-wrap gap-2">

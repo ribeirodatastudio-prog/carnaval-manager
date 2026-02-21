@@ -70,7 +70,8 @@ export interface StaffMember {
   partnerId?: string; // ID of the partner (for MestreSala/PortaBandeira couples)
   synergy?: number; // Synergy level for couples (1-100 or similar scale, TBD)
   archetype?: RainhaArchetype; // Specific archetype for Rainha de Bateria
-  age?: number; // Age of the staff member
+  age: number; // Age of the staff member
+  potential?: number; // Maximum reputation ceiling (1-200) for generated staff
 
   // Historical Data
   historyText?: string; // "Cargos Históricos" (e.g., "Mangueira (2016-22), Imperatriz (2023-24)")
@@ -182,4 +183,5 @@ export interface GameState {
   pendingOffers: TransferOffer[]; // Offers waiting for resolution
   resolvedOffers: TransferOffer[]; // Offers resolved this week
   transferNews: string[]; // Market activity log
+  hallOfFame: StaffMember[]; // Retired legends with >= 200 reputation
 }

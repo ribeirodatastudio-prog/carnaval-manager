@@ -24,6 +24,32 @@ const createSkills = (base: number): StaffSkills => {
   };
 };
 
+const calculateRealStaffAge = (role: StaffRole, baseSkill: number): number => {
+  const averages: Record<StaffRole, number> = {
+    RainhaDeBateria: 28,
+    MestreSala: 32,
+    PortaBandeira: 30,
+    Interprete: 45,
+    MestreDeBateria: 52,
+    Coreografo: 40,
+    Carnavalesco: 48,
+    DiretorDeCarnaval: 50,
+    DiretorDeHarmonia: 46,
+    MestreDeBarracao: 48
+  };
+
+  const avg = averages[role] || 40;
+  let variance = Math.floor(Math.random() * 11) - 5; // -5 to +5
+
+  if (baseSkill > 185) {
+     // Elite veterans: bias upward. e.g. -2 to +8
+     variance = Math.floor(Math.random() * 11) - 2;
+  }
+
+  // Ensure we don't go below min realistic ages
+  return Math.max(18, avg + variance);
+};
+
 // Helper to construct the object
 const defineStaff = (
   id: string,
@@ -33,6 +59,7 @@ const defineStaff = (
   historyText: string,
   achievements: StaffAchievement[],
   baseSkill: number,
+  age?: number,
   archetype?: RainhaArchetype,
   partnerId?: string
 ): RealStaffRaw => {
@@ -44,6 +71,7 @@ const defineStaff = (
     historyText,
     achievementsRaw: achievements,
     baseSkill,
+    age: age || calculateRealStaffAge(role, baseSkill),
     archetype,
     partnerId
   };
@@ -59,7 +87,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2019, division: 'Grupo Especial' },
       { type: 'Title', year: 2023, division: 'Grupo Especial' }
     ],
-    195
+    195,
+    47 // Hardcoded
   ),
   // 2. Neguinho da Beija-Flor
   defineStaff(
@@ -68,7 +97,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', count: 15, division: 'Grupo Especial' } // 15 titles generic
     ],
-    198
+    198,
+    73 // Hardcoded
   ),
   // 3. Paulo Barros
   defineStaff(
@@ -80,7 +110,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2014, division: 'Grupo Especial' },
       { type: 'Title', year: 2017, division: 'Grupo Especial' }
     ],
-    196
+    196,
+    60 // Hardcoded
   ),
   // 4. Selminha Sorriso (Partner: Claudinho)
   defineStaff(
@@ -90,6 +121,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', count: 10, division: 'Grupo Especial' }
     ],
     197,
+    55, // Hardcoded
     undefined,
     'claudinho'
   ),
@@ -101,7 +133,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2020, division: 'Grupo Especial' },
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
-    195
+    195,
+    58 // Hardcoded
   ),
   // 6. Tarcísio Zanon
   defineStaff(
@@ -111,7 +144,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2020, division: 'Grupo Especial' },
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
-    192
+    192,
+    undefined
   ),
   // 7. Lucinha Nobre
   defineStaff(
@@ -121,7 +155,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Estandarte', count: 10 },
       { type: 'Nota10', count: 20 }
     ],
-    190
+    190,
+    undefined
   ),
   // 8. Zé Paulo Sierra
   defineStaff(
@@ -130,7 +165,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', year: 2020, division: 'Grupo Especial' }
     ],
-    188
+    188,
+    undefined
   ),
   // 9. Alex Neoral
   defineStaff(
@@ -140,7 +176,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2020, division: 'Grupo Especial' },
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
-    185
+    185,
+    undefined
   ),
   // 10. Paolla Oliveira
   defineStaff(
@@ -150,6 +187,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2022, division: 'Grupo Especial' }
     ],
     195, // Fame
+    undefined,
     'Celebridade'
   ),
   // 11. Erika Januza
@@ -160,6 +198,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
     185,
+    undefined,
     'Celebridade'
   ),
   // 12. Sabrina Sato
@@ -170,6 +209,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2013, division: 'Grupo Especial' }
     ],
     198,
+    undefined,
     'Celebridade'
   ),
   // 13. Marcelo Misailidis
@@ -181,7 +221,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2018, division: 'Grupo Especial' },
       { type: 'Title', year: 2023, division: 'Grupo Especial' }
     ],
-    190
+    190,
+    undefined
   ),
   // 14. Gabriel Haddad
   defineStaff(
@@ -190,7 +231,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', year: 2022, division: 'Grupo Especial' }
     ],
-    185
+    185,
+    undefined
   ),
   // 15. Leonardo Bora
   defineStaff(
@@ -199,7 +241,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', year: 2022, division: 'Grupo Especial' }
     ],
-    185
+    185,
+    undefined
   ),
   // 16. Tinga
   defineStaff(
@@ -208,7 +251,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', year: 2014, division: 'Grupo Especial' }
     ],
-    188
+    188,
+    undefined
   ),
   // 17. Alexandre Louzada
   defineStaff(
@@ -218,7 +262,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2017, division: 'Grupo Especial' },
       { type: 'Title', year: 2018, division: 'Grupo Especial' }
     ],
-    192
+    192,
+    undefined
   ),
   // 18. Claudinho (Partner: Selminha)
   defineStaff(
@@ -229,6 +274,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     ],
     197,
     undefined,
+    undefined,
     'selminha'
   ),
   // 19. Mauro Quintaes
@@ -238,7 +284,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', year: 2023, division: 'Série Ouro' }
     ],
-    180
+    180,
+    undefined
   ),
   // 20. Mestre Sombra (SP -> Market)
   defineStaff(
@@ -250,7 +297,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2023, division: 'Grupo Especial' },
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
-    193
+    193,
+    undefined
   ),
   // 21. Aline Oliveira (SP -> Market)
   defineStaff(
@@ -263,6 +311,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
     190,
+    undefined,
     'CriaDaComunidade'
   ),
   // 22. Marcus Ferreira
@@ -273,7 +322,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2020, division: 'Grupo Especial' },
       { type: 'Title', year: 2022, division: 'Grupo Especial' }
     ],
-    188
+    188,
+    undefined
   ),
   // 23. Jorge Silveira (SP -> Market)
   defineStaff(
@@ -283,7 +333,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2023, division: 'Grupo Especial' },
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
-    185
+    185,
+    undefined
   ),
   // 24. Igor Sorriso (SP -> Market)
   defineStaff(
@@ -293,7 +344,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2023, division: 'Grupo Especial' },
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
-    185
+    185,
+    undefined
   ),
   // 25. Celsinho Mody (SP -> Market)
   defineStaff(
@@ -303,7 +355,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2017, division: 'Grupo Especial' },
       { type: 'Title', year: 2018, division: 'Grupo Especial' }
     ],
-    185
+    185,
+    undefined
   ),
   // 26. Alex Fab
   defineStaff(
@@ -313,7 +366,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2020, division: 'Grupo Especial' },
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
-    185
+    185,
+    undefined
   ),
   // 27. Mestre Fafá
   defineStaff(
@@ -322,7 +376,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', year: 2022, division: 'Grupo Especial' }
     ],
-    182
+    182,
+    undefined
   ),
   // 28. Rute Alves (Partner: Julinho)
   defineStaff(
@@ -333,6 +388,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
       { type: 'Title', year: 2024, division: 'Grupo Especial' }
     ],
     192,
+    undefined,
     undefined,
     'julinho'
   ),
@@ -346,6 +402,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     ],
     192,
     undefined,
+    undefined,
     'rute-alves'
   ),
   // 30. Leandro Valente
@@ -355,14 +412,16 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
       { type: 'Title', year: 2024, division: 'Série Ouro' }
     ],
-    175
+    175,
+    undefined
   ),
   // 31. Wic Tavares
   defineStaff(
     'wic-tavares', 'Wic Tavares', 'Interprete', 'Unidos da Tijuca',
     'Unidos da Tijuca (2022-2024)',
     [],
-    170
+    170,
+    undefined
   ),
   // 32. Mestre Rodney
   defineStaff(
@@ -371,7 +430,8 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     [
         { type: 'Title', year: 2025, division: 'Grupo Especial' } // Future title!
     ],
-    185
+    185,
+    undefined
   ),
   // 33. Ana Beatriz Godói
   defineStaff(
@@ -379,6 +439,7 @@ export const REAL_STAFF_DATA: RealStaffRaw[] = [
     'Rosas de Ouro (2024-2025)',
     [],
     180,
+    undefined,
     'PostoPago' // Est.
   )
 ];
@@ -396,6 +457,7 @@ export const loadRealStaff = (): Omit<StaffMember, 'salary' | 'contractYears' | 
     skills: createSkills(raw.baseSkill),
     partnerId: raw.partnerId,
     archetype: raw.archetype,
+    age: raw.age,
     historyText: raw.historyText,
     achievements: raw.achievementsRaw || [],
     // Tmp props for linking

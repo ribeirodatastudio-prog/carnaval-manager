@@ -1,0 +1,27 @@
+
+> temp@0.1.0 dev
+> next dev
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+✓ Ready in 1274ms
+○ Compiling / ...
+ GET / 200 in 5.7s (compile: 4.8s, render: 875ms)
+ GET /flags/acad%C3%83%C2%AAmicos_do_grande_rio.png 404 in 1322ms (compile: 845ms, render: 477ms)
+ GET /flags/acad%C3%83%C2%AAmicos_do_salgueiro.jpg 404 in 1327ms (compile: 913ms, render: 414ms)
+ GET /flags/Bandeira_Beija-Flor_de_Nil%C3%83%C2%B3polis.png 404 in 1359ms (compile: 994ms, render: 364ms)
+ GET /flags/esta%C3%83%C2%A7%C3%83%C2%A3o_primeira_de_mangueira.jpg 404 in 1382ms (compile: 1064ms, render: 319ms)
+ GET / 200 in 88ms (compile: 7ms, render: 81ms)
+ GET /flags/esta%C3%83%C2%A7%C3%83%C2%A3o_primeira_de_mangueira.jpg 404 in 185ms (compile: 20ms, render: 164ms)
+ GET /flags/Bandeira_Beija-Flor_de_Nil%C3%83%C2%B3polis.png 404 in 192ms (compile: 62ms, render: 130ms)
+ GET /flags/acad%C3%83%C2%AAmicos_do_salgueiro.jpg 404 in 190ms (compile: 94ms, render: 96ms)
+ GET /flags/acad%C3%83%C2%AAmicos_do_grande_rio.png 404 in 87ms (compile: 28ms, render: 59ms)
+[?25h

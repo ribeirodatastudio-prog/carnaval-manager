@@ -1,5 +1,5 @@
 
-import { StaffMember, Division, StaffAchievement } from '../types/models';
+import { StaffMember, Division, StaffAchievement, StaffRole } from '../types/models';
 
 const K_DECAY = 0.04;
 
@@ -109,4 +109,109 @@ export function calculateStaffReputation(staff: StaffMember, currentYear: number
 
   // Ensure strict 1-200 range
   return Math.round(Math.max(1, Math.min(200, finalRep)));
+}
+
+// Per-role retirement configuration
+const RETIREMENT_CONFIG: Record<StaffRole, { startAge: number; certainAge: number }> = {
+  // Physical performance roles — retire young
+  RainhaDeBateria:   { startAge: 35, certainAge: 45 },
+  MestreSala:        { startAge: 42, certainAge: 55 },
+  PortaBandeira:     { startAge: 40, certainAge: 52 },
+
+  // Artistic/vocal roles — moderate career length
+  Interprete:        { startAge: 55, certainAge: 75 },
+  Coreografo:        { startAge: 50, certainAge: 65 },
+
+  // Technical/craft/leadership roles — long careers
+  Carnavalesco:      { startAge: 60, certainAge: 80 },
+  DiretorDeCarnaval: { startAge: 62, certainAge: 82 },
+  DiretorDeHarmonia: { startAge: 60, certainAge: 78 },
+  MestreDeBarracao:  { startAge: 60, certainAge: 78 },
+
+  // Legendary endurance — Mestres de Bateria can go forever
+  MestreDeBateria:   { startAge: 65, certainAge: 90 },
+};
+
+export function processRetirements(
+  allStaff: StaffMember[]
+): { remaining: StaffMember[]; retired: StaffMember[] } {
+  const remaining: StaffMember[] = [];
+  const retired: StaffMember[] = [];
+
+  for (const member of allStaff) {
+    const age = member.age;
+    const config = RETIREMENT_CONFIG[member.role];
+
+    // If no config or age undefined (fallback), just age them
+    if (!config || age === undefined) {
+      remaining.push({ ...member, age: (age || 0) + 1 });
+      continue;
+    }
+
+    if (age < config.startAge) {
+      // Age staff by 1 year each season
+      remaining.push({ ...member, age: age + 1 });
+      continue;
+    }
+
+    // Linear retirement probability: 0% at startAge, 100% at certainAge
+    const progress = Math.min(1, (age - config.startAge) / (config.certainAge - config.startAge));
+    const retirementChance = progress;
+
+    if (Math.random() < retirementChance) {
+      retired.push(member);
+    } else {
+      remaining.push({ ...member, age: age + 1 });
+    }
+  }
+
+  return { remaining, retired };
+}
+
+export function processStaffDevelopment(
+  staff: StaffMember[],
+  carnavalScore: number // 0-100
+): { updatedStaff: StaffMember[]; updates: string[] } {
+    const updates: string[] = [];
+    const updatedStaff = staff.map(member => {
+    // Skip real staff (no potential defined) and already-maxed staff
+    if (member.potential === undefined) return member;
+    if (member.reputation >= member.potential) return member;
+
+    // Base growth chance: better carnival = better development environment
+    // carnavalScore 0 = 5% chance, carnavalScore 100 = 40% chance
+    const baseChance = 0.05 + (carnavalScore / 100) * 0.35;
+
+    // Gap bonus: staff far from their potential grow faster (hunger/drive)
+    const gap = member.potential - member.reputation;
+    const gapBonus = Math.min(0.15, gap / 200); // Up to +15% if very far from potential
+
+    const growthChance = Math.min(0.55, baseChance + gapBonus);
+
+    if (Math.random() < growthChance) {
+      // Growth amount: 1-5 reputation points, more if far from potential
+      const maxGrowth = Math.min(gap, Math.max(1, Math.floor(gap / 10)));
+      const growth = Math.floor(Math.random() * maxGrowth) + 1;
+      const newReputation = Math.min(member.potential, member.reputation + growth);
+
+      updates.push(`${member.name} (${member.role}) developed +${growth} reputation.`);
+
+      return { ...member, reputation: newReputation };
+    }
+
+    return member;
+  });
+
+  return { updatedStaff, updates };
+}
+
+export function getPotentialDescriptor(reputation: number, potential: number | undefined): string {
+    if (potential === undefined) return "Real/Legacy"; // Real staff
+
+    const gap = potential - reputation;
+
+    if (gap > 40) return "Joia Bruta";
+    if (gap > 20) return "Promissor";
+    if (gap > 5) return "Talento Limitado"; // Or "Em Evolução"
+    return "Consolidado";
 }
