@@ -1,4 +1,6 @@
 import escolasData from './escolas_db.json';
+import escolasCores from './logos/escolas_cores_v2.json';
+import { FLAG_IMAGES } from './flagImages';
 import { School, SchoolHistory, SchoolHistoryEntry, Division } from '../types/models';
 
 interface EscolaRaw {
@@ -25,11 +27,36 @@ interface EscolaRaw {
 }
 
 interface EscolasDB {
-  metadata: any;
+  metadata: Record<string, unknown>;
   escolas: Record<string, EscolaRaw>;
 }
 
+interface ColorEntry {
+  escola: string;
+  cor_principal: string;
+  cor_secundaria: string;
+}
+
 const db = escolasData as unknown as EscolasDB;
+
+// Helper to normalize strings for matching (remove accents, lowercase, remove special chars)
+function normalize(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+// Pre-process colors into a map for fast lookup
+const colorMap = new Map<string, string[]>();
+(escolasCores as ColorEntry[]).forEach((entry) => {
+  // Try to match by name
+  const normName = normalize(entry.escola);
+  // Also handle "Bandeira do GRES..." or similar if present in JSON names (it seems they are clean names but title cased)
+  // Check the JSON content again if needed, but the python script output showed names like "Acadêmicos Da Abolição"
+  colorMap.set(normName, [entry.cor_principal, entry.cor_secundaria]);
+});
 
 /**
  * Loads all schools from the JSON database.
@@ -40,17 +67,13 @@ export function loadAllSchools(): School[] {
   let generatedIdCounter = 1;
 
   for (const [name, data] of Object.entries(db.escolas)) {
-    // Determine ID: Use data.id if available, otherwise generate one
+    // Determine ID
     const id = data.id ? data.id.toString() : `generated-${generatedIdCounter++}`;
 
-    // Calculate dynamic budget: Base 2M + (Prestige * 25k)
-    // Adjust for lower divisions to be realistic?
-    // For now, use the same formula but maybe scale down base for lower divisions?
-    // The prompt only specified: "Initial School Budget is calculated as 2,000,000 + (Prestige * 25,000)."
-    // I will stick to that formula as it scales with prestige anyway.
+    // Calculate dynamic budget
     const calculatedBudget = 2000000 + (data.prestige * 25000);
 
-    // Calculate dynamic morale: Prestige / 2, capped at 100
+    // Calculate dynamic morale
     const calculatedMorale = Math.min(100, Math.round(data.prestige / 2));
 
     // Construct History Object
@@ -64,8 +87,29 @@ export function loadAllSchools(): School[] {
       quintos: data.historico.quintos || [],
     };
 
-    // Parse colors
-    const colors = data.cores ? [data.cores.primaria, data.cores.secundaria] : [];
+    // Resolve Colors
+    const normName = normalize(name);
+    let colors = colorMap.get(normName);
+
+    // Fallback if not found directly
+    if (!colors) {
+      // Try fuzzy match? Or just default.
+      // Let's try to find if one contains the other
+      for (const [key, val] of colorMap.entries()) {
+        if (key.includes(normName) || normName.includes(key)) {
+            colors = val;
+            break;
+        }
+      }
+    }
+
+    if (!colors) {
+        colors = ['#CCCCCC', '#333333']; // Default Grey/Dark Grey
+    }
+
+    // Resolve Flag
+    // FLAG_IMAGES keys are exact matches from escolas_db keys
+    const flagUrl = FLAG_IMAGES[name];
 
     const school: School = {
       id: id,
@@ -80,7 +124,7 @@ export function loadAllSchools(): School[] {
       currentDivision: data.divisao_atual as Division,
       score_bruto: data.score_bruto,
       anos_no_especial: data.anos_no_especial || 0,
-      anos_em_acesso: 0, // Default to 0 as it's not in the JSON
+      anos_em_acesso: 0,
       history: history,
       enredo: null,
     };

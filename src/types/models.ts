@@ -44,6 +44,16 @@ export interface StaffSkills {
 export type RainhaArchetype = 'Celebridade' | 'PostoPago' | 'CriaDaComunidade';
 
 /**
+ * Represents a specific achievement in a staff member's career.
+ */
+export interface StaffAchievement {
+  type: 'Title' | 'Vice' | 'Estandarte' | 'Nota10';
+  year?: number; // If year is unknown, it's a generic count
+  division?: Division; // Defaults to Grupo Especial if not specified
+  count?: number; // For "15 titles", count = 15
+}
+
+/**
  * StaffMember represents an individual hired by a Samba School.
  * Each staff member has specific skills and costs associated with them.
  */
@@ -60,6 +70,10 @@ export interface StaffMember {
   partnerId?: string; // ID of the partner (for MestreSala/PortaBandeira couples)
   synergy?: number; // Synergy level for couples (1-100 or similar scale, TBD)
   archetype?: RainhaArchetype; // Specific archetype for Rainha de Bateria
+
+  // Historical Data
+  historyText?: string; // "Cargos Históricos" (e.g., "Mangueira (2016-22), Imperatriz (2023-24)")
+  achievements?: StaffAchievement[]; // Structured achievements for reputation calculation
 }
 
 /**
@@ -122,6 +136,7 @@ export interface School {
   name: string; // The display name of the school
   logo?: string; // Path to the school's logo image
   colors: string[]; // Array of hex codes or color names representing the school's identity
+  flag?: string; // URL/Path to the school's flag image
   budget: number; // Current funds available for hiring and events
   fanbaseMorale: number; // Represents the happiness/engagement of the fans (0-100)
   staff: StaffMember[]; // Collection of staff members currently hired by the school

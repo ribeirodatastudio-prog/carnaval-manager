@@ -10,6 +10,18 @@ import { formatMoney, formatRole } from '../utils/textUtils';
 import { getKeySkills } from '../utils/helpers';
 import RosterList from './RosterList';
 
+// Helper for contrast
+function getContrastColor(hex: string | undefined): string {
+    if (!hex) return '#FFFFFF';
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#111827' : '#F9FAFB'; // gray-900 vs gray-50
+}
+
 export default function MarketDashboard() {
   const { gameState, schools, availableStaff, makeHiringOffer } = useGameStore();
   const { playerSchoolId } = gameState;
@@ -46,7 +58,12 @@ export default function MarketDashboard() {
 
   // Calculate Recent Champions (Special Group)
   const recentChampions = schools
-    .flatMap(s => s.history.titulos.map(t => ({ ...t, schoolName: s.name, schoolColors: s.colors })))
+    .flatMap(s => s.history.titulos.map(t => ({
+        ...t,
+        schoolName: s.name,
+        schoolColors: s.colors,
+        schoolFlag: s.flag
+    })))
     .filter(t => t.divisao === 'Grupo Especial')
     .sort((a, b) => b.ano - a.ano)
     .slice(0, 5);
@@ -72,19 +89,35 @@ export default function MarketDashboard() {
     );
   };
 
+  // Determine dynamic colors
+  const headerBg = playerSchool?.colors[0] || '#1F2937'; // Default gray-800
+  const headerText = getContrastColor(playerSchool?.colors[0]);
+  const headerSubText = headerText === '#111827' ? '#374151' : '#9CA3AF'; // Dark gray or light gray
+  const secondaryColor = playerSchool?.colors[1] || headerBg;
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 relative">
       {/* Top Bar / Header */}
-      <header className="bg-gray-800 p-4 shadow-md flex justify-between items-center z-20 relative">
+      <header
+        className="p-4 shadow-md flex justify-between items-center z-20 relative transition-colors duration-500"
+        style={{ backgroundColor: headerBg, color: headerText }}
+      >
         <div className="flex items-center gap-6">
-          <div>
-            <h1 className="text-2xl font-bold text-yellow-500">Carnival Manager</h1>
-            <div className="text-sm text-gray-400">
-                Year {gameState.currentYear} | Phase: <span className="text-white font-semibold">{gameState.currentPhase}</span>
+          <div className="flex items-center gap-4">
+            {playerSchool?.flag && (
+                <div className="w-16 h-10 relative rounded overflow-hidden shadow-sm border border-black/10">
+                    <img src={playerSchool.flag} alt="Flag" className="w-full h-full object-cover" />
+                </div>
+            )}
+            <div>
+                <h1 className="text-2xl font-bold leading-none">Carnival Manager</h1>
+                <div className="text-sm" style={{ color: headerSubText }}>
+                    Year {gameState.currentYear} | Phase: <span className="font-semibold">{gameState.currentPhase}</span>
+                </div>
             </div>
           </div>
 
-          <Link href="/devtools" className="text-xs bg-gray-900 border border-gray-700 px-2 py-1 rounded text-gray-500 hover:text-white hover:border-blue-500 transition-colors">
+          <Link href="/devtools" className="text-xs bg-black/20 hover:bg-black/30 border border-white/20 px-2 py-1 rounded transition-colors backdrop-blur-sm" style={{ color: headerText }}>
             🔧 DevTools
           </Link>
         </div>
@@ -94,19 +127,22 @@ export default function MarketDashboard() {
               <div className="flex gap-2">
                  <button
                     onClick={() => setIsHistoryOpen(true)}
-                    className="bg-purple-900 hover:bg-purple-800 px-3 py-1 rounded text-sm text-white border border-purple-700"
+                    className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors"
+                    style={{ color: headerText }}
                  >
                     🏆 History
                  </button>
                  <button
                     onClick={() => setIsRosterOpen(true)}
-                    className="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded text-sm text-white"
+                    className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors"
+                    style={{ color: headerText }}
                  >
                     My Roster
                  </button>
                  <Link
                     href="/roster"
-                    className="bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded text-sm text-white flex items-center"
+                    className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm flex items-center border border-white/10 backdrop-blur-sm transition-colors"
+                    style={{ color: headerText }}
                  >
                     Full Details
                  </Link>
@@ -114,9 +150,9 @@ export default function MarketDashboard() {
             )}
 
             {playerSchool ? (
-              <div className="bg-gray-700 px-4 py-2 rounded-lg border border-gray-600 text-right min-w-[150px]">
-                <div className="text-xs text-gray-400">Budget</div>
-                <div className="text-xl font-mono text-green-400">{formatMoney(playerSchool.budget)}</div>
+              <div className="bg-black/20 px-4 py-2 rounded-lg border border-white/10 text-right min-w-[150px] backdrop-blur-sm">
+                <div className="text-xs opacity-80" style={{ color: headerText }}>Budget</div>
+                <div className="text-xl font-mono font-bold" style={{ color: headerText }}>{formatMoney(playerSchool.budget)}</div>
               </div>
             ) : (
               <div className="bg-red-900/50 px-4 py-2 rounded-lg border border-red-700 text-red-200">
@@ -133,9 +169,10 @@ export default function MarketDashboard() {
         <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 flex items-center gap-4 overflow-x-auto">
             <span className="text-xs font-bold uppercase text-gray-500 tracking-wider whitespace-nowrap">Recent Champions (Special Group):</span>
             <div className="flex gap-4">
-                {recentChampions.map((champ, idx) => (
+                {recentChampions.map((champ) => (
                     <div key={`${champ.ano}-${champ.schoolName}`} className="flex items-center gap-2 bg-gray-900 px-3 py-1 rounded border border-gray-700">
                         <span className="text-yellow-500 font-bold text-sm">{champ.ano}</span>
+                        {champ.schoolFlag && <img src={champ.schoolFlag} alt="Flag" className="w-6 h-4 object-cover rounded shadow-sm" />}
                         <span className="text-sm text-gray-300 whitespace-nowrap">{champ.schoolName}</span>
                     </div>
                 ))}
@@ -173,6 +210,7 @@ export default function MarketDashboard() {
               <tr>
                 <th className="p-4 font-semibold border-b border-gray-700">Name</th>
                 <th className="p-4 font-semibold border-b border-gray-700">Role</th>
+                <th className="p-4 font-semibold border-b border-gray-700 text-center">Rep</th>
                 <th className="p-4 font-semibold border-b border-gray-700 w-1/3">Key Attributes (1-20)</th>
                 <th className="p-4 font-semibold border-b border-gray-700">Estimated Cost</th>
                 <th className="p-4 font-semibold border-b border-gray-700 text-center">Action</th>
@@ -181,7 +219,7 @@ export default function MarketDashboard() {
             <tbody className="divide-y divide-gray-700">
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">No staff members found matching criteria.</td>
+                  <td colSpan={6} className="p-8 text-center text-gray-500">No staff members found matching criteria.</td>
                 </tr>
               ) : (
                 filteredStaff.map((staff) => {
@@ -192,7 +230,7 @@ export default function MarketDashboard() {
 
                   return (
                     <tr key={staff.id} className="hover:bg-gray-700/50 transition-colors group">
-                      <td className="p-4 font-medium text-white relative">
+                      <td className="p-4 font-medium text-white relative min-w-[200px]">
                         <div className="flex items-center">
                             {staff.name}
                             {staff.partnerId && (
@@ -210,9 +248,19 @@ export default function MarketDashboard() {
                                 </span>
                             )}
                         </div>
+                        {staff.historyText && (
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-[250px]" title={staff.historyText}>
+                                {staff.historyText}
+                            </div>
+                        )}
                         {staff.partnerId && hoveredPartnerId === staff.partnerId && renderPartnerTooltip(staff.partnerId)}
                       </td>
                       <td className="p-4 text-gray-300">{formatRole(staff.role)}</td>
+                      <td className="p-4 text-center">
+                         <span className={`px-2 py-1 rounded text-xs font-bold ${staff.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-800 text-gray-300 border border-gray-700'}`}>
+                            {staff.reputation}
+                         </span>
+                      </td>
                       <td className="p-4">
                         <div className="flex flex-wrap gap-2">
                           {getKeySkills(staff.role, staff.skills).map((skill) => (
@@ -261,11 +309,24 @@ export default function MarketDashboard() {
       {isRosterOpen && playerSchool && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700">
-                <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-lg">
-                    <h2 className="text-xl font-bold text-white">Current Roster: <span className="text-yellow-500">{playerSchool.name}</span></h2>
+                <div
+                  className="p-4 border-b flex justify-between items-center rounded-t-lg transition-colors duration-500"
+                  style={{ backgroundColor: headerBg, borderColor: secondaryColor }}
+                >
+                    <h2 className="text-xl font-bold flex items-center gap-3" style={{ color: headerText }}>
+                         {playerSchool.flag && (
+                             <div className="w-10 h-6 relative rounded overflow-hidden shadow-sm border border-black/20">
+                                 <img src={playerSchool.flag} alt="Flag" className="w-full h-full object-cover" />
+                             </div>
+                         )}
+                        <span>
+                            Current Roster: <span style={{ color: secondaryColor === headerBg ? headerText : secondaryColor, textShadow: '0px 0px 2px rgba(0,0,0,0.5)' }}>{playerSchool.name}</span>
+                        </span>
+                    </h2>
                     <button
                         onClick={() => setIsRosterOpen(false)}
-                        className="text-gray-400 hover:text-white"
+                        className="opacity-70 hover:opacity-100 transition-opacity"
+                        style={{ color: headerText }}
                     >
                         ✕ Close
                     </button>
@@ -281,11 +342,15 @@ export default function MarketDashboard() {
       {isHistoryOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
              <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col border border-gray-700">
-                <div className="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900 rounded-t-lg">
-                    <h2 className="text-xl font-bold text-yellow-500">League History</h2>
+                <div
+                  className="p-4 border-b flex justify-between items-center rounded-t-lg transition-colors duration-500"
+                  style={{ backgroundColor: headerBg, borderColor: secondaryColor }}
+                >
+                    <h2 className="text-xl font-bold" style={{ color: headerText }}>League History</h2>
                     <button
                         onClick={() => setIsHistoryOpen(false)}
-                        className="text-gray-400 hover:text-white"
+                        className="opacity-70 hover:opacity-100 transition-opacity"
+                        style={{ color: headerText }}
                     >
                         ✕ Close
                     </button>
