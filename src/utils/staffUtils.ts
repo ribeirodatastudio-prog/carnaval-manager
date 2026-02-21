@@ -47,3 +47,32 @@ export const ALL_ROLES: StaffRole[] = [
   'DiretorDeHarmonia',
   'MestreDeBarracao'
 ];
+
+export const generatePotential = (reputation: number): number => {
+  // Roll for how much room to grow
+  const roll = Math.random();
+  let bonus: number;
+  if (roll < 0.05) bonus = Math.floor(Math.random() * 40) + 40;      // 5% chance: hidden gem (+40 to +79)
+  else if (roll < 0.20) bonus = Math.floor(Math.random() * 25) + 15;  // 15% chance: good upside (+15 to +39)
+  else if (roll < 0.55) bonus = Math.floor(Math.random() * 15) + 5;   // 35% chance: modest upside (+5 to +19)
+  else bonus = Math.floor(Math.random() * 5);                          // 45% chance: near-ceiling (0 to +4)
+
+  return Math.min(200, reputation + bonus);
+};
+
+export const generateAge = (role: StaffRole): number => {
+  const ranges: Record<StaffRole, [number, number]> = {
+    RainhaDeBateria: [20, 38],
+    MestreSala: [24, 45],
+    PortaBandeira: [22, 42],
+    Interprete: [28, 65],
+    MestreDeBateria: [35, 75],
+    Coreografo: [28, 58],
+    Carnavalesco: [32, 65],
+    DiretorDeCarnaval: [38, 68],
+    DiretorDeHarmonia: [34, 62],
+    MestreDeBarracao: [36, 65],
+  };
+  const [min, max] = ranges[role] || [25, 50];
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+};

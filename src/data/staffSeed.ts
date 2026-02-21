@@ -1,7 +1,7 @@
 
 import { StaffMember, StaffRole, StaffSkills, RainhaArchetype } from '../types/models';
 import { GENERIC_MARKET_POOL } from './genericStaffSeed';
-import { calculateSalaryExpectation } from '../utils/staffUtils';
+import { calculateSalaryExpectation, generateAge, generatePotential } from '../utils/staffUtils';
 
 // Helper to generate simple IDs
 const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
@@ -110,6 +110,8 @@ export const TIER_S_STAFF: StaffMember[] = [
   },
 ].map(staff => ({
   ...staff,
+  age: generateAge(staff.role),
+  potential: generatePotential(staff.reputation),
   salaryExpectation: calculateSalaryExpectation(staff.role, staff.skills, staff.reputation)
 }));
 
@@ -172,7 +174,8 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         salaryExpectation: calculateSalaryExpectation('MestreSala', msSkills, msRep),
         partnerId: pbId,
         synergy,
-        age: Math.floor(Math.random() * 15) + 25 // 25-40
+        age: generateAge('MestreSala'),
+        potential: generatePotential(msRep)
       });
 
       // Create PortaBandeira
@@ -195,7 +198,8 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         salaryExpectation: calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep),
         partnerId: msId,
         synergy,
-        age: Math.floor(Math.random() * 15) + 25 // 25-40
+        age: generateAge('PortaBandeira'),
+        potential: generatePotential(pbRep)
       });
 
       if (staff.length >= count) break;
@@ -242,7 +246,8 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         currentSchoolId: null,
         salaryExpectation: calculateSalaryExpectation(role, skills, reputation, archetype),
         archetype,
-        age: Math.floor(Math.random() * 20) + 25 // 25-45
+        age: generateAge(role),
+        potential: generatePotential(reputation)
       });
     }
 
@@ -258,5 +263,9 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
 export const INITIAL_MARKET_STAFF = [
   ...TIER_S_STAFF,
   ...generateRandomStaff(30),
-  ...GENERIC_MARKET_POOL
+  ...GENERIC_MARKET_POOL.map(s => ({
+      ...s,
+      potential: s.potential || generatePotential(s.reputation),
+      age: s.age || generateAge(s.role) // Override/Fill
+  }))
 ];

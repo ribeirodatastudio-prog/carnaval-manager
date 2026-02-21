@@ -1,5 +1,5 @@
 import { StaffMember, StaffRole, StaffSkills, Division, RainhaArchetype } from '../types/models';
-import { calculateSalaryExpectation } from '../utils/staffUtils';
+import { calculateSalaryExpectation, generateAge, generatePotential } from '../utils/staffUtils';
 
 const MALE_FIRST_NAMES = [
   'Carlos', 'João', 'Pedro', 'Lucas', 'Mateus', 'Gabriel', 'Rafael', 'Felipe', 'Bruno', 'Thiago', 'Jorge', 'Luiz', 'Antônio', 'José', 'Francisco', 'Paulo', 'Roberto', 'Marcos', 'Ricardo', 'Eduardo', 'André', 'Daniel', 'Diego', 'Fábio', 'Gustavo', 'Henrique', 'Igor', 'Júnior', 'Kleber', 'Leonardo', 'Márcio', 'Nélson', 'Oswaldo', 'Renato', 'Sandro', 'Túlio', 'Vagner', 'Wellington', 'Xande', 'Alessandro', 'Bernardo', 'Caio', 'Danilo', 'Evandro', 'Flávio', 'Gilberto', 'Haroldo', 'Ivaldo', 'Jeremias', 'Kleiton'
@@ -21,12 +21,12 @@ const DIVISION_SALARY_FACTOR: Record<Division, number> = {
   'Grupo de Avaliação': 0.10,
 };
 
-const SKILL_RANGES: Record<Division, { baseMin: number; baseMax: number; repMin: number; repMax: number; ageMin: number; ageMax: number }> = {
-  'Grupo Especial': { baseMin: 100, baseMax: 145, repMin: 95, repMax: 145, ageMin: 28, ageMax: 52 },
-  'Série Ouro': { baseMin: 80, baseMax: 120, repMin: 75, repMax: 120, ageMin: 24, ageMax: 48 },
-  'Série Prata': { baseMin: 60, baseMax: 100, repMin: 55, repMax: 100, ageMin: 20, ageMax: 45 },
-  'Série Bronze': { baseMin: 40, baseMax: 80, repMin: 35, repMax: 80, ageMin: 18, ageMax: 42 },
-  'Grupo de Avaliação': { baseMin: 20, baseMax: 60, repMin: 15, repMax: 60, ageMin: 17, ageMax: 38 },
+const SKILL_RANGES: Record<Division, { baseMin: number; baseMax: number; repMin: number; repMax: number }> = {
+  'Grupo Especial': { baseMin: 100, baseMax: 145, repMin: 95, repMax: 145 },
+  'Série Ouro': { baseMin: 80, baseMax: 120, repMin: 75, repMax: 120 },
+  'Série Prata': { baseMin: 60, baseMax: 100, repMin: 55, repMax: 100 },
+  'Série Bronze': { baseMin: 40, baseMax: 80, repMin: 35, repMax: 80 },
+  'Grupo de Avaliação': { baseMin: 20, baseMax: 60, repMin: 15, repMax: 60 },
 };
 
 function getRandomName(role: StaffRole): string {
@@ -192,7 +192,8 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
     // Mestre Sala
     const msSkills = generateSkills('MestreSala', baseSkill);
     const msRep = Math.min(160, Math.floor(Math.random() * (range.repMax - range.repMin + 1)) + range.repMin);
-    const msAge = Math.floor(Math.random() * (range.ageMax - range.ageMin + 1)) + range.ageMin;
+    const msAge = generateAge('MestreSala');
+    const msPotential = generatePotential(msRep);
 
     const ms: StaffMember = {
       id: msId,
@@ -206,7 +207,8 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
       currentSchoolId: null,
       partnerId: pbId,
       synergy,
-      age: msAge
+      age: msAge,
+      potential: msPotential
     };
     ms.salaryExpectation = calculateSalaryExpectation('MestreSala', msSkills, msRep);
     ms.salary = Math.floor(ms.salaryExpectation * DIVISION_SALARY_FACTOR[division]);
@@ -216,7 +218,8 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
     // Porta Bandeira
     const pbSkills = generateSkills('PortaBandeira', baseSkill);
     const pbRep = Math.min(160, Math.floor(Math.random() * (range.repMax - range.repMin + 1)) + range.repMin);
-    const pbAge = Math.floor(Math.random() * (range.ageMax - range.ageMin + 1)) + range.ageMin;
+    const pbAge = generateAge('PortaBandeira');
+    const pbPotential = generatePotential(pbRep);
 
     const pb: StaffMember = {
       id: pbId,
@@ -230,7 +233,8 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
       currentSchoolId: null,
       partnerId: msId,
       synergy,
-      age: pbAge
+      age: pbAge,
+      potential: pbPotential
     };
     pb.salaryExpectation = calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep);
     pb.salary = Math.floor(pb.salaryExpectation * DIVISION_SALARY_FACTOR[division]);
@@ -244,7 +248,8 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
     const baseSkill = Math.floor(Math.random() * (range.baseMax - range.baseMin + 1)) + range.baseMin;
     const skills = generateSkills(role, baseSkill);
     let reputation = Math.min(160, Math.floor(Math.random() * (range.repMax - range.repMin + 1)) + range.repMin);
-    const age = Math.floor(Math.random() * (range.ageMax - range.ageMin + 1)) + range.ageMin;
+    const age = generateAge(role);
+    const potential = generatePotential(reputation);
 
     let archetype: RainhaArchetype | undefined;
     if (role === 'RainhaDeBateria') {
@@ -269,7 +274,8 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
       contractYears: Math.floor(Math.random() * 3) + 1,
       currentSchoolId: null,
       archetype,
-      age
+      age,
+      potential
     };
 
     staff.salaryExpectation = calculateSalaryExpectation(role, skills, reputation, archetype);
@@ -305,7 +311,7 @@ function generateMarketPool(): StaffMember[] {
         const isCouple = Math.random() < 0.15;
         const baseSkill = Math.floor(Math.random() * (range.baseMax - range.baseMin + 1)) + range.baseMin;
         const uuid = Math.random().toString(36).substr(2, 9);
-        const age = Math.floor(Math.random() * (range.ageMax - range.ageMin + 1)) + range.ageMin;
+        const age = generateAge('MestreSala'); // Assuming random logic inside generateAge is sufficient variance
 
         if (isCouple) {
             const synergy = Math.floor(Math.random() * 51) + 50;
@@ -315,6 +321,8 @@ function generateMarketPool(): StaffMember[] {
              // MS
             const msSkills = generateSkills('MestreSala', baseSkill);
             const msRep = Math.min(160, Math.floor(Math.random() * (range.repMax - range.repMin + 1)) + range.repMin);
+            const msAge = generateAge('MestreSala');
+            const msPotential = generatePotential(msRep);
             const ms: StaffMember = {
                 id: msId,
                 name: getRandomName('MestreSala'),
@@ -327,7 +335,8 @@ function generateMarketPool(): StaffMember[] {
                 currentSchoolId: null,
                 partnerId: pbId,
                 synergy,
-                age
+                age: msAge,
+                potential: msPotential
             };
             ms.salaryExpectation = calculateSalaryExpectation('MestreSala', msSkills, msRep);
             pool.push(ms);
@@ -336,6 +345,8 @@ function generateMarketPool(): StaffMember[] {
             // PB
             const pbSkills = generateSkills('PortaBandeira', baseSkill);
             const pbRep = Math.min(160, Math.floor(Math.random() * (range.repMax - range.repMin + 1)) + range.repMin);
+            const pbAge = generateAge('PortaBandeira');
+            const pbPotential = generatePotential(pbRep);
             const pb: StaffMember = {
                 id: pbId,
                 name: getRandomName('PortaBandeira'),
@@ -348,19 +359,18 @@ function generateMarketPool(): StaffMember[] {
                 currentSchoolId: null,
                 partnerId: msId,
                 synergy,
-                age
+                age: pbAge,
+                potential: pbPotential
             };
             pb.salaryExpectation = calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep);
             pool.push(pb);
 
         } else {
             const role = allRoles[Math.floor(Math.random() * allRoles.length)];
-            // Skip Coreografo/etc for lower divisions? Market implies "free agents", so maybe they exist even if division doesn't use them?
-            // "Distribute roles roughly evenly."
-            // I'll assume all roles are valid for market, but lower divisions won't hire them.
-
             const skills = generateSkills(role, baseSkill);
             let reputation = Math.min(160, Math.floor(Math.random() * (range.repMax - range.repMin + 1)) + range.repMin);
+            const age = generateAge(role);
+            const potential = generatePotential(reputation);
 
             let archetype: RainhaArchetype | undefined;
             if (role === 'RainhaDeBateria') {
@@ -385,7 +395,8 @@ function generateMarketPool(): StaffMember[] {
                 contractYears: 0,
                 currentSchoolId: null,
                 archetype,
-                age
+                age,
+                potential
             };
             staff.salaryExpectation = calculateSalaryExpectation(role, skills, reputation, archetype);
             pool.push(staff);

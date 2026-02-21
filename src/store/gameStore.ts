@@ -4,7 +4,7 @@ import { loadAllSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
 import { calculateSalaryExpectation, ALL_ROLES } from '../utils/staffUtils';
 import { loadRealStaff } from '../data/realStaff';
-import { calculateStaffReputation } from '../services/staffService';
+import { calculateStaffReputation, processRetirements, processStaffDevelopment } from '../services/staffService';
 import { researchEnredo } from '../services/researchEngine';
 import { runSimulation, SimulationResult } from '../services/simulationService';
 import { resolveOffer, processAITransfers } from '../services/transferService';
@@ -45,7 +45,9 @@ const initializeGameData = () => {
       salaryExpectation,
       salary: 0,
       contractYears: 0,
-      currentSchoolId: null // Will be set below
+      currentSchoolId: null, // Will be set below
+      age: raw.age,
+      potential: undefined // Real staff have no potential (ceiling reached or custom logic)
     };
 
     // Find Target School
@@ -138,7 +140,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     playerSchoolId: null,
     pendingOffers: [],
     resolvedOffers: [],
-    transferNews: []
+    transferNews: [],
+    hallOfFame: []
   },
   schools: initialSchools,
   availableStaff: initialStaff,
@@ -167,20 +170,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       let updatedSchools = [...state.schools];
       let updatedAvailableStaff = [...state.availableStaff];
-      let newResolvedOffers = [...state.gameState.resolvedOffers]; // Keep existing resolved offers? Prompt says "cleared each week after display"
-      // Actually prompt says "Close button clears resolvedOffers...". But here we should probably clear old ones if they were viewed?
-      // Or maybe we clear them now?
-      // "The player sees all results... at the start of each new week."
-      // So we should probably keep them until the player dismisses them, OR accumulate new ones.
-      // Prompt: "Close button clears resolvedOffers and transferNews from view (but not from state until next week)"
-      // Actually: "Close button clears resolvedOffers... from view".
-      // Let's assume we clear *previous* week's resolved offers when we resolve *new* ones, effectively replacing them.
-      // So reset resolvedOffers to [].
+      let newResolvedOffers = [...state.gameState.resolvedOffers];
+      // Close button clears resolvedOffers from view, so we assume we start fresh or append.
+      // Given the UI logic, let's clear them so we only show new ones.
       newResolvedOffers = [];
 
-      let newTransferNews = [...state.gameState.transferNews]; // Accumulate? Or reset?
-      // Prompt: "list transferNews strings from AI market activity log".
-      // Usually news is weekly.
+      let newTransferNews = [...state.gameState.transferNews];
+      // Reset news? Usually yes for a new week update.
       newTransferNews = [];
 
       if (currentPhase === 'Market') {
@@ -189,7 +185,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
         pending.forEach(offer => {
             if (offer.status !== 'Pending') {
-                // Should not be here usually, but if so, move to resolved
                 newResolvedOffers.push(offer);
                 return;
             }
@@ -198,7 +193,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             const staffIdx = updatedAvailableStaff.findIndex(s => s.id === offer.toStaffId);
             let staff = updatedAvailableStaff[staffIdx];
 
-            // If staff not in available, maybe they are in another school?
             if (!staff) {
                 // Check schools
                 for (const s of updatedSchools) {
@@ -211,21 +205,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             }
 
             if (!staff || schoolIdx === -1) {
-                // Invalid offer (staff retired? school gone?)
                 offer.status = 'Rejected';
                 newResolvedOffers.push(offer);
                 return;
             }
 
             const school = updatedSchools[schoolIdx];
-            // Calculate unfilled roles for desperation logic
             const unfilledRolesCount = ALL_ROLES.filter(role => !school.staff.some(s => s.role === role)).length;
 
             const resolved = resolveOffer(offer, staff, school, currentWeek, 8, unfilledRolesCount);
 
             if (resolved.status === 'Accepted') {
                 // Execute Hire
-                // 1. Remove from old location
                 if (staff.currentSchoolId) {
                     const oldSchoolIdx = updatedSchools.findIndex(s => s.id === staff.currentSchoolId);
                     if (oldSchoolIdx !== -1) {
@@ -234,11 +225,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                         updatedSchools[oldSchoolIdx] = { ...oldSchool };
                     }
                 } else {
-                    // Remove from available
                     updatedAvailableStaff = updatedAvailableStaff.filter(s => s.id !== staff.id);
                 }
 
-                // 2. Remove existing staff in role at new school
                 const existingStaffIdx = school.staff.findIndex(s => s.role === staff.role);
                 if (existingStaffIdx !== -1) {
                     const fired = school.staff[existingStaffIdx];
@@ -246,11 +235,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                     fired.salary = 0;
                     fired.contractYears = 0;
                     updatedAvailableStaff.push(fired);
-
-                    school.staff = school.staff.filter(s => s.id !== fired.id); // Remove from roster
+                    school.staff = school.staff.filter(s => s.id !== fired.id);
                 }
 
-                // 3. Add to new school
                 const newStaff = {
                     ...staff,
                     currentSchoolId: school.id,
@@ -258,22 +245,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                     contractYears: offer.contractYears
                 };
                 school.staff.push(newStaff);
-
-                // 4. Update Budget
-                // Rainha logic? Prompt didn't mention specific Rainha logic for *transfers*, but we should probably keep it consistent?
-                // "The project is a 'Carnival Manager'... RainhaDeBateria roles have specific archetypes..."
-                // Transfer service ignores Rainha logic?
-                // `calculateOfferProbability` works for everyone.
-                // But budget deduction?
-                // Standard logic: deduct salary.
-                // Rainha special logic (PostoPago adds money, Celebrity costs 0?)
-                // If the user manually offered a salary, we deduct it.
-                // If it's PostoPago, salary offered might be 0, but they pay the school.
-                // Let's assume Transfer System overrides the "Instant Hire" special logic for now, or applies it if appropriate.
-                // Given the prompt didn't specify Rainha transfer details, I'll stick to simple deduction of offered salary.
                 school.budget -= offer.offeredSalary;
 
-                // 5. Prestige Bonus
                 const prestigeBonus = Math.max(0, (staff.reputation - school.prestige) * 0.02);
                 school.prestige = Math.min(195, school.prestige + prestigeBonus);
 
@@ -310,6 +283,54 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         nextPhase = 'Results/Offseason';
       }
 
+      // -- NEW LOGIC START --
+
+      // Retirement Check (Start of Market / Week 1)
+      let hallOfFame = [...state.gameState.hallOfFame || []];
+
+      if (nextWeek === 1) {
+          // Process Available Staff
+          const retAvail = processRetirements(updatedAvailableStaff);
+          updatedAvailableStaff = retAvail.remaining;
+
+          retAvail.retired.forEach(r => {
+              if (r.reputation >= 200) hallOfFame.push(r);
+              newTransferNews.push(`${r.name} (${r.role}) retired.`);
+          });
+
+          // Process Schools Staff
+          updatedSchools = updatedSchools.map(school => {
+             const retSchool = processRetirements(school.staff);
+
+             retSchool.retired.forEach(r => {
+                 if (r.reputation >= 200) hallOfFame.push(r);
+                 newTransferNews.push(`${r.name} (${r.role}, ${school.name}) retired.`);
+             });
+
+             return { ...school, staff: retSchool.remaining };
+          });
+      }
+
+      // Development Check (Start of Results/Offseason)
+      if (nextWeek === 46) {
+          // Process Player School Development
+          const playerSchoolIndex = updatedSchools.findIndex(s => s.id === state.gameState.playerSchoolId);
+          if (playerSchoolIndex !== -1) {
+              const playerSchool = updatedSchools[playerSchoolIndex];
+              // Get Score
+              let score = 50;
+              // Simple heuristic if no simulation result available
+              if (playerSchool.prestige > 150) score = 70 + (Math.random() * 20);
+              else score = 50 + (Math.random() * 20);
+
+              const devResult = processStaffDevelopment(playerSchool.staff, score);
+              updatedSchools[playerSchoolIndex] = { ...playerSchool, staff: devResult.updatedStaff };
+
+              devResult.updates.forEach(u => newTransferNews.push(u));
+          }
+      }
+      // -- NEW LOGIC END --
+
       return {
         schools: updatedSchools,
         availableStaff: updatedAvailableStaff,
@@ -318,9 +339,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           currentYear: nextYear,
           currentWeek: nextWeek,
           currentPhase: nextPhase,
-          pendingOffers: [], // All pending were resolved (or moved to resolvedOffers)
+          pendingOffers: [],
           resolvedOffers: newResolvedOffers,
-          transferNews: newTransferNews
+          transferNews: newTransferNews,
+          hallOfFame
         },
       };
     }),
@@ -332,7 +354,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (currentPhase !== 'Market') return 'Transfer market is closed.';
 
     const school = state.schools.find(s => s.id === schoolId);
-    // Find staff in available OR in other schools
     let staff = state.availableStaff.find(s => s.id === staffId);
     if (!staff) {
         for (const s of state.schools) {
@@ -346,11 +367,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     if (school.budget < offeredSalary) return 'Insufficient budget.';
 
-    // Check one offer per role per week
     const conflict = pendingOffers.find(o => {
         if (o.fromSchoolId !== schoolId || o.status !== 'Pending' || o.weekMade !== currentWeek) return false;
-
-        // Check role
         let targetStaff = state.availableStaff.find(s => s.id === o.toStaffId);
         if (!targetStaff) {
              for (const s of state.schools) {
@@ -391,15 +409,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const offer = state.gameState.resolvedOffers[offerIndex];
     if (offer.status !== 'Countered' || !offer.counterSalary) return;
 
-    // Execute Hire (Copy-paste logic from resolve, but using counter values)
-    // We need to update schools and staff
     const updatedSchools = [...state.schools];
     let updatedAvailableStaff = [...state.availableStaff];
 
     const schoolIdx = updatedSchools.findIndex(s => s.id === offer.fromSchoolId);
     let staff = updatedAvailableStaff.find(s => s.id === offer.toStaffId);
 
-    // Find staff if not available
     if (!staff) {
         for (const s of updatedSchools) {
             const found = s.staff.find(st => st.id === offer.toStaffId);
@@ -410,30 +425,24 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         }
     }
 
-    if (schoolIdx === -1 || !staff) return; // Should handle error?
+    if (schoolIdx === -1 || !staff) return;
     const school = updatedSchools[schoolIdx];
 
     if (school.budget < offer.counterSalary) {
-        // Can't afford counter?
-        // UI should prevent this probably, but handle here.
-        // Fail silently or just don't apply.
         return;
     }
 
-    // Execute Hire
-    // 1. Remove from old
     if (staff.currentSchoolId) {
         const oldSchoolIdx = updatedSchools.findIndex(s => s.id === staff.currentSchoolId);
         if (oldSchoolIdx !== -1) {
             const oldSchool = updatedSchools[oldSchoolIdx];
-            oldSchool.staff = oldSchool.staff.filter(s => s.id !== staff!.id); // ! is safe here
+            oldSchool.staff = oldSchool.staff.filter(s => s.id !== staff!.id);
             updatedSchools[oldSchoolIdx] = { ...oldSchool };
         }
     } else {
         updatedAvailableStaff = updatedAvailableStaff.filter(s => s.id !== staff!.id);
     }
 
-    // 2. Remove existing
     const existingStaffIdx = school.staff.findIndex(s => s.role === staff!.role);
     if (existingStaffIdx !== -1) {
         const fired = school.staff[existingStaffIdx];
@@ -444,7 +453,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         school.staff = school.staff.filter(s => s.id !== fired.id);
     }
 
-    // 3. Add new
     const newStaff = {
         ...staff,
         currentSchoolId: school.id,
@@ -452,17 +460,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         contractYears: offer.counterYears || 1
     };
     school.staff.push(newStaff);
-
-    // 4. Budget
     school.budget -= offer.counterSalary;
 
-    // 5. Prestige
     const prestigeBonus = Math.max(0, (staff.reputation - school.prestige) * 0.02);
     school.prestige = Math.min(195, school.prestige + prestigeBonus);
 
     updatedSchools[schoolIdx] = { ...school };
 
-    // Update Offer Status
     const updatedResolvedOffers = [...state.gameState.resolvedOffers];
     updatedResolvedOffers[offerIndex] = { ...offer, status: 'Accepted' };
 

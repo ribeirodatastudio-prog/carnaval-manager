@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { StaffMember } from '../types/models';
+import { getPotentialDescriptor } from '../services/staffService';
 import { formatMoney, formatRole } from '../utils/textUtils';
 import { getKeySkills } from '../utils/helpers';
 
@@ -31,13 +32,19 @@ export default function RosterList({ staff }: RosterListProps) {
             <tr key={member.id} className="bg-gray-800 hover:bg-gray-750">
               <td className="px-4 py-3 font-medium text-white">{formatRole(member.role)}</td>
               <td className="px-4 py-3">
-                {member.name}
-                {member.archetype && <span className="ml-2 text-xs bg-purple-900 text-purple-200 px-1 rounded">{member.archetype}</span>}
+                <div className="flex items-center">
+                  {member.name}
+                  {member.age && <span className="ml-2 text-xs text-gray-500">({member.age}y)</span>}
+                  {member.archetype && <span className="ml-2 text-xs bg-purple-900 text-purple-200 px-1 rounded">{member.archetype}</span>}
+                </div>
               </td>
               <td className="px-4 py-3 text-center">
-                <span className={`px-2 py-1 rounded text-xs font-bold ${member.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-700 text-gray-300'}`}>
-                    {member.reputation}
-                </span>
+                <div className="flex flex-col items-center gap-1">
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${member.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-700 text-gray-300'}`}>
+                      {member.reputation}
+                  </span>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-tight">{getPotentialDescriptor(member.reputation, member.potential)}</span>
+                </div>
               </td>
               <td className="px-4 py-3">
                 <div className="flex gap-2 flex-wrap">
