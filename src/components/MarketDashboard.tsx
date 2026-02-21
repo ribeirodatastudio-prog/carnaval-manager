@@ -1,14 +1,14 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useGameStore } from '../store/gameStore';
-import { StaffRole, StaffMember } from '../types/models';
+import { StaffRole, StaffMember, TransferOffer } from '../types/models';
 import { calculateAdjustedSalary } from '../store/gameStore';
+import { calculateOfferProbability } from '../services/transferService';
 import { formatMoney, formatRole } from '../utils/textUtils';
 import { getKeySkills } from '../utils/helpers';
-import RosterList from './RosterList';
+import RosterList from './RosterList'; // You might need to adjust this path if RosterList is not in same folder or check its content
 
 // Helper for contrast
 function getContrastColor(hex: string | undefined): string {
@@ -23,28 +23,53 @@ function getContrastColor(hex: string | undefined): string {
 }
 
 export default function MarketDashboard() {
-  const { gameState, schools, availableStaff, makeHiringOffer } = useGameStore();
-  const { playerSchoolId } = gameState;
+  const { gameState, schools, availableStaff, submitTransferOffer, advanceWeek, acceptCounter, rejectCounter } = useGameStore();
+  const { playerSchoolId, currentPhase, pendingOffers, resolvedOffers, transferNews } = gameState;
+
   const [filterRole, setFilterRole] = useState<StaffRole | 'All'>('All');
   const [message, setMessage] = useState<string | null>(null);
   const [isRosterOpen, setIsRosterOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [hoveredPartnerId, setHoveredPartnerId] = useState<string | null>(null);
 
+  // New States
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [offerSalary, setOfferSalary] = useState(0);
+  const [offerYears, setOfferYears] = useState(1);
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+
   const playerSchool = schools.find(s => s.id === playerSchoolId);
 
-  const handleHire = (staffId: string, offeredSalary: number) => {
-    if (!playerSchoolId) {
-      setMessage("You must select a school first.");
-      return;
-    }
-    const result = makeHiringOffer(playerSchoolId, staffId, offeredSalary);
-    setMessage(result);
-    setTimeout(() => setMessage(null), 3000);
+  // Calculate live probability
+  const probData = (playerSchool && selectedStaff)
+    ? calculateOfferProbability(selectedStaff, playerSchool, offerSalary, offerYears)
+    : null;
+
+  const openOfferModal = (staff: StaffMember) => {
+      setSelectedStaff(staff);
+      const baseSalary = calculateAdjustedSalary(staff, playerSchool?.prestige || 100);
+      setOfferSalary(baseSalary > 0 ? baseSalary : staff.salaryExpectation); // Default
+      setOfferYears(1);
+      setIsOfferModalOpen(true);
+  };
+
+  const handleMakeOffer = () => {
+      if (!playerSchool || !selectedStaff) return;
+      const msg = submitTransferOffer(playerSchool.id, selectedStaff.id, offerSalary, offerYears);
+      setMessage(msg);
+      setTimeout(() => setMessage(null), 3000);
+      setIsOfferModalOpen(false);
+  };
+
+  const handleAdvanceWeek = () => {
+      advanceWeek();
+      setIsResultsModalOpen(true);
   };
 
   const filteredStaff = availableStaff.filter(staff => filterRole === 'All' || staff.role === filterRole);
   const uniqueRoles = Array.from(new Set(availableStaff.map(s => s.role)));
+  const counteredOffers = resolvedOffers.filter(o => o.status === 'Countered');
 
   const findPartner = (partnerId: string): StaffMember | null => {
     const inMarket = availableStaff.find(s => s.id === partnerId);
@@ -56,19 +81,7 @@ export default function MarketDashboard() {
     return null;
   };
 
-  // Calculate Recent Champions (Special Group)
-  const recentChampions = schools
-    .flatMap(s => s.history.titulos.map(t => ({
-        ...t,
-        schoolName: s.name,
-        schoolColors: s.colors,
-        schoolFlag: s.flag
-    })))
-    .filter(t => t.divisao === 'Grupo Especial')
-    .sort((a, b) => b.ano - a.ano)
-    .slice(0, 5);
-
-  const renderPartnerTooltip = (partnerId: string) => {
+   const renderPartnerTooltip = (partnerId: string) => {
     const partner = findPartner(partnerId);
     if (!partner) return null;
 
@@ -90,10 +103,21 @@ export default function MarketDashboard() {
   };
 
   // Determine dynamic colors
-  const headerBg = playerSchool?.colors[0] || '#1F2937'; // Default gray-800
+  const headerBg = playerSchool?.colors[0] || '#1F2937';
   const headerText = getContrastColor(playerSchool?.colors[0]);
-  const headerSubText = headerText === '#111827' ? '#374151' : '#9CA3AF'; // Dark gray or light gray
   const secondaryColor = playerSchool?.colors[1] || headerBg;
+
+  // Probability Color
+  const getProbColor = (p: number) => {
+      if (p < 0.3) return 'text-red-500';
+      if (p < 0.65) return 'text-yellow-500';
+      return 'text-green-500';
+  };
+  const getProbLabel = (p: number) => {
+       if (p < 0.3) return 'Low';
+      if (p < 0.65) return 'Medium';
+      return 'High';
+  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 relative">
@@ -111,48 +135,41 @@ export default function MarketDashboard() {
             )}
             <div>
                 <h1 className="text-2xl font-bold leading-none">Carnival Manager</h1>
-                <div className="text-sm" style={{ color: headerSubText }}>
-                    Year {gameState.currentYear} | Phase: <span className="font-semibold">{gameState.currentPhase}</span>
+                <div className="text-sm opacity-90">
+                    Year {gameState.currentYear} | Phase: <span className="font-semibold">{currentPhase}</span> | Week: {gameState.currentWeek}
                 </div>
             </div>
           </div>
-
-          <Link href="/devtools" className="text-xs bg-black/20 hover:bg-black/30 border border-white/20 px-2 py-1 rounded transition-colors backdrop-blur-sm" style={{ color: headerText }}>
+           <Link href="/devtools" className="text-xs bg-black/20 hover:bg-black/30 border border-white/20 px-2 py-1 rounded transition-colors backdrop-blur-sm">
             🔧 DevTools
           </Link>
         </div>
 
         <div className="flex items-center gap-4">
-            {playerSchool && (
+             {playerSchool && (
               <div className="flex gap-2">
-                 <button
-                    onClick={() => setIsHistoryOpen(true)}
-                    className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors"
-                    style={{ color: headerText }}
-                 >
+                 <button onClick={() => setIsHistoryOpen(true)} className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors">
                     🏆 History
                  </button>
-                 <button
-                    onClick={() => setIsRosterOpen(true)}
-                    className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors"
-                    style={{ color: headerText }}
-                 >
+                 <button onClick={() => setIsRosterOpen(true)} className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors">
                     My Roster
                  </button>
-                 <Link
-                    href="/roster"
-                    className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm flex items-center border border-white/10 backdrop-blur-sm transition-colors"
-                    style={{ color: headerText }}
-                 >
-                    Full Details
-                 </Link>
+                  {/* Next Week Button */}
+                 {currentPhase === 'Market' && (
+                    <button
+                        onClick={handleAdvanceWeek}
+                        className="bg-green-600 hover:bg-green-500 text-white font-bold px-4 py-1 rounded text-sm border border-green-400 shadow-lg animate-pulse"
+                    >
+                        Next Week ➡️
+                    </button>
+                 )}
               </div>
             )}
 
             {playerSchool ? (
               <div className="bg-black/20 px-4 py-2 rounded-lg border border-white/10 text-right min-w-[150px] backdrop-blur-sm">
-                <div className="text-xs opacity-80" style={{ color: headerText }}>Budget</div>
-                <div className="text-xl font-mono font-bold" style={{ color: headerText }}>{formatMoney(playerSchool.budget)}</div>
+                <div className="text-xs opacity-80">Budget</div>
+                <div className="text-xl font-mono font-bold">{formatMoney(playerSchool.budget)}</div>
               </div>
             ) : (
               <div className="bg-red-900/50 px-4 py-2 rounded-lg border border-red-700 text-red-200">
@@ -165,20 +182,39 @@ export default function MarketDashboard() {
       {/* Main Content */}
       <main className="flex-1 overflow-hidden flex flex-col p-6 gap-6">
 
-        {/* Recent Champions Widget */}
-        <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-3 flex items-center gap-4 overflow-x-auto">
-            <span className="text-xs font-bold uppercase text-gray-500 tracking-wider whitespace-nowrap">Recent Champions (Special Group):</span>
-            <div className="flex gap-4">
-                {recentChampions.map((champ) => (
-                    <div key={`${champ.ano}-${champ.schoolName}`} className="flex items-center gap-2 bg-gray-900 px-3 py-1 rounded border border-gray-700">
-                        <span className="text-yellow-500 font-bold text-sm">{champ.ano}</span>
-                        {champ.schoolFlag && <img src={champ.schoolFlag} alt="Flag" className="w-6 h-4 object-cover rounded shadow-sm" />}
-                        <span className="text-sm text-gray-300 whitespace-nowrap">{champ.schoolName}</span>
-                    </div>
-                ))}
-                {recentChampions.length === 0 && <span className="text-gray-600 text-sm">No history yet.</span>}
+        {/* Pending Decisions Panel */}
+        {counteredOffers.length > 0 && (
+            <div className="bg-yellow-900/40 border border-yellow-600 p-4 rounded-lg">
+                <h3 className="text-yellow-400 font-bold mb-2">⚠️ Pending Counter-Offers</h3>
+                <div className="space-y-2">
+                    {counteredOffers.map(offer => {
+                        const staff = availableStaff.find(s => s.id === offer.toStaffId) || schools.flatMap(s => s.staff).find(s => s.id === offer.toStaffId);
+                        return (
+                            <div key={offer.id} className="flex justify-between items-center bg-black/40 p-2 rounded">
+                                <div>
+                                    <span className="font-bold text-white">{staff?.name}</span> ({staff?.role}) requests
+                                    <span className="text-green-400 font-mono ml-2">{formatMoney(offer.counterSalary || 0)}</span> for {offer.counterYears} year(s).
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => acceptCounter(offer.id)}
+                                        className="bg-green-700 hover:bg-green-600 px-3 py-1 rounded text-xs font-bold"
+                                    >
+                                        Accept
+                                    </button>
+                                    <button
+                                        onClick={() => rejectCounter(offer.id)}
+                                        className="bg-red-700 hover:bg-red-600 px-3 py-1 rounded text-xs font-bold"
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
-        </div>
+        )}
 
         {/* Filters and Actions */}
         <div className="flex justify-between items-center bg-gray-800 p-4 rounded-lg shadow-sm">
@@ -211,8 +247,8 @@ export default function MarketDashboard() {
                 <th className="p-4 font-semibold border-b border-gray-700">Name</th>
                 <th className="p-4 font-semibold border-b border-gray-700">Role</th>
                 <th className="p-4 font-semibold border-b border-gray-700 text-center">Rep</th>
-                <th className="p-4 font-semibold border-b border-gray-700 w-1/3">Key Attributes (1-20)</th>
-                <th className="p-4 font-semibold border-b border-gray-700">Estimated Cost</th>
+                <th className="p-4 font-semibold border-b border-gray-700 w-1/3">Key Attributes</th>
+                <th className="p-4 font-semibold border-b border-gray-700">Expected Cost</th>
                 <th className="p-4 font-semibold border-b border-gray-700 text-center">Action</th>
               </tr>
             </thead>
@@ -223,16 +259,25 @@ export default function MarketDashboard() {
                 </tr>
               ) : (
                 filteredStaff.map((staff) => {
-                  // Calculate dynamic salary based on player's school prestige
-                  const prestige = playerSchool ? playerSchool.prestige : 100; // Default to 100 if no school selected
+                  const prestige = playerSchool ? playerSchool.prestige : 100;
                   const adjustedSalary = calculateAdjustedSalary(staff, prestige);
                   const isRainha = staff.role === 'RainhaDeBateria';
+
+                  // Check if offer pending
+                  const isPending = pendingOffers.some(o => o.toStaffId === staff.id && o.status === 'Pending');
+                  // Check if pending offer for this ROLE exists
+                  const rolePending = pendingOffers.some(o => {
+                      if (o.status !== 'Pending' || o.fromSchoolId !== playerSchoolId) return false;
+                      const s = availableStaff.find(st => st.id === o.toStaffId);
+                      return s && s.role === staff.role;
+                  });
 
                   return (
                     <tr key={staff.id} className="hover:bg-gray-700/50 transition-colors group">
                       <td className="p-4 font-medium text-white relative min-w-[200px]">
                         <div className="flex items-center">
                             {staff.name}
+                            {staff.age && <span className="ml-2 text-xs text-gray-500">({staff.age}y)</span>}
                             {staff.partnerId && (
                             <span
                                 className="ml-2 text-xs bg-pink-900 text-pink-200 px-1 rounded cursor-help"
@@ -284,16 +329,16 @@ export default function MarketDashboard() {
                       </td>
                       <td className="p-4 text-center">
                         <button
-                          onClick={() => handleHire(staff.id, adjustedSalary)}
-                          className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={
-                              !playerSchool ||
-                              (staff.role !== 'RainhaDeBateria' && playerSchool.budget < adjustedSalary) ||
-                              (staff.archetype === 'Celebridade' && playerSchool.prestige < 180)
-                          }
-                          title={staff.archetype === 'Celebridade' && playerSchool && playerSchool.prestige < 180 ? "Requires Historical Prestige (180+)" : "Hire Staff"}
+                          onClick={() => openOfferModal(staff)}
+                          className={`px-4 py-2 rounded text-sm font-medium transition-colors ${
+                              isPending ? 'bg-yellow-600 text-white cursor-not-allowed' :
+                              rolePending ? 'bg-gray-600 text-gray-400 cursor-not-allowed' :
+                              'bg-blue-600 hover:bg-blue-500 text-white'
+                          }`}
+                          disabled={!playerSchool || isPending || rolePending}
+                          title={isPending ? "Offer Pending" : rolePending ? "Offer already submitted for this role this week" : "Make Offer"}
                         >
-                          Hire
+                          {isPending ? "Pending" : "Make Offer"}
                         </button>
                       </td>
                     </tr>
@@ -304,6 +349,129 @@ export default function MarketDashboard() {
           </table>
         </div>
       </main>
+
+      {/* Offer Modal */}
+      {isOfferModalOpen && selectedStaff && playerSchool && probData && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-md border border-gray-700 p-6">
+                  <h2 className="text-xl font-bold text-white mb-4">Make Offer to {selectedStaff.name}</h2>
+
+                  {/* Salary Slider */}
+                  <div className="mb-4">
+                      <label className="block text-gray-400 text-sm mb-1">Annual Salary Offer</label>
+                      <div className="flex justify-between items-center mb-2">
+                           <span className="text-sm text-gray-500">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 0.5))}</span>
+                           <span className="text-xl font-bold font-mono text-green-400">{formatMoney(offerSalary)}</span>
+                           <span className="text-sm text-gray-500">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 2.5))}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min={Math.floor(selectedStaff.salaryExpectation * 0.5)}
+                        max={Math.floor(selectedStaff.salaryExpectation * 2.5)}
+                        step={1000}
+                        value={offerSalary}
+                        onChange={(e) => setOfferSalary(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                      />
+                  </div>
+
+                  {/* Contract Years */}
+                  <div className="mb-6">
+                       <label className="block text-gray-400 text-sm mb-2">Contract Duration (Years)</label>
+                       <div className="flex gap-2">
+                           {[1, 2, 3].map(y => (
+                               <button
+                                key={y}
+                                onClick={() => setOfferYears(y)}
+                                className={`flex-1 py-2 rounded border ${offerYears === y ? 'bg-blue-600 border-blue-400 text-white' : 'bg-gray-700 border-gray-600 text-gray-400 hover:bg-gray-600'}`}
+                               >
+                                   {y} Year{y > 1 ? 's' : ''}
+                               </button>
+                           ))}
+                       </div>
+                  </div>
+
+                  {/* Probability */}
+                  <div className="mb-6 bg-gray-900 p-3 rounded border border-gray-700 text-center">
+                      <div className="text-gray-400 text-sm">Acceptance Probability</div>
+                      <div className={`text-2xl font-bold ${getProbColor(probData.prob)}`}>
+                          {Math.round(probData.prob * 100)}% ({getProbLabel(probData.prob)})
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                          Ideal: {probData.idealYears} years | Min Salary: {formatMoney(Math.round(probData.minSalary))}
+                      </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                      <button onClick={() => setIsOfferModalOpen(false)} className="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded">Cancel</button>
+                      <button onClick={handleMakeOffer} className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded font-bold shadow-lg">Submit Offer</button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* Week Results Modal */}
+      {isResultsModalOpen && (
+           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+               <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-gray-700">
+                    <div className="p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
+                        <h2 className="text-xl font-bold text-white">Week {gameState.currentWeek - 1} Results</h2>
+                    </div>
+                    <div className="p-6 overflow-auto space-y-6">
+                        {/* Your Offers */}
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-1">Your Offers</h3>
+                            {resolvedOffers.length === 0 ? (
+                                <p className="text-gray-500 italic">No offers resolved this week.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {resolvedOffers.map(o => {
+                                        const staff = availableStaff.find(s => s.id === o.toStaffId) || schools.flatMap(s => s.staff).find(s => s.id === o.toStaffId); // Try to find staff everywhere
+                                        return (
+                                            <div key={o.id} className="bg-gray-900 p-3 rounded border border-gray-700 flex justify-between items-center">
+                                                <div>
+                                                    <span className="font-bold text-white">{staff?.name || 'Unknown Staff'}</span>
+                                                    <span className="text-gray-500 text-sm ml-2">({formatMoney(o.offeredSalary)} / {o.contractYears}y)</span>
+                                                </div>
+                                                <div className="font-bold">
+                                                    {o.status === 'Accepted' && <span className="text-green-500">✅ Accepted</span>}
+                                                    {o.status === 'Rejected' && <span className="text-red-500">❌ Rejected</span>}
+                                                    {o.status === 'Countered' && <span className="text-yellow-500">🔄 Countered</span>}
+                                                </div>
+                                                {o.status === 'Countered' && (
+                                                    <div className="text-xs text-yellow-300 mt-1">
+                                                        Counter: {formatMoney(o.counterSalary || 0)} / {o.counterYears}y
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Market News */}
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-300 mb-2 border-b border-gray-600 pb-1">Market News</h3>
+                             {transferNews.length === 0 ? (
+                                <p className="text-gray-500 italic">No market activity reported.</p>
+                            ) : (
+                                <ul className="space-y-1">
+                                    {transferNews.map((news, i) => (
+                                        <li key={i} className="text-sm text-gray-400">• {news}</li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+                    <div className="p-4 border-t border-gray-700 bg-gray-900 rounded-b-lg text-right">
+                         <button onClick={() => setIsResultsModalOpen(false)} className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded">
+                             Continue
+                         </button>
+                    </div>
+               </div>
+           </div>
+      )}
 
       {/* Roster Modal */}
       {isRosterOpen && playerSchool && (

@@ -63,6 +63,11 @@ export function calculateRawScore(school: School, currentYear: number): number {
   // Bonus for Current Division (Fixed base bonus)
   score += DIVISION_PRESENCE_BONUS[school.currentDivision] || 0;
 
+  // Staff Bonus: Up to 40 points based on total reputation
+  const staffRepSum = school.staff.reduce((sum, s) => sum + s.reputation, 0);
+  const staffBonus = Math.min(40, staffRepSum / 10);
+  score += staffBonus;
+
   return score;
 }
 

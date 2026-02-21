@@ -1,6 +1,8 @@
 import escolasData from './escolas_db.json';
 import escolasCores from './logos/escolas_cores_v2.json';
 import { FLAG_IMAGES } from './flagImages';
+import { REAL_STAFF_DATA } from './realStaff';
+import { generateSchoolRoster } from './genericStaffSeed';
 import { School, SchoolHistory, SchoolHistoryEntry, Division } from '../types/models';
 
 interface EscolaRaw {
@@ -116,6 +118,7 @@ export function loadAllSchools(): School[] {
       name: name,
       colors: colors,
       logo: data.logo,
+      flag: flagUrl,
       budget: calculatedBudget,
       fanbaseMorale: calculatedMorale,
       staff: [],
@@ -128,6 +131,27 @@ export function loadAllSchools(): School[] {
       history: history,
       enredo: null,
     };
+
+    // Identify roles covered by REAL staff
+    // Note: REAL_STAFF_DATA uses the exact name from the JSON
+    const coveredRoles = new Set(
+      REAL_STAFF_DATA
+        .filter(s => s.currentSchoolName === name)
+        .map(s => s.role)
+    );
+
+    // Generate full roster for the division
+    const genericRoster = generateSchoolRoster(name, school.currentDivision);
+
+    // Filter out generic staff whose role is already covered by a real staff member
+    const filteredRoster = genericRoster.filter(s => !coveredRoles.has(s.role));
+
+    // Assign school ID to the generic staff
+    filteredRoster.forEach(s => {
+      s.currentSchoolId = school.id;
+    });
+
+    school.staff = filteredRoster;
 
     schools.push(school);
   }
