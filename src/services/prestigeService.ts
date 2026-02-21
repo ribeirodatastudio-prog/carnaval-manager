@@ -27,6 +27,12 @@ const DIVISION_PRESENCE_BONUS: Record<Division, number> = {
   'Grupo de Avaliação': 0.3,
 };
 
+// Based on current Mangueira/Beija-Flor scores (approx 275) mapping to 195.
+// Formula: (Score / MAX_REFERENCE)^0.6 * 200 = 195
+// => 275 / MAX_REFERENCE = (195/200)^(1/0.6) = 0.975^1.666 = 0.958
+// => MAX_REFERENCE = 275 / 0.958 = 287
+const MAX_SCORE_REFERENCE = 287.0;
+
 /**
  * Calculates the raw score for a single school based on its history and current status.
  */
@@ -50,15 +56,17 @@ export function calculateRawScore(school: School, currentYear: number): number {
   };
 
   // Process all history categories
-  processAchievements(school.history.titulos, WEIGHTS.titulo);
-  processAchievements(school.history.vices, WEIGHTS.vice);
-  processAchievements(school.history.terceiros, WEIGHTS.terceiro);
-  processAchievements(school.history.quartos, WEIGHTS.quarto);
-  processAchievements(school.history.quintos, WEIGHTS.quinto);
+  if (school.history) {
+    processAchievements(school.history.titulos || [], WEIGHTS.titulo);
+    processAchievements(school.history.vices || [], WEIGHTS.vice);
+    processAchievements(school.history.terceiros || [], WEIGHTS.terceiro);
+    processAchievements(school.history.quartos || [], WEIGHTS.quarto);
+    processAchievements(school.history.quintos || [], WEIGHTS.quinto);
+  }
 
   // Bonus for Presence (Accumulated years)
-  score += (school.anos_no_especial * 0.4);
-  score += (school.anos_em_acesso * 0.1);
+  score += ((school.anos_no_especial || 0) * 0.4);
+  score += ((school.anos_em_acesso || 0) * 0.1);
 
   // Bonus for Current Division (Fixed base bonus)
   score += DIVISION_PRESENCE_BONUS[school.currentDivision] || 0;
@@ -68,7 +76,7 @@ export function calculateRawScore(school: School, currentYear: number): number {
 
 /**
  * Recalculates prestige for all schools and updates them in place (or returns new objects).
- * Uses the normalization logic to fit scores into the 1-195 scale.
+ * Uses a purely meritocratic logic based on raw score, capped at 200.
  */
 export function recalculatePrestige(schools: School[], currentYear: number): School[] {
   // 1. Calculate Raw Scores
@@ -77,39 +85,23 @@ export function recalculatePrestige(schools: School[], currentYear: number): Sch
     return { ...school, score_bruto: rawScore };
   });
 
-  // 2. Sort by Raw Score Descending
+  // 2. Sort by Raw Score Descending (for consistent ordering if needed elsewhere, though prestige calculation is independent now)
   schoolsWithScore.sort((a, b) => (b.score_bruto || 0) - (a.score_bruto || 0));
 
-  // 3. Identify References
-  if (schoolsWithScore.length < 2) return schoolsWithScore; // Edge case
+  // 3. Normalize and Assign Prestige
+  const updatedSchools = schoolsWithScore.map((school) => {
+    const rawScore = school.score_bruto || 0;
 
-  // Top 2 get max prestige
-  // Note: If multiple schools are tied for top 2, logic might need adjustment, but assuming floating point scores, ties are rare.
-  const sRef = schoolsWithScore[1].score_bruto || 0; // 2nd highest score
-  const sMin = schoolsWithScore[schoolsWithScore.length - 1].score_bruto || 0; // Lowest score
+    // Apply power curve (0.6) to raw score relative to reference max
+    // Ensures distribution is similar to previous logic but without artificial pinning
+    const ratio = Math.pow(Math.max(0, rawScore) / MAX_SCORE_REFERENCE, 0.6);
 
-  // 4. Normalize and Assign Prestige
-  const updatedSchools = schoolsWithScore.map((school, index) => {
-    let newPrestige = 0;
+    // Map to 0-200 scale
+    const calculatedPrestige = ratio * 200;
 
-    if (school.score_bruto && school.score_bruto >= sRef) {
-      // Top 2 (or anyone higher than the 2nd place ref) gets 195
-      newPrestige = 195;
-    } else {
-      const sAdj = (school.score_bruto || 0) - sMin;
-      const denominator = sRef - sMin;
-
-      // Avoid division by zero if all scores are equal
-      const sNorm = denominator > 0 ? sAdj / denominator : 0;
-
-      // Apply power curve (0.6)
-      const ratio = Math.pow(sNorm, 0.6);
-
-      // Calculate prestige: 1 + ratio * 187
-      // Clamped between 1 and 188
-      const val = 1 + (ratio * 187);
-      newPrestige = Math.round(Math.max(1, Math.min(188, val)));
-    }
+    // Clamp between 1 and 200
+    // We allow reaching 200 if score >= MAX_SCORE_REFERENCE
+    const newPrestige = Math.round(Math.max(1, Math.min(200, calculatedPrestige)));
 
     return { ...school, prestige: newPrestige };
   });
