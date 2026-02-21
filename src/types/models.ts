@@ -95,19 +95,43 @@ export interface TransferOffer {
 
 /**
  * EnredoCategory defines the thematic classification of an Enredo.
+ * Replaces the old taxonomy with a richer, research-based set.
  */
-export type EnredoCategory = 'History' | 'Culture' | 'Abstract' | 'Political' | 'Religious';
+export type EnredoCategory =
+  | 'AfroBrasileiro'        // Afro-Brazilian history, quilombos, orixás, resistance
+  | 'Religioso'             // Catholic, Candomblé, or syncretic spirituality
+  | 'Historico'             // Official Brazilian history, national heroes, colonial era
+  | 'Biografico'            // Tribute to a living or dead artist, athlete, or cultural figure
+  | 'PoliticoSocial'        // Social critique, labor, inequality, police violence
+  | 'Folclorico'            // Regional folklore, legends, festas populares
+  | 'Ambiental'             // Ecological/environmental themes
+  | 'Indigena'              // Indigenous peoples and cultures
+  | 'Patrocinado'           // Commercially sponsored theme
+  | 'Abstrato'              // Conceptual, artistic, philosophical
+  | 'ComunitarioLocal';     // Neighborhood/community tribute
 
 /**
  * Enredo represents the theme (Samba-Enredo) chosen by a school for the year.
- * A good Enredo is crucial for high scores in multiple categories.
+ * Expanded to include detailed attributes that affect simulation and strategy.
  */
 export interface Enredo {
-  id: string; // Unique identifier for the Enredo
-  title: string; // The title of the theme
-  category: EnredoCategory; // The thematic category
-  complexity: number; // How difficult the theme is to execute (1-100). Higher complexity requires higher staff skill.
-  potentialScore: number; // The theoretical maximum score this theme can achieve (1-100) if executed perfectly.
+  id: string;
+  title: string;
+  category: EnredoCategory;        // existing
+  complexity: number;               // RENAMED meaning: Research Depth required (1-100)
+  difficulty: number;               // NEW: How hard to translate to a desfile (1-100)
+  potentialScore: number;           // existing: max score if executed perfectly (1-100)
+  controversy: number;              // NEW: see below (0-100)
+  appeal: number;                   // NEW: see below (1-100)
+  sponsorValue: number;             // NEW: see below (0-100)
+  trend: 'Rising' | 'Stable' | 'Saturated'; // NEW: cultural moment timing
+
+  // Hidden stats — revealed by research
+  hiddenRisk?: number;              // hidden: chance of judging deduction (0-100)
+  hiddenBonus?: number;             // hidden: chance of bonus points from crowd/media (0-100)
+
+  // Research Progress
+  statsRevealed: number;            // 0=None, 1=Complexity, 2=Difficulty, 3=Potential, 4=Risk, 5=Bonus
 }
 
 /**
@@ -170,6 +194,8 @@ export interface School {
   history: SchoolHistory; // Detailed history
 
   enredo: Enredo | null; // The current year's theme. Null if not yet researched/chosen.
+  enredoCandidates?: Enredo[]; // The pool of available themes to research/choose from.
+  researchFocusId?: string | null; // The ID of the candidate currently being researched.
 }
 
 /**

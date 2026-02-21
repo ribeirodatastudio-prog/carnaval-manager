@@ -1,13 +1,21 @@
 import { create } from 'zustand';
-import { GameState, School, StaffMember, TransferOffer } from '../types/models';
+import { GameState, School, StaffMember, TransferOffer, Enredo, EnredoCategory } from '../types/models';
 import { loadAllSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
 import { calculateSalaryExpectation, ALL_ROLES } from '../utils/staffUtils';
 import { loadRealStaff } from '../data/realStaff';
 import { calculateStaffReputation, processRetirements, processStaffDevelopment } from '../services/staffService';
-import { researchEnredo } from '../services/researchEngine';
+import {
+  generateEnredoPool,
+  revealNextStat,
+  generateSingleEnredo,
+  getCategoryWeightsForDivision,
+  weightedRandomCategory,
+  calculateTrendMap
+} from '../services/researchEngine';
 import { runSimulation, SimulationResult } from '../services/simulationService';
 import { resolveOffer, processAITransfers } from '../services/transferService';
+import { formatMoney } from '../utils/textUtils';
 
 /**
  * Helper to initialize game data by merging real staff into schools and market.
@@ -15,6 +23,33 @@ import { resolveOffer, processAITransfers } from '../services/transferService';
 const initializeGameData = () => {
   // 1. Load Schools
   const schools = loadAllSchools();
+
+  // 1a. Generate Enredos for AI Schools (to set trends)
+  const aiSchools = schools; // All schools initially (player picks one later)
+  const aiCategories: EnredoCategory[] = [];
+  const schoolCategories = new Map<string, EnredoCategory>();
+
+  // Assign Categories first
+  aiSchools.forEach(school => {
+    const weights = getCategoryWeightsForDivision(school.currentDivision);
+    const category = weightedRandomCategory(weights);
+    schoolCategories.set(school.id, category);
+    aiCategories.push(category);
+  });
+
+  // Calculate Trend Map
+  const trendMap = calculateTrendMap(aiCategories);
+
+  // Generate Enredos for AI Schools
+  aiSchools.forEach(school => {
+    const category = schoolCategories.get(school.id)!;
+    // Generate full enredo
+    const enredo = generateSingleEnredo(category, school, trendMap, 2026);
+    // Auto-select for AI (they don't research)
+    school.enredo = enredo;
+    // AI schools also get a pool technically, but we just lock one in for simplicity
+    school.enredoCandidates = [];
+  });
 
   // 2. Load Real Staff
   const realStaffRaw = loadRealStaff();
@@ -127,8 +162,11 @@ interface GameStoreState {
   submitTransferOffer: (schoolId: string, staffId: string, offeredSalary: number, contractYears: number) => string;
   acceptCounter: (offerId: string) => void;
   rejectCounter: (offerId: string) => void;
-  generateTheme: (schoolId: string, budgetInvested: number) => void;
   runPrestigeSimulation: (years: number) => void;
+
+  // Enredo Actions
+  focusResearch: (enredoId: string) => void;
+  lockInEnredo: (enredoId: string) => void;
 }
 
 /**
@@ -152,10 +190,27 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   setPlayerSchool: (schoolId) =>
     set((state) => {
-      const updatedSchools = state.schools.map((school) => ({
-        ...school,
-        isPlayerControlled: school.id === schoolId,
-      }));
+      // 1. Identify trends from other schools (which already have Enredos assigned in Init)
+      const otherSchools = state.schools.filter(s => s.id !== schoolId && s.enredo);
+      const categories = otherSchools.map(s => s.enredo!.category);
+
+      const updatedSchools = state.schools.map((school) => {
+        if (school.id === schoolId) {
+          // Player School: Clear AI choice, generate pool
+          const pool = generateEnredoPool(school, state.gameState.currentYear, categories);
+          return {
+            ...school,
+            isPlayerControlled: true,
+            enredo: null,
+            enredoCandidates: pool,
+            researchFocusId: null
+          };
+        }
+        return {
+          ...school,
+          isPlayerControlled: false,
+        };
+      });
 
       return {
         schools: updatedSchools,
@@ -287,6 +342,92 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       }
 
       // -- NEW LOGIC START --
+
+      // Research Progress & Enredo Management
+      if (state.gameState.playerSchoolId) {
+        const pSchoolIdx = updatedSchools.findIndex(s => s.id === state.gameState.playerSchoolId);
+        if (pSchoolIdx !== -1) {
+            let pSchool = updatedSchools[pSchoolIdx];
+
+            // 1. Research Progress (Weekly)
+            if (pSchool.researchFocusId && pSchool.enredoCandidates) {
+                const candIdx = pSchool.enredoCandidates.findIndex(e => e.id === pSchool.researchFocusId);
+                if (candIdx !== -1) {
+                    const candidate = pSchool.enredoCandidates[candIdx];
+                    const newCandidate = revealNextStat(candidate);
+
+                    const newCandidates = [...pSchool.enredoCandidates];
+                    newCandidates[candIdx] = newCandidate;
+
+                    pSchool = { ...pSchool, enredoCandidates: newCandidates };
+
+                    if (newCandidate.statsRevealed >= 5) {
+                         pSchool.researchFocusId = null;
+                         newTransferNews.push(`Research complete for "${newCandidate.title}"`);
+                    }
+                }
+            }
+
+            // 2. Market Deadline / Preparation Start (Week 8 -> 9)
+            if (currentWeek === 8 && nextWeek === 9) {
+                 if (!pSchool.enredo && pSchool.enredoCandidates && pSchool.enredoCandidates.length > 0) {
+                     const randomPick = pSchool.enredoCandidates[0];
+                     pSchool = {
+                         ...pSchool,
+                         enredo: randomPick,
+                         enredoCandidates: [],
+                         researchFocusId: null
+                     };
+                     newTransferNews.push(`Deadline passed! "${randomPick.title}" selected as enredo.`);
+                 }
+
+                 if (pSchool.enredo) {
+                     let budgetAdd = 0;
+                     if (pSchool.enredo.sponsorValue > 0) {
+                         const income = (pSchool.enredo.sponsorValue / 100) * pSchool.budget * 0.4;
+                         budgetAdd = income;
+                         newTransferNews.push(`Sponsorship for "${pSchool.enredo.title}" added ${formatMoney(income)}.`);
+                     }
+
+                     // Initial Morale Boost/Hit from Appeal
+                     const moraleChange = Math.floor((pSchool.enredo.appeal - 50) / 10);
+                     let newMorale = pSchool.fanbaseMorale + moraleChange;
+                     newMorale = Math.max(0, Math.min(100, newMorale));
+
+                     if (moraleChange !== 0) {
+                        newTransferNews.push(`Enredo appeal changed morale by ${moraleChange > 0 ? '+' : ''}${moraleChange}.`);
+                     }
+
+                     pSchool = {
+                         ...pSchool,
+                         budget: pSchool.budget + budgetAdd,
+                         fanbaseMorale: newMorale
+                     };
+                 }
+            }
+
+            // 3. Weekly Preparation Updates (Weeks 9-44) - Passive Morale Drift
+            if (nextPhase === 'Preparation' && pSchool.enredo) {
+                 // Appeal 50 is neutral. >50 gains, <50 loses.
+                 // Small drift: (Appeal - 50) / 20 per week.
+                 const drift = (pSchool.enredo.appeal - 50) / 20;
+                 const chance = Math.abs(drift);
+                 const sign = Math.sign(drift);
+
+                 let change = Math.floor(chance);
+                 if (Math.random() < (chance - change)) {
+                     change += 1;
+                 }
+
+                 if (change > 0) {
+                     const newMorale = Math.max(0, Math.min(100, pSchool.fanbaseMorale + (change * sign)));
+                     pSchool = { ...pSchool, fanbaseMorale: newMorale };
+                 }
+            }
+
+            updatedSchools[pSchoolIdx] = pSchool;
+        }
+      }
 
       // Retirement Check (Start of Market / Week 1)
       let hallOfFame = [...state.gameState.hallOfFame || []];
@@ -494,35 +635,42 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }));
   },
 
-  generateTheme: (schoolId, budgetInvested) => {
-    const state = get();
-    const schoolIndex = state.schools.findIndex((s) => s.id === schoolId);
-    if (schoolIndex === -1) return;
+  focusResearch: (enredoId) =>
+    set((state) => {
+      const playerSchoolIndex = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (playerSchoolIndex === -1) return {};
 
-    const school = state.schools[schoolIndex];
+      const school = { ...state.schools[playerSchoolIndex] };
+      // Verify enredo is in candidates
+      if (!school.enredoCandidates?.some(e => e.id === enredoId)) return {};
 
-    if (school.budget < budgetInvested) {
-      console.warn("Not enough budget for research");
-      return;
-    }
+      school.researchFocusId = enredoId;
 
-    const carnavalesco = school.staff.find((s) => s.role === 'Carnavalesco');
-    let skill = 50;
-    if (carnavalesco) {
-      skill = (carnavalesco.skills.criatividade * 0.7) + (carnavalesco.skills.resiliencia * 0.3);
-    }
+      const updatedSchools = [...state.schools];
+      updatedSchools[playerSchoolIndex] = school;
 
-    const newEnredo = researchEnredo(skill, budgetInvested);
+      return { schools: updatedSchools };
+    }),
 
-    const updatedSchools = [...state.schools];
-    updatedSchools[schoolIndex] = {
-      ...school,
-      budget: school.budget - budgetInvested,
-      enredo: newEnredo,
-    };
+  lockInEnredo: (enredoId) =>
+    set((state) => {
+      const playerSchoolIndex = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (playerSchoolIndex === -1) return {};
 
-    set({ schools: updatedSchools });
-  },
+      const school = { ...state.schools[playerSchoolIndex] };
+      const selected = school.enredoCandidates?.find(e => e.id === enredoId);
+
+      if (!selected) return {};
+
+      school.enredo = selected;
+      school.enredoCandidates = []; // Clear pool
+      school.researchFocusId = null;
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[playerSchoolIndex] = school;
+
+      return { schools: updatedSchools };
+    }),
 
   runPrestigeSimulation: (years) => {
     const state = get();

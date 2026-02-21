@@ -1,83 +1,320 @@
-
-import { Enredo, EnredoCategory } from '../types/models';
-
-/**
- * Categories for Enredos.
- */
-const CATEGORIES: EnredoCategory[] = ['History', 'Culture', 'Abstract', 'Political', 'Religious'];
+import { Enredo, EnredoCategory, School, Division } from '../types/models';
 
 /**
- * Generates a title based on the category.
- * In a real game, this could use a more complex generator or AI.
+ * Stat ranges for each Enredo Category.
  */
-const generateTitle = (category: EnredoCategory): string => {
-  const prefixes = ['O Canto da', 'A Saga de', 'Mistérios da', 'Luz de', 'Caminhos da', 'Vozes da'];
-  const suffixes: Record<EnredoCategory, string[]> = {
-    History: ['Revolução', 'Coroa', 'Liberdade', 'Terra', 'Ancestralidade'],
-    Culture: ['Arte', 'Dança', 'Festa', 'Alma', 'Brasilidade'],
-    Abstract: ['Imaginação', 'Essência', 'Vida', 'Eternidade', 'Sonho'],
-    Political: ['Luta', 'Esperança', 'Justiça', 'Igualdade', 'Pátria'],
-    Religious: ['Fé', 'Devoção', 'Oração', 'Divindade', 'Criação'],
-  };
-
-  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-  const suffixList = suffixes[category];
-  const suffix = suffixList[Math.floor(Math.random() * suffixList.length)];
-
-  return `${prefix} ${suffix}`;
+const CATEGORY_STAT_RANGES: Record<EnredoCategory, {
+  complexity: [number, number];
+  difficulty: [number, number];
+  controversy: [number, number];
+  appeal: [number, number];
+  sponsorValue: [number, number];
+}> = {
+  AfroBrasileiro: { complexity: [55, 85], difficulty: [45, 75], controversy: [35, 70], appeal: [60, 90], sponsorValue: [10, 30] },
+  Religioso: { complexity: [60, 90], difficulty: [50, 80], controversy: [40, 90], appeal: [50, 80], sponsorValue: [5, 20] },
+  Historico: { complexity: [40, 70], difficulty: [30, 60], controversy: [10, 35], appeal: [45, 70], sponsorValue: [20, 50] },
+  Biografico: { complexity: [30, 60], difficulty: [25, 50], controversy: [20, 55], appeal: [55, 85], sponsorValue: [30, 60] },
+  PoliticoSocial: { complexity: [50, 80], difficulty: [55, 85], controversy: [55, 95], appeal: [55, 80], sponsorValue: [0, 15] },
+  Folclorico: { complexity: [35, 65], difficulty: [30, 55], controversy: [10, 30], appeal: [60, 85], sponsorValue: [20, 45] },
+  Ambiental: { complexity: [45, 70], difficulty: [40, 65], controversy: [25, 55], appeal: [55, 80], sponsorValue: [25, 55] },
+  Indigena: { complexity: [55, 80], difficulty: [45, 70], controversy: [30, 65], appeal: [55, 80], sponsorValue: [10, 30] },
+  Patrocinado: { complexity: [20, 45], difficulty: [20, 45], controversy: [15, 40], appeal: [20, 50], sponsorValue: [60, 100] },
+  Abstrato: { complexity: [70, 100], difficulty: [75, 100], controversy: [20, 60], appeal: [35, 65], sponsorValue: [5, 20] },
+  ComunitarioLocal: { complexity: [15, 40], difficulty: [15, 35], controversy: [5, 20], appeal: [70, 95], sponsorValue: [5, 25] },
 };
 
 /**
- * Researches and generates a new Enredo based on the Carnavalesco's skill and invested budget.
- *
- * Logic:
- * - Budget increases the floor of the potential score (resources for research).
- * - Skill increases the ceiling and consistency.
- * - Complexity is correlated with Potential Score but has variance.
- *
- * @param carnavalescoSkill The skill level of the Carnavalesco (1-200).
- * @param budgetInvested The amount of money invested in research.
- * @returns A newly generated Enredo object.
+ * Category Weights by Division.
  */
-export const researchEnredo = (carnavalescoSkill: number, budgetInvested: number): Enredo => {
-  // 1. Determine Category
-  const category = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+const DIVISION_CATEGORY_WEIGHTS: Record<Division, Partial<Record<EnredoCategory, number>>> = {
+  'Grupo Especial': {
+    AfroBrasileiro: 20, Religioso: 12, Historico: 10, Biografico: 12,
+    PoliticoSocial: 12, Folclorico: 8, Ambiental: 8, Indigena: 8,
+    Patrocinado: 5, Abstrato: 3, ComunitarioLocal: 2
+  },
+  'Série Ouro': {
+    AfroBrasileiro: 15, Religioso: 10, Historico: 15, Biografico: 15,
+    PoliticoSocial: 8, Folclorico: 12, Ambiental: 8, Indigena: 7,
+    Patrocinado: 5, Abstrato: 1, ComunitarioLocal: 4
+  },
+  'Série Prata': {
+    AfroBrasileiro: 10, Religioso: 10, Historico: 15, Biografico: 15,
+    PoliticoSocial: 5, Folclorico: 18, Ambiental: 7, Indigena: 5,
+    Patrocinado: 3, Abstrato: 0, ComunitarioLocal: 12
+  },
+  'Série Bronze': {
+    Historico: 20, Biografico: 20, Folclorico: 20, ComunitarioLocal: 20,
+    AfroBrasileiro: 8, Religioso: 8, Ambiental: 4
+  },
+  'Grupo de Avaliação': {
+    ComunitarioLocal: 40, Folclorico: 25, Historico: 15, Biografico: 15, Religioso: 5
+  }
+};
 
-  // 2. Calculate Potential Score
-  // Base score from 50 to 70
-  const baseScore = 50 + Math.random() * 20;
+/**
+ * Title Templates.
+ */
+const ENREDO_TITLE_TEMPLATES: Record<EnredoCategory, string[]> = {
+  AfroBrasileiro: [
+    "O Rei que Não Morreu: A Saga de [Hero]",
+    "Tambores de [Place]: A Resistência Negra que o Brasil Tentou Esquecer",
+    "Da Senzala ao Terreiro: O Axé que Nos Une",
+    "Filhos de [Orixá]: Uma Herança que Atravessa o Atlântico",
+    "[Hero] Vive! A Chama do Quilombo que Nunca se Apagou"
+  ],
+  Religioso: [
+    "O Itã de [Orixá]: Quando os Deuses Desceram à Terra",
+    "Fé, Pólvora e Folhas: A Encruzilhada do Sagrado e o Profano",
+    "Nossa Senhora de [Place]: A Mãe que o Brasil Sempre Teve",
+    "Entre o Santo e o Orixá: O Sincretismo que Fez o Brasil"
+  ],
+  Historico: [
+    "[Figure]: O Herói que a História Oficial Tentou Calar",
+    "1888: O Ano em que o Brasil Fingiu Ser Livre",
+    "A Epopeia de [Place]: Da Capitania ao Sonho de Nação",
+    "Os Construtores do Brasil: Mãos Anônimas, Grandeza Eterna"
+  ],
+  Biografico: [
+    "A Voz que o Brasil Não Merecia: Homenagem a [Artist]",
+    "[Artist]: Toda Forma de Amor Merece Existir",
+    "O Poeta do Povo: Um Canto para [Figure]",
+    "[Artist] e Seus Brasis: Uma Viagem pela Alma de um Gênio"
+  ],
+  PoliticoSocial: [
+    "Parabéns pra Você: Um País em Festa, um Povo em Luta",
+    "A Fome que Não Aparece no Noticiário",
+    "Não Foi Golpe, Foi Carnaval: A Democracia em Forma de Samba",
+    "Quem Protege os Protetores? A Violência que o Estado Nega"
+  ],
+  Folclorico: [
+    "O Bicho-Papão e Outras Verdades: O Folclore que nos Criou",
+    "Na Beira do Rio: As Lendas que o [Region] Guarda",
+    "Bumba meu Brasil: Do Boi-Bumbá ao Frevo, o País em Festa",
+    "Conto de Fadas à Brasileira: O Imaginário que a Floresta Esconde"
+  ],
+  Ambiental: [
+    "Pororoca: Quando o Rio Encontra o Mar e o Homem Esquece de Respeitar",
+    "A Última Árvore: Um Réquiem Verde para o Cerrado",
+    "Guardiões da Floresta: Os Povos que o Brasil Insiste em Ignorar",
+    "Água: O Novo Ouro que Estamos Perdendo"
+  ],
+  Indigena: [
+    "[Tribe]: Os Primeiros Donos deste Chão que Chamamos de Brasil",
+    "Antes de Cabral: O Brasil que Existia Antes de Existir",
+    "A Aldeia Global: Da Tradição Indígena à Resistência Contemporânea",
+    "Yanomami: O Grito que o Mundo Precisava Ouvir"
+  ],
+  Patrocinado: [
+    "Sabores do [Region]: Uma Viagem pelos Tesouros Gastronômicos do Brasil",
+    "[Brand/Industry]: A Força que Move o Nosso País",
+    "Turismo é Amor: [Destination] de Braços Abertos para o Mundo",
+    "[Region]: Terra de Oportunidades e Gente Forte"
+  ],
+  Abstrato: [
+    "O Tempo Não Existe: Uma Meditação sobre o Efêmero e o Eterno",
+    "Caos e Beleza: Quando a Desordem se Torna Arte",
+    "O Avesso do Avesso: O Brasil que se Vê no Espelho e Não se Reconhece",
+    "Metamorfose: A Transformação como Única Constante"
+  ],
+  ComunitarioLocal: [
+    "Nossa Laje, Nossa Raiz: Um Canto para o [Neighborhood]",
+    "De Geração em Geração: A História que Nossas Mãos Guardam",
+    "O Morro Tem Memória: [Neighborhood] como Epicentro do Mundo",
+    "Aqui Nasceu um Povo: A Identidade que o Concreto Não Apagou"
+  ]
+};
 
-  // Budget Bonus: Up to 15 points (Max out at 500k invested)
-  const budgetBonus = Math.min(budgetInvested / 33000, 15);
+const PLACEHOLDERS = {
+  Hero: ['Zumbi', 'Tiradentes', 'Dandara', 'Anita Garibaldi', 'Sepé Tiaraju', 'Chico Mendes', 'Lampião'],
+  Artist: ['Cartola', 'Beth Carvalho', 'Clara Nunes', 'Adoniran', 'Villa-Lobos', 'Pixinguinha', 'Ary Barroso', 'Elza Soares'],
+  Region: ['Bahia', 'Amazônia', 'Nordeste', 'Sertão', 'Pantanal', 'Minas Gerais', 'Recife', 'Pernambuco'],
+  Orixá: ['Xangô', 'Oxum', 'Iemanjá', 'Ogum', 'Exu', 'Oxóssi', 'Obaluaê', 'Iansã'],
+  Place: ['Quilombo', 'Favela', 'Terreiro', 'Senzala', 'Mangue', 'Cais do Valongo'],
+  Figure: ['Getúlio', 'Dom Pedro', 'Santos Dumont', 'Ruy Barbosa', 'Barão de Mauá'],
+  Tribe: ['Yanomami', 'Guarani', 'Tupinambá', 'Pataxó', 'Xavante', 'Kayapó'],
+  'Brand/Industry': ['Petrobras', 'Vale', 'Agro', 'Indústria', 'Comércio', 'Tecnologia'],
+  Destination: ['Salvador', 'Rio de Janeiro', 'Manaus', 'Foz do Iguaçu', 'Bonito'],
+  Neighborhood: ['Madureira', 'Bangu', 'Tijuca', 'Vila Isabel', 'Ramos', 'Penha', 'Lapa']
+};
 
-  // Skill Bonus: Up to 20 points (Max out at 200 skill)
-  const skillBonus = (carnavalescoSkill / 200) * 20;
+/**
+ * Helpers
+ */
+function randomInRange([min, max]: [number, number]): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-  // RNG Factor: +/- 5 points
-  const rngFactor = (Math.random() * 10) - 5;
+export function getCategoryWeightsForDivision(division: Division): Partial<Record<EnredoCategory, number>> {
+  return DIVISION_CATEGORY_WEIGHTS[division];
+}
 
-  let potentialScore = Math.floor(baseScore + budgetBonus + skillBonus + rngFactor);
-  potentialScore = Math.max(50, Math.min(100, potentialScore));
+export function weightedRandomCategory(weights: Partial<Record<EnredoCategory, number>>): EnredoCategory {
+  let totalWeight = 0;
+  const entries = Object.entries(weights) as [EnredoCategory, number][];
 
-  // 3. Calculate Complexity
-  // Generally, higher potential themes are more complex.
-  // Complexity = Potential Score * (0.8 to 1.2)
-  const complexityMultiplier = 0.8 + (Math.random() * 0.4);
-  let complexity = Math.floor(potentialScore * complexityMultiplier);
-
-  // High skill Carnavalescos might find ways to simplify complex themes slightly (optimization)
-  if (carnavalescoSkill > 150) {
-    complexity -= Math.floor((carnavalescoSkill - 150) / 10); // Reduce complexity by up to 5 points
+  for (const [, weight] of entries) {
+    totalWeight += weight;
   }
 
-  // Ensure complexity is within bounds
-  complexity = Math.max(10, Math.min(100, complexity));
+  let random = Math.random() * totalWeight;
+
+  for (const [category, weight] of entries) {
+    random -= weight;
+    if (random <= 0) {
+      return category;
+    }
+  }
+
+  return 'Historico'; // Fallback
+}
+
+/**
+ * Calculates Trend Map based on AI choices.
+ */
+export function calculateTrendMap(aiEnredoCategories: EnredoCategory[]): Map<EnredoCategory, 'Rising' | 'Stable' | 'Saturated'> {
+  const counts = new Map<EnredoCategory, number>();
+
+  for (const cat of aiEnredoCategories) {
+    counts.set(cat, (counts.get(cat) || 0) + 1);
+  }
+
+  const trendMap = new Map<EnredoCategory, 'Rising' | 'Stable' | 'Saturated'>();
+  const totalAI = aiEnredoCategories.length;
+
+  // Logic:
+  // If > 20% of schools do a category -> Saturated
+  // If < 5% or 0 -> Rising (opportunity)
+  // Else Stable
+  // Note: For small number of schools (e.g. 11 AI), 4+ is Saturated.
+
+  const categories: EnredoCategory[] = Object.keys(CATEGORY_STAT_RANGES) as EnredoCategory[];
+
+  for (const cat of categories) {
+    const count = counts.get(cat) || 0;
+    if (count >= 4) {
+      trendMap.set(cat, 'Saturated');
+    } else if (count === 0 || count === 1) { // 1 is still low enough to be rising/fresh? Maybe 0 is better.
+      // Let's stick to user prompt: "Rising: Fresh territory... Saturated: Too many schools"
+      if (count === 0) trendMap.set(cat, 'Rising');
+      else trendMap.set(cat, 'Stable');
+    } else {
+      trendMap.set(cat, 'Stable');
+    }
+  }
+
+  return trendMap;
+}
+
+/**
+ * Generates a Title.
+ */
+export function generateEnredoTitle(category: EnredoCategory): string {
+  const templates = ENREDO_TITLE_TEMPLATES[category];
+  const template = templates[Math.floor(Math.random() * templates.length)];
+
+  // Replace placeholders
+  return template.replace(/\[(.*?)\]/g, (match, p1) => {
+    const key = p1 as keyof typeof PLACEHOLDERS;
+    const list = PLACEHOLDERS[key];
+    if (list) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+    return p1; // Fallback if not found
+  });
+}
+
+/**
+ * Generates a single Enredo Candidate.
+ */
+export function generateSingleEnredo(
+  category: EnredoCategory,
+  school: School,
+  trendMap: Map<EnredoCategory, 'Rising' | 'Stable' | 'Saturated'>,
+  year: number
+): Enredo {
+  const ranges = CATEGORY_STAT_RANGES[category];
+
+  const complexity = randomInRange(ranges.complexity);
+  const difficulty = randomInRange(ranges.difficulty);
+  const controversy = randomInRange(ranges.controversy);
+  const appeal = randomInRange(ranges.appeal);
+  const sponsorValue = randomInRange(ranges.sponsorValue);
+
+  // Potential score
+  const basePotential = 40 + Math.floor(Math.random() * 30);
+  const prestigeBonus = Math.floor((school.prestige / 200) * 25);
+  const complexityBonus = Math.floor((complexity / 100) * 10);
+  const potentialScore = Math.min(100, basePotential + prestigeBonus + complexityBonus);
+
+  // Hidden stats
+  // High controversy increases hiddenRisk floor
+  const hiddenRisk = controversy > 60
+    ? Math.floor(Math.random() * 40) + 10 // 10-50
+    : Math.floor(Math.random() * 20);      // 0-20
+
+  // High potential increases hiddenBonus probability
+  const hiddenBonus = potentialScore > 75
+    ? Math.floor(Math.random() * 35) + 10 // 10-45
+    : Math.floor(Math.random() * 15);      // 0-15
+
+  const trend = trendMap.get(category) ?? 'Stable';
 
   return {
-    id: `enredo-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    title: generateTitle(category),
+    id: `enredo-${year}-${Math.random().toString(36).substr(2, 9)}`,
+    title: generateEnredoTitle(category),
     category,
     complexity,
+    difficulty,
     potentialScore,
+    controversy,
+    appeal,
+    sponsorValue,
+    trend,
+    hiddenRisk,
+    hiddenBonus,
+    statsRevealed: 0 // Start hidden
   };
-};
+}
+
+/**
+ * Generates a Pool of Enredos for a School.
+ */
+export function generateEnredoPool(school: School, currentYear: number, aiEnredoCategories: EnredoCategory[]): Enredo[] {
+  const categoryWeights = getCategoryWeightsForDivision(school.currentDivision);
+  const trendMap = calculateTrendMap(aiEnredoCategories);
+
+  const pool: Enredo[] = [];
+  const poolSize = school.currentDivision === 'Grupo Especial' ? 12 :
+                   school.currentDivision === 'Série Ouro' ? 10 : 8;
+
+  const usedTitles = new Set<string>();
+
+  for (let i = 0; i < poolSize; i++) {
+    const category = weightedRandomCategory(categoryWeights);
+    let enredo = generateSingleEnredo(category, school, trendMap, currentYear);
+
+    // Retry to avoid duplicate titles (max 5 attempts)
+    let attempts = 0;
+    while (usedTitles.has(enredo.title) && attempts < 5) {
+        enredo = generateSingleEnredo(category, school, trendMap, currentYear);
+        attempts++;
+    }
+    usedTitles.add(enredo.title);
+    pool.push(enredo);
+  }
+
+  return pool;
+}
+
+/**
+ * Logic to reveal the next stat.
+ * Order: Complexity -> Difficulty -> Potential -> Hidden Risk -> Hidden Bonus
+ */
+export function revealNextStat(enredo: Enredo): Enredo {
+  // Return a new object to ensure immutability in store
+  const newEnredo = { ...enredo };
+  if (newEnredo.statsRevealed < 5) {
+    newEnredo.statsRevealed += 1;
+  }
+  return newEnredo;
+}
