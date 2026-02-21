@@ -34,3 +34,16 @@ export const calculateSalaryExpectation = (role: StaffRole, skills: StaffSkills,
 
   return getRandomSalary(min, max);
 };
+
+export const ALL_ROLES: StaffRole[] = [
+  'DiretorDeCarnaval',
+  'Carnavalesco',
+  'Interprete',
+  'MestreDeBateria',
+  'MestreSala',
+  'PortaBandeira',
+  'RainhaDeBateria',
+  'Coreografo',
+  'DiretorDeHarmonia',
+  'MestreDeBarracao'
+];
