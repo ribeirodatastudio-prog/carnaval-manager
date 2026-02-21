@@ -58,6 +58,28 @@ export default function DevToolsPage() {
   const sortedByPrestige = [...finalSchools].sort((a, b) => b.prestige - a.prestige);
   const top10 = sortedByPrestige.slice(0, 10);
 
+  // Group by Division
+  const divisions: Division[] = ['Grupo Especial', 'Série Ouro', 'Série Prata', 'Série Bronze', 'Grupo de Avaliação'];
+  const schoolsByDiv: Record<Division, School[]> = {
+    'Grupo Especial': [],
+    'Série Ouro': [],
+    'Série Prata': [],
+    'Série Bronze': [],
+    'Grupo de Avaliação': []
+  };
+
+  finalSchools.forEach(s => {
+    if (schoolsByDiv[s.currentDivision]) {
+      schoolsByDiv[s.currentDivision].push(s);
+    }
+  });
+
+  // Sort each division by Prestige
+  Object.keys(schoolsByDiv).forEach(key => {
+    const div = key as Division;
+    schoolsByDiv[div].sort((a, b) => b.prestige - a.prestige);
+  });
+
   // Calculate Risers/Fallers
   const deltas = finalSchools.map(final => {
     const initial = initialSchools.find(s => s.id === final.id);
@@ -103,7 +125,7 @@ export default function DevToolsPage() {
         {/* Top 10 Table */}
         <section className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden">
             <h2 className="bg-gray-750 p-4 font-bold text-xl border-b border-gray-700 flex items-center gap-2">
-                🏆 Top 10 Prestige (Year 3025)
+                🏆 Top 10 Prestige (Global)
             </h2>
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
@@ -113,9 +135,8 @@ export default function DevToolsPage() {
                             <th className="p-4">School</th>
                             <th className="p-4">Division</th>
                             <th className="p-4 text-right">Prestige</th>
-                            <th className="p-4 text-right">Start (2026)</th>
                             <th className="p-4 text-right">Change</th>
-                            <th className="p-4 text-right">Titles (Total)</th>
+                            <th className="p-4 text-right">Titles (All)</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-700">
@@ -128,7 +149,6 @@ export default function DevToolsPage() {
                                     <td className="p-4 font-bold text-white" style={{color: school.colors[0]}}>{school.name}</td>
                                     <td className="p-4 text-sm text-gray-300">{school.currentDivision}</td>
                                     <td className="p-4 text-right font-bold text-yellow-400">{school.prestige}</td>
-                                    <td className="p-4 text-right text-gray-500">{initial?.prestige || 0}</td>
                                     <td className={`p-4 text-right font-medium ${delta >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {delta > 0 ? '+' : ''}{delta}
                                     </td>
@@ -138,6 +158,57 @@ export default function DevToolsPage() {
                         })}
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        {/* Division Standings */}
+        <section className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-200 border-b border-gray-700 pb-2">Division Standings (Top 5 & Bottom 3)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {divisions.map((div) => {
+                    const schools = schoolsByDiv[div];
+                    const top5 = schools.slice(0, 5);
+                    const bottom3 = schools.length > 5 ? schools.slice(-3) : [];
+
+                    return (
+                        <div key={div} className="bg-gray-800 rounded-xl shadow border border-gray-700 overflow-hidden flex flex-col">
+                            <h3 className="bg-gray-750 p-3 font-bold text-lg border-b border-gray-700 text-center text-blue-300">
+                                {div}
+                            </h3>
+                            <div className="p-3 flex-1">
+                                <h4 className="text-xs uppercase text-gray-500 font-bold mb-2">Leaders</h4>
+                                <ul className="space-y-2 mb-4">
+                                    {top5.map((s, idx) => (
+                                        <li key={s.id} className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-400 w-6">#{idx + 1}</span>
+                                            <span className="font-bold flex-1 truncate mr-2" style={{color: s.colors[0]}}>{s.name}</span>
+                                            <span className="text-yellow-500 font-mono">{s.prestige}</span>
+                                        </li>
+                                    ))}
+                                    {schools.length === 0 && <li className="text-gray-500 italic text-sm">No schools</li>}
+                                </ul>
+
+                                {bottom3.length > 0 && (
+                                    <>
+                                        <h4 className="text-xs uppercase text-gray-500 font-bold mb-2 border-t border-gray-700 pt-2">Relegation Zone</h4>
+                                        <ul className="space-y-2">
+                                            {bottom3.map((s, idx) => (
+                                                <li key={s.id} className="flex justify-between items-center text-sm">
+                                                    <span className="text-gray-400 w-6">#{schools.length - 2 + idx}</span>
+                                                    <span className="font-medium flex-1 truncate mr-2 text-gray-300">{s.name}</span>
+                                                    <span className="text-red-400 font-mono">{s.prestige}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </>
+                                )}
+                            </div>
+                            <div className="bg-gray-900/30 p-2 text-center text-xs text-gray-500">
+                                Total Schools: {schools.length}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </section>
 
@@ -178,7 +249,7 @@ export default function DevToolsPage() {
         {/* Evolution Table */}
         <section className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden">
             <h2 className="bg-gray-750 p-4 font-bold text-xl border-b border-gray-700">
-                ⏳ Prestige Evolution (Top 5 Schools)
+                ⏳ Prestige Evolution (Top 5 Global)
             </h2>
             <div className="overflow-x-auto">
                 <table className="w-full text-center text-sm">
