@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* No more light mode variables as per requirement for dark theme */
+  --background: #080C18;
+  --foreground: #F0E6D3;
 }
 
 @theme inline {
@@ -12,15 +13,40 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0F1629; }
+::-webkit-scrollbar-thumb { background: #2A3F6B; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #C9A84C; }
+
+/* Confetti Animation */
+@keyframes float-up {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+  100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+}
+
+.confetti-piece {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  animation: float-up linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
 }

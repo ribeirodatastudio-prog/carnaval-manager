@@ -18,94 +18,102 @@ export default function EnredoSelectionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-gray-700">
-        <div className="p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">Select Enredo for 2026</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">✕ Close</button>
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+      <div className="bg-[#0F1629] rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col border border-[#1E2D50]">
+        <div className="p-5 border-b border-[#1E2D50] bg-[#080C18] rounded-t-xl flex justify-between items-center">
+          <h2 className="text-xl font-black text-[#F0E6D3] uppercase tracking-wide">Pesquisa de Enredo 2026</h2>
+          <button onClick={onClose} className="text-[#8A9BB8] hover:text-[#F0E6D3] text-xs font-bold uppercase tracking-widest transition-colors">✕ Fechar</button>
         </div>
 
-        <div className="p-6 overflow-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="p-6 overflow-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 custom-scrollbar">
           {candidates.map(enredo => {
             const isFocused = researchFocusId === enredo.id;
             const revealLevel = enredo.statsRevealed;
 
             // Helper to render stat or hidden
-            const renderStat = (label: string, value: number | string, levelReq: number, colorClass = "text-white") => {
+            const renderStat = (label: string, value: number | string, levelReq: number, colorClass = "text-[#F0E6D3]") => {
                 if (revealLevel >= levelReq) {
-                    return <span className={`font-bold ${colorClass}`}>{value}</span>;
+                    return <span className={`font-black font-mono ${colorClass}`}>{value}</span>;
                 }
-                return <span className="text-gray-600 font-mono">???</span>;
+                return <span className="text-[#4A5A7A] font-mono tracking-widest">???</span>;
             };
 
             return (
-              <div key={enredo.id} className={`bg-gray-900 p-4 rounded-lg border-2 flex flex-col gap-2 transition-all ${isFocused ? 'border-blue-500 shadow-blue-900/50 shadow-lg' : 'border-gray-700 hover:border-gray-600'}`}>
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">{enredo.category}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded font-bold ${
-                        enredo.trend === 'Rising' ? 'bg-green-900 text-green-300' :
-                        enredo.trend === 'Saturated' ? 'bg-red-900 text-red-300' :
-                        'bg-gray-700 text-gray-300'
+              <div key={enredo.id}
+                className={`bg-[#161E35] p-5 rounded-xl border-2 flex flex-col gap-3 transition-all duration-300 ${
+                    isFocused
+                    ? 'border-[#C9A84C] shadow-lg shadow-[#C9A84C20] translate-y-[-2px]'
+                    : 'border-[#1E2D50] hover:border-[#2A3F6B] hover:translate-y-[-2px] hover:shadow-xl'
+                }`}
+              >
+                <div className="flex justify-between items-start">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#8A9BB8]">{enredo.category}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+                        enredo.trend === 'Rising' ? 'bg-[#2ECC7115] text-[#2ECC71] border border-[#2ECC7130]' :
+                        enredo.trend === 'Saturated' ? 'bg-[#E74C3C15] text-[#E74C3C] border border-[#E74C3C30]' :
+                        'bg-[#1E2D50] text-[#8A9BB8] border border-[#2A3F6B]'
                     }`}>{enredo.trend}</span>
                 </div>
 
-                <h3 className="text-lg font-bold text-white leading-tight mb-2 h-12 overflow-hidden">{enredo.title}</h3>
+                <h3 className="text-xl font-black text-[#F0E6D3] leading-tight h-14 overflow-hidden flex items-center">{enredo.title}</h3>
 
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm bg-black/20 p-3 rounded">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs bg-[#080C18] p-4 rounded-lg border border-[#1E2D50]">
                     {/* Visible Stats */}
-                    <div className="flex justify-between">
-                        <span className="text-gray-400">Appeal</span>
-                        <span className={`font-bold ${enredo.appeal > 70 ? 'text-green-400' : 'text-gray-300'}`}>{enredo.appeal}</span>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Apelo</span>
+                        <span className={`font-black font-mono ${enredo.appeal > 70 ? 'text-[#2ECC71]' : 'text-[#F0E6D3]'}`}>{enredo.appeal}</span>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-400">Controversy</span>
-                        <span className={`font-bold ${enredo.controversy > 60 ? 'text-red-400' : 'text-gray-300'}`}>{enredo.controversy}</span>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Polêmica</span>
+                        <span className={`font-black font-mono ${enredo.controversy > 60 ? 'text-[#E74C3C]' : 'text-[#F0E6D3]'}`}>{enredo.controversy}</span>
                     </div>
-                    <div className="flex justify-between col-span-2 border-b border-gray-700 pb-1 mb-1">
-                        <span className="text-gray-400">Sponsor Value</span>
-                        <span className="font-mono text-yellow-500">{enredo.sponsorValue > 0 ? formatMoney((enredo.sponsorValue / 100) * schoolBudget * 0.4) : '-'}</span>
+                    <div className="flex justify-between items-center col-span-2 border-b border-[#1E2D50] pb-2 mb-1">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Patrocínio</span>
+                        <span className="font-mono font-bold text-[#C9A84C]">{enredo.sponsorValue > 0 ? formatMoney((enredo.sponsorValue / 100) * schoolBudget * 0.4) : '-'}</span>
                     </div>
 
                     {/* Hidden Stats */}
-                    <div className="flex justify-between">
-                        <span className="text-gray-400">Complexity</span>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Complex.</span>
                         {renderStat('Complexity', enredo.complexity, 1)}
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-400">Difficulty</span>
+                    <div className="flex justify-between items-center">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Dificul.</span>
                         {renderStat('Difficulty', enredo.difficulty, 2)}
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-400">Potential</span>
-                        {renderStat('Potential', enredo.potentialScore, 3, "text-yellow-400")}
+                    <div className="flex justify-between items-center">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Potencial</span>
+                        {renderStat('Potential', enredo.potentialScore, 3, "text-[#C9A84C]")}
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-400">Risk</span>
-                        {renderStat('Risk', `${enredo.hiddenRisk || 0}%`, 4, "text-red-400")}
+                    <div className="flex justify-between items-center">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Risco</span>
+                        {renderStat('Risk', `${enredo.hiddenRisk || 0}%`, 4, "text-[#E74C3C]")}
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-400">Bonus</span>
-                        {renderStat('Bonus', `${enredo.hiddenBonus || 0}%`, 5, "text-green-400")}
+                    <div className="flex justify-between items-center">
+                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Bônus</span>
+                        {renderStat('Bonus', `${enredo.hiddenBonus || 0}%`, 5, "text-[#2ECC71]")}
                     </div>
                 </div>
 
-                <div className="mt-auto pt-4 flex gap-2">
+                <div className="mt-auto pt-4 flex gap-3">
                     <button
                         onClick={() => onFocus(enredo.id)}
                         disabled={isFocused || revealLevel >= 5}
-                        className={`flex-1 py-2 rounded text-sm font-bold transition-colors ${
-                            isFocused ? 'bg-blue-900/50 text-blue-300 cursor-default border border-blue-700' :
-                            revealLevel >= 5 ? 'bg-gray-800 text-gray-500 cursor-not-allowed' :
-                            'bg-gray-700 hover:bg-gray-600 text-white'
+                        className={`flex-1 py-3 rounded-lg text-xs font-black uppercase tracking-widest transition-colors border ${
+                            isFocused
+                            ? 'bg-[#3D1F7A]/30 text-[#9B6FE4] border-[#7B4FD4]/50 cursor-default'
+                            : revealLevel >= 5
+                            ? 'bg-[#1E2D50] text-[#4A5A7A] border-transparent cursor-not-allowed'
+                            : 'bg-transparent hover:bg-[#1E2D50] text-[#F0E6D3] border-[#2A3F6B]'
                         }`}
                     >
-                        {isFocused ? 'Researching...' : revealLevel >= 5 ? 'Fully Researched' : 'Research'}
+                        {isFocused ? 'Pesquisando...' : revealLevel >= 5 ? 'Completo' : 'Pesquisar'}
                     </button>
                     <button
                         onClick={() => onLockIn(enredo.id)}
-                        className="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded text-sm font-bold shadow-lg"
+                        className="flex-1 bg-[#C9A84C] hover:bg-[#E8C96A] text-[#080C18] py-3 rounded-lg text-xs font-black uppercase tracking-widest shadow-lg shadow-[#C9A84C20] transition-transform active:scale-95"
                     >
-                        Select
+                        Escolher
                     </button>
                 </div>
               </div>
@@ -113,9 +121,9 @@ export default function EnredoSelectionModal({
           })}
         </div>
 
-        <div className="p-4 border-t border-gray-700 bg-gray-900 rounded-b-lg text-sm text-gray-400 flex justify-between">
-            <span>Research one candidate per week to reveal stats.</span>
-            <span>Deadline: Week 6</span>
+        <div className="p-5 border-t border-[#1E2D50] bg-[#080C18] rounded-b-xl text-xs text-[#8A9BB8] flex justify-between font-medium">
+            <span>ℹ️ Pesquise um candidato por semana para revelar atributos ocultos.</span>
+            <span className="text-[#E67E22] font-bold uppercase tracking-wider">Prazo: Semana 6</span>
         </div>
       </div>
     </div>
