@@ -1,10 +1,15 @@
 import { StaffMember, School, TransferOffer, StaffRole } from '../types/models';
 
+import { ALL_ROLES } from '../utils/staffUtils';
+
 export function calculateOfferProbability(
   staff: StaffMember,
   school: School,
   offeredSalary: number,
-  contractYears: number
+  contractYears: number,
+  currentWeek?: number,
+  totalMarketWeeks?: number,
+  unfilledRolesCount?: number
 ): { prob: number; minSalary: number; idealYears: number } {
   const gap = Math.max(0, staff.reputation - school.prestige);
   const repFactor = 1 + (gap / 150);
@@ -40,6 +45,26 @@ export function calculateOfferProbability(
   // Base probability is 50% if offer matches expectation exactly
   let prob = 0.5 + salarySurplus;
 
+  // Apply Desperation Logic
+  if (currentWeek !== undefined && totalMarketWeeks !== undefined) {
+    // Progress through the market window (0 = week 1, 1 = final week)
+    const marketProgress = Math.min(1, Math.max(0, (currentWeek - 1) / (totalMarketWeeks - 1)));
+
+    // Staff desperation: unsigned staff become more willing near end of market
+    // At week 1: no bonus. At week 8: +0.25 probability bonus
+    const staffDesperation = marketProgress * 0.25;
+
+    // School desperation: schools with unfilled roles get a bonus too
+    // Pass in `unfilledRolesCount` for the school (count of StaffRole slots with no staff assigned)
+    // Each unfilled role adds urgency: up to +0.20 bonus total
+    const schoolDesperation = unfilledRolesCount !== undefined
+      ? Math.min(0.20, (unfilledRolesCount / 10) * marketProgress * 0.30)
+      : 0;
+
+    // Apply both to the final probability
+    prob += staffDesperation + schoolDesperation;
+  }
+
   // Clamp probability between 5% and 95%
   prob = Math.max(0.05, Math.min(0.95, prob));
 
@@ -49,13 +74,19 @@ export function calculateOfferProbability(
 export function resolveOffer(
   offer: TransferOffer,
   staff: StaffMember,
-  school: School
+  school: School,
+  currentWeek?: number,
+  totalMarketWeeks?: number,
+  unfilledRolesCount?: number
 ): TransferOffer {
   const { prob, minSalary, idealYears } = calculateOfferProbability(
     staff,
     school,
     offer.offeredSalary,
-    offer.contractYears
+    offer.contractYears,
+    currentWeek,
+    totalMarketWeeks,
+    unfilledRolesCount
   );
 
   const roll = Math.random();
@@ -78,19 +109,29 @@ export function resolveOffer(
 export function processAITransfers(
   schools: School[],
   availableStaff: StaffMember[],
-  currentWeek: number
+  currentWeek: number,
+  totalMarketWeeks: number
 ): { updatedSchools: School[]; updatedStaff: StaffMember[]; news: string[] } {
   const updatedSchools = [...schools];
   const updatedStaff = [...availableStaff];
   const news: string[] = [];
   const hiredStaffIds = new Set<string>();
 
+  // Calculate market progress
+  const marketProgress = Math.min(1, Math.max(0, (currentWeek - 1) / (totalMarketWeeks - 1)));
+
+  // AI Activity chance scales from 40% to 70% based on market progress
+  const activityChance = 0.4 + (marketProgress * 0.3);
+
   updatedSchools.forEach((school, index) => {
     // Skip player school
     if (school.isPlayerControlled) return;
 
-    // 40% chance to attempt a signing
-    if (Math.random() > 0.4) return;
+    // Chance to attempt a signing based on market progress
+    if (Math.random() > activityChance) return;
+
+    // Calculate unfilled roles for AI school
+    const unfilledRolesCount = ALL_ROLES.filter(role => !school.staff.some(s => s.role === role)).length;
 
     // AI Logic:
     // 1. Identify needs? (For now, just random upgrade or fill empty?)
@@ -140,8 +181,16 @@ export function processAITransfers(
     const offerSalary = candidate.salaryExpectation;
     const offerYears = 1;
 
-    // Calculate probability
-    const { prob } = calculateOfferProbability(candidate, school, offerSalary, offerYears);
+    // Calculate probability with desperation
+    const { prob } = calculateOfferProbability(
+      candidate,
+      school,
+      offerSalary,
+      offerYears,
+      currentWeek,
+      totalMarketWeeks,
+      unfilledRolesCount
+    );
 
     // Roll
     if (Math.random() < prob) {

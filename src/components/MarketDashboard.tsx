@@ -8,6 +8,7 @@ import { calculateAdjustedSalary } from '../store/gameStore';
 import { calculateOfferProbability } from '../services/transferService';
 import { formatMoney, formatRole } from '../utils/textUtils';
 import { getKeySkills } from '../utils/helpers';
+import { ALL_ROLES } from '../utils/staffUtils';
 import RosterList from './RosterList'; // You might need to adjust this path if RosterList is not in same folder or check its content
 
 // Helper for contrast
@@ -27,6 +28,7 @@ export default function MarketDashboard() {
   const { playerSchoolId, currentPhase, pendingOffers, resolvedOffers, transferNews } = gameState;
 
   const [filterRole, setFilterRole] = useState<StaffRole | 'All'>('All');
+  const [hideFilled, setHideFilled] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isRosterOpen, setIsRosterOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -41,9 +43,22 @@ export default function MarketDashboard() {
 
   const playerSchool = schools.find(s => s.id === playerSchoolId);
 
+  // Calculate unfilled roles for desperation logic
+  const unfilledRolesCount = playerSchool
+      ? ALL_ROLES.filter(role => !playerSchool.staff.some(s => s.role === role)).length
+      : 0;
+
   // Calculate live probability
   const probData = (playerSchool && selectedStaff)
-    ? calculateOfferProbability(selectedStaff, playerSchool, offerSalary, offerYears)
+    ? calculateOfferProbability(
+        selectedStaff,
+        playerSchool,
+        offerSalary,
+        offerYears,
+        gameState.currentWeek,
+        8,
+        unfilledRolesCount
+      )
     : null;
 
   const openOfferModal = (staff: StaffMember) => {
@@ -67,7 +82,13 @@ export default function MarketDashboard() {
       setIsResultsModalOpen(true);
   };
 
-  const filteredStaff = availableStaff.filter(staff => filterRole === 'All' || staff.role === filterRole);
+  const filteredStaff = availableStaff.filter(staff => {
+      if (filterRole !== 'All' && staff.role !== filterRole) return false;
+      if (hideFilled && playerSchool) {
+          if (playerSchool.staff.some(s => s.role === staff.role)) return false;
+      }
+      return true;
+  });
   const uniqueRoles = Array.from(new Set(availableStaff.map(s => s.role)));
   const counteredOffers = resolvedOffers.filter(o => o.status === 'Countered');
 
@@ -230,6 +251,16 @@ export default function MarketDashboard() {
                  <option key={role} value={role}>{formatRole(role)}</option>
                ))}
              </select>
+
+             <label className="flex items-center gap-2 cursor-pointer bg-gray-700/50 px-3 py-1 rounded border border-gray-600 hover:bg-gray-700 transition-colors">
+               <input
+                 type="checkbox"
+                 checked={hideFilled}
+                 onChange={(e) => setHideFilled(e.target.checked)}
+                 className="rounded bg-gray-600 border-gray-500 text-yellow-500 focus:ring-yellow-500/50"
+               />
+               <span className="text-sm text-gray-300">Hide Filled Positions</span>
+             </label>
            </div>
 
            {message && (
@@ -262,6 +293,8 @@ export default function MarketDashboard() {
                   const prestige = playerSchool ? playerSchool.prestige : 100;
                   const adjustedSalary = calculateAdjustedSalary(staff, prestige);
                   const isRainha = staff.role === 'RainhaDeBateria';
+
+                  const isRoleFilled = playerSchool?.staff.some(s => s.role === staff.role);
 
                   // Check if offer pending
                   const isPending = pendingOffers.some(o => o.toStaffId === staff.id && o.status === 'Pending');
@@ -300,7 +333,16 @@ export default function MarketDashboard() {
                         )}
                         {staff.partnerId && hoveredPartnerId === staff.partnerId && renderPartnerTooltip(staff.partnerId)}
                       </td>
-                      <td className="p-4 text-gray-300">{formatRole(staff.role)}</td>
+                      <td className="p-4 text-gray-300">
+                        <div className="flex flex-col">
+                            {formatRole(staff.role)}
+                            {isRoleFilled && (
+                                <span className="text-[10px] uppercase font-bold text-green-500 flex items-center gap-1">
+                                    ✓ Filled
+                                </span>
+                            )}
+                        </div>
+                      </td>
                       <td className="p-4 text-center">
                          <span className={`px-2 py-1 rounded text-xs font-bold ${staff.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-800 text-gray-300 border border-gray-700'}`}>
                             {staff.reputation}

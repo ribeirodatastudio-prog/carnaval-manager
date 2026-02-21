@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { GameState, School, StaffMember, TransferOffer } from '../types/models';
 import { loadAllSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
-import { calculateSalaryExpectation } from '../utils/staffUtils';
+import { calculateSalaryExpectation, ALL_ROLES } from '../utils/staffUtils';
 import { loadRealStaff } from '../data/realStaff';
 import { calculateStaffReputation } from '../services/staffService';
 import { researchEnredo } from '../services/researchEngine';
@@ -218,7 +218,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             }
 
             const school = updatedSchools[schoolIdx];
-            const resolved = resolveOffer(offer, staff, school);
+            // Calculate unfilled roles for desperation logic
+            const unfilledRolesCount = ALL_ROLES.filter(role => !school.staff.some(s => s.role === role)).length;
+
+            const resolved = resolveOffer(offer, staff, school, currentWeek, 8, unfilledRolesCount);
 
             if (resolved.status === 'Accepted') {
                 // Execute Hire
@@ -281,7 +284,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         });
 
         // B. Run AI Transfers
-        const aiResult = processAITransfers(updatedSchools, updatedAvailableStaff, currentWeek);
+        const aiResult = processAITransfers(updatedSchools, updatedAvailableStaff, currentWeek, 8);
         updatedSchools = aiResult.updatedSchools;
         updatedAvailableStaff = aiResult.updatedStaff;
         newTransferNews = aiResult.news;
@@ -297,9 +300,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       }
 
       let nextPhase: GameState['currentPhase'] = 'Market';
-      if (nextWeek >= 1 && nextWeek <= 12) {
+      if (nextWeek >= 1 && nextWeek <= 8) {
         nextPhase = 'Market';
-      } else if (nextWeek >= 13 && nextWeek <= 44) {
+      } else if (nextWeek >= 9 && nextWeek <= 44) {
         nextPhase = 'Preparation';
       } else if (nextWeek === 45) {
         nextPhase = 'Parade';
