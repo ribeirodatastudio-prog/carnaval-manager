@@ -26,12 +26,28 @@ export default function Home() {
             <button
               key={school.id}
               onClick={() => setPlayerSchool(school.id)}
-              className="bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-yellow-500 p-6 rounded-xl text-left transition-all duration-300 transform hover:-translate-y-1 shadow-lg hover:shadow-yellow-500/20 group"
+              className="bg-gray-800 hover:bg-gray-750 border-2 border-gray-700 p-6 rounded-xl text-left transition-all duration-300 transform hover:-translate-y-1 shadow-lg group relative overflow-hidden"
+              style={{
+                borderColor: school.colors[0] || '#374151',
+                boxShadow: `0 10px 15px -3px ${school.colors[0]}20, 0 4px 6px -2px ${school.colors[0]}10`
+              }}
             >
-              <h3 className="text-lg font-bold mb-3 truncate group-hover:text-yellow-400 transition-colors" style={{ color: school.colors[0] || '#FFF' }}>
-                {school.name}
-              </h3>
-              <div className="flex justify-between items-center text-sm text-gray-400 mt-2">
+              <div className="flex items-center gap-4 mb-4">
+                 {school.flag && (
+                    <div className="w-16 h-12 relative flex-shrink-0 rounded overflow-hidden shadow-md bg-black/20">
+                         <img
+                            src={school.flag}
+                            alt={`${school.name} flag`}
+                            className="w-full h-full object-cover"
+                         />
+                    </div>
+                 )}
+                 <h3 className="text-lg font-bold truncate transition-colors flex-1" style={{ color: school.colors[0] || '#FFF' }}>
+                    {school.name}
+                 </h3>
+              </div>
+
+              <div className="flex justify-between items-center text-sm text-gray-400 mt-2 border-t border-gray-700 pt-3">
                 <span>Prestige: <span className="text-white font-medium">{school.prestige}</span></span>
                 <span>Budget: <span className="text-green-400 font-medium">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(school.budget)}</span></span>
               </div>
