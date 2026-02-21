@@ -33,6 +33,9 @@ const DIVISIONS: Division[] = [
   'Grupo de Avaliação'
 ];
 
+/**
+ * Runs a multi-year simulation of school prestige, promotion, and relegation.
+ */
 export function runSimulation(initialSchools: School[], startYear: number, totalYears: number): SimulationResult {
   // Deep copy to avoid mutating the store directly during simulation steps
   let schools: School[] = JSON.parse(JSON.stringify(initialSchools));
@@ -61,17 +64,18 @@ export function runSimulation(initialSchools: School[], startYear: number, total
       }
     });
 
-    // 1. Simulate Season: Calculate Scores & Rank
+    // We will store the *ordered* list of schools for each division after results are finalized.
+    // This list will determine history updates and promotions/relegations.
     const rankedByDivision: Record<Division, School[]> = { ...schoolsByDivision }; // Placeholder
 
+    // 1. Determine Results for Each Division
     for (const div of DIVISIONS) {
       const divisionSchools = schoolsByDivision[div];
       if (divisionSchools.length === 0) continue;
 
-      // Find max prestige in this division for normalization base
+      // A. Calculate Performance Scores
       const maxPrestige = Math.max(...divisionSchools.map(s => s.prestige), 1);
 
-      // Calculate Scores
       const scoredSchools = divisionSchools.map(school => {
         const performanceBase = school.prestige / maxPrestige;
         const randomFactor = randomNormal(1.0, 0.30); // Mean 1.0, SD 0.30
@@ -79,124 +83,132 @@ export function runSimulation(initialSchools: School[], startYear: number, total
         return { ...school, tempScore: finalScore };
       });
 
-      // Sort by Score Descending
+      // Sort by Score Descending (Highest Score First)
       scoredSchools.sort((a, b) => b.tempScore - a.tempScore);
 
-      // Store ranked list (remove tempScore property conceptually, though we need to map back to original objects)
-      // We need to update the main `schools` array with the history updates first.
+      // B. Determine Relegation Candidates & Victims
+      // Logic:
+      // - Special: Bottom 4 candidates -> 1 random victim
+      // - Others: Bottom 5 candidates -> 2 random victims
+      // Note: If division is too small, handle gracefully.
 
-      // Update History (Top 5)
-      scoredSchools.forEach((s, index) => {
+      const numCandidates = div === 'Grupo Especial' ? 4 : 5;
+      const numVictims = div === 'Grupo Especial' ? 1 : 2;
+
+      // Identify candidates from the bottom of the list
+      // If division size < numCandidates, use all as candidates (or all - 1? Unlikely case given game data).
+      const candidateStartIndex = Math.max(0, scoredSchools.length - numCandidates);
+      const candidates = scoredSchools.slice(candidateStartIndex);
+      const safeSchoolsFromBottom = scoredSchools.slice(0, candidateStartIndex);
+
+      // Randomly select victims
+      // Shuffle candidates array and pick first N as victims
+      const shuffledCandidates = [...candidates].sort(() => Math.random() - 0.5);
+      const victims = shuffledCandidates.slice(0, numVictims);
+      const survivors = shuffledCandidates.slice(numVictims);
+
+      // Mark victims for relegation logic later
+      // We'll construct the final ranked list such that victims are at the very bottom.
+
+      // C. Determine Winners (Top 3)
+      // Logic: Randomly chosen between all schools that are NOT randomly chosen to be relegated.
+      // Pool = Safe Schools (from step B) + Survivors (from step B)
+      const nonRelegatedPool = [...safeSchoolsFromBottom, ...survivors];
+
+      // Randomly pick Top 3 (Champion, Vice, 3rd)
+      // Note: If pool size < 3, just shuffle what we have.
+      const shuffledWinners = [...nonRelegatedPool].sort(() => Math.random() - 0.5);
+
+      const top3 = shuffledWinners.slice(0, 3);
+      const middlePack = shuffledWinners.slice(3);
+
+      // Re-sort middle pack by performance score?
+      // "The rest of the schools... just fill the middle ranks".
+      // Usually, meritocracy should apply for the middle to respect prestige.
+      // So we take `middlePack` and sort them by their `tempScore` again.
+      middlePack.sort((a, b) => b.tempScore - a.tempScore);
+
+      // D. Construct Final Ranked List
+      // Order: Top 3 (Random) -> Middle Pack (Score) -> Victims (Randomly Relegated)
+      const finalRankedList = [...top3, ...middlePack, ...victims];
+
+      // Update the main map
+      rankedByDivision[div] = finalRankedList;
+
+      // E. Update History (Titles, Vices, etc.) based on this final rank
+      finalRankedList.forEach((s, index) => {
         const rank = index + 1;
         const entry: SchoolHistoryEntry = { divisao: div, ano: year };
 
-        // Find the school in the main array to update
+        // Find school in main array
         const schoolInMain = schools.find(sch => sch.id === s.id);
         if (schoolInMain) {
-          if (rank === 1) {
-            schoolInMain.history.titulos.push(entry);
-            schoolInMain.history.totalTitles += 1;
-            // Log for result output
-            if (div === 'Grupo Especial' || div === 'Série Ouro') {
+            if (rank === 1) {
+                schoolInMain.history.titulos.push(entry);
+                schoolInMain.history.totalTitles += 1;
+                // Log all champions
                 historyLog.push({ year, championId: s.id, championName: s.name, division: div });
+            } else if (rank === 2) {
+                schoolInMain.history.vices.push(entry);
+                schoolInMain.history.totalRunnerUps += 1;
+            } else if (rank === 3) {
+                schoolInMain.history.terceiros.push(entry);
+            } else if (rank === 4) {
+                schoolInMain.history.quartos.push(entry);
+            } else if (rank === 5) {
+                schoolInMain.history.quintos.push(entry);
             }
-          } else if (rank === 2) {
-            schoolInMain.history.vices.push(entry);
-            schoolInMain.history.totalRunnerUps += 1;
-          } else if (rank === 3) {
-            schoolInMain.history.terceiros.push(entry);
-          } else if (rank === 4) {
-            schoolInMain.history.quartos.push(entry);
-          } else if (rank === 5) {
-            schoolInMain.history.quintos.push(entry);
-          }
 
-          // Update years in division
-          if (div === 'Grupo Especial') {
-            schoolInMain.anos_no_especial += 1;
-          } else {
-            schoolInMain.anos_em_acesso += 1;
-          }
+            // Update years in division
+            if (div === 'Grupo Especial') {
+                schoolInMain.anos_no_especial += 1;
+            } else {
+                schoolInMain.anos_em_acesso += 1;
+            }
         }
       });
-
-      // Save ranked list for promotion/relegation
-      rankedByDivision[div] = scoredSchools;
     }
 
     // 2. Promotions and Relegations
-    // We need to apply moves *after* processing all ranks to avoid moving a school and then processing it again?
-    // Actually, we just change their `currentDivision` property.
+    // Now we strictly move schools based on their position in `rankedByDivision`.
+    // The "Victims" are already at the bottom of the list.
+    // The "Winners" (Promotable) are at the top.
 
-    // Helper to move school
     const moveSchool = (schoolId: string, newDiv: Division) => {
       const s = schools.find(sc => sc.id === schoolId);
       if (s) s.currentDivision = newDiv;
     };
 
-    // Especial <-> Ouro
-    // Relegation: 1 Random from Bottom 5 Prestige in Especial
-    const specialSchools = schools.filter(s => s.currentDivision === 'Grupo Especial');
-    if (specialSchools.length > 0) {
-        // Sort by Prestige Ascending
-        const sortedByPrestige = [...specialSchools].sort((a, b) => a.prestige - b.prestige);
-        const candidates = sortedByPrestige.slice(0, 5); // Bottom 5
-        const relegated = candidates[Math.floor(Math.random() * candidates.length)];
+    // Helper to process a pair of divisions (Higher <-> Lower)
+    const processInterDivisionMoves = (
+        higherDiv: Division,
+        lowerDiv: Division,
+        numDown: number,
+        numUp: number
+    ) => {
+        const higherList = rankedByDivision[higherDiv];
+        const lowerList = rankedByDivision[lowerDiv];
 
-        moveSchool(relegated.id, 'Série Ouro');
+        if (higherList.length > 0 && lowerList.length > 0) {
+            // Relegate bottom N
+            const relegated = higherList.slice(-numDown);
+            relegated.forEach(s => moveSchool(s.id, lowerDiv));
 
-        // Promotion: Champion of Ouro
-        const ouroChampion = rankedByDivision['Série Ouro'][0];
-        if (ouroChampion) {
-            moveSchool(ouroChampion.id, 'Grupo Especial');
+            // Promote top N
+            const promoted = lowerList.slice(0, numUp);
+            promoted.forEach(s => moveSchool(s.id, higherDiv));
         }
-    }
+    };
 
-    // Ouro <-> Prata (2 down / 2 up)
-    {
-        const ouroSchools = rankedByDivision['Série Ouro'];
-        const prataSchools = rankedByDivision['Série Prata'];
+    // Apply moves
+    processInterDivisionMoves('Grupo Especial', 'Série Ouro', 1, 1);
+    processInterDivisionMoves('Série Ouro', 'Série Prata', 2, 2);
+    processInterDivisionMoves('Série Prata', 'Série Bronze', 2, 2);
+    processInterDivisionMoves('Série Bronze', 'Grupo de Avaliação', 2, 2);
 
-        if (ouroSchools.length > 0 && prataSchools.length > 0) {
-            // Relegate bottom 2
-            const relegated = ouroSchools.slice(-2);
-            relegated.forEach(s => moveSchool(s.id, 'Série Prata'));
-
-            // Promote top 2
-            const promoted = prataSchools.slice(0, 2);
-            promoted.forEach(s => moveSchool(s.id, 'Série Ouro'));
-        }
-    }
-
-    // Prata <-> Bronze (2 down / 2 up)
-    {
-        const prataSchools = rankedByDivision['Série Prata'];
-        const bronzeSchools = rankedByDivision['Série Bronze'];
-
-        if (prataSchools.length > 0 && bronzeSchools.length > 0) {
-            const relegated = prataSchools.slice(-2);
-            relegated.forEach(s => moveSchool(s.id, 'Série Bronze'));
-
-            const promoted = bronzeSchools.slice(0, 2);
-            promoted.forEach(s => moveSchool(s.id, 'Série Prata'));
-        }
-    }
-
-    // Bronze <-> Avaliação (2 down / 2 up)
-    {
-        const bronzeSchools = rankedByDivision['Série Bronze'];
-        const avaliacaoSchools = rankedByDivision['Grupo de Avaliação'];
-
-        if (bronzeSchools.length > 0 && avaliacaoSchools.length > 0) {
-            const relegated = bronzeSchools.slice(-2);
-            relegated.forEach(s => moveSchool(s.id, 'Grupo de Avaliação'));
-
-            const promoted = avaliacaoSchools.slice(0, 2);
-            promoted.forEach(s => moveSchool(s.id, 'Série Bronze'));
-        }
-    }
 
     // 3. Recalculate Prestige
+    // Uses the history we just updated
     schools = recalculatePrestige(schools, year);
 
     // 4. Log Evolution
