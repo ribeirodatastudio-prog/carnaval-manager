@@ -112,7 +112,7 @@ export const TIER_S_STAFF: StaffMember[] = [
   ...staff,
   age: generateAge(staff.role),
   potential: generatePotential(staff.reputation),
-  salaryExpectation: calculateSalaryExpectation(staff.role, staff.skills, staff.reputation)
+  salaryExpectation: calculateSalaryExpectation(staff.role, staff.skills, staff.reputation, 'Grupo Especial')
 }));
 
 const FIRST_NAMES = [
@@ -171,7 +171,7 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         reputation: msRep,
         contractYears: 0,
         currentSchoolId: null,
-        salaryExpectation: calculateSalaryExpectation('MestreSala', msSkills, msRep),
+        salaryExpectation: calculateSalaryExpectation('MestreSala', msSkills, msRep, 'Grupo Especial'),
         partnerId: pbId,
         synergy,
         age: generateAge('MestreSala'),
@@ -195,7 +195,7 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         reputation: pbRep,
         contractYears: 0,
         currentSchoolId: null,
-        salaryExpectation: calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep),
+        salaryExpectation: calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep, 'Grupo Especial'),
         partnerId: msId,
         synergy,
         age: generateAge('PortaBandeira'),
@@ -244,7 +244,7 @@ export const generateRandomStaff = (count: number): StaffMember[] => {
         reputation,
         contractYears: 0,
         currentSchoolId: null,
-        salaryExpectation: calculateSalaryExpectation(role, skills, reputation, archetype),
+        salaryExpectation: calculateSalaryExpectation(role, skills, reputation, 'Grupo Especial', archetype),
         archetype,
         age: generateAge(role),
         potential: generatePotential(reputation)

@@ -25,13 +25,19 @@ const initializeGameData = () => {
     // Calculate Reputation
     const reputation = calculateStaffReputation(raw as any, 2026); // Assume 2026 start
 
-    // Calculate Salary Expectation
-    const salaryExpectation = calculateSalaryExpectation(raw.role, raw.skills, reputation, raw.archetype);
-
-    // Complete Staff Object
+    // Find Target School to determine division context for salary
     // We cast raw to any to access _schoolName safely
     const rawAny = raw as any;
+    const targetSchool = schools.find(s => s.name === rawAny._schoolName);
 
+    // Per requirements: Real staff are legends/top-tier, so they always use 'Grupo Especial' context
+    // regardless of their current school's division.
+    const division = 'Grupo Especial';
+
+    // Calculate Salary Expectation
+    const salaryExpectation = calculateSalaryExpectation(raw.role, raw.skills, reputation, division, raw.archetype);
+
+    // Complete Staff Object
     const staff: StaffMember = {
       id: raw.id,
       name: raw.name,
@@ -49,9 +55,6 @@ const initializeGameData = () => {
       age: raw.age,
       potential: undefined // Real staff have no potential (ceiling reached or custom logic)
     };
-
-    // Find Target School
-    const targetSchool = schools.find(s => s.name === rawAny._schoolName);
 
     if (targetSchool) {
       // Assign to School

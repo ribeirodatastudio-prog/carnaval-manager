@@ -210,7 +210,7 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
       age: msAge,
       potential: msPotential
     };
-    ms.salaryExpectation = calculateSalaryExpectation('MestreSala', msSkills, msRep);
+    ms.salaryExpectation = calculateSalaryExpectation('MestreSala', msSkills, msRep, division);
     ms.salary = Math.floor(ms.salaryExpectation * DIVISION_SALARY_FACTOR[division]);
     roster.push(ms);
     processedRoles.add('MestreSala');
@@ -236,7 +236,7 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
       age: pbAge,
       potential: pbPotential
     };
-    pb.salaryExpectation = calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep);
+    pb.salaryExpectation = calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep, division);
     pb.salary = Math.floor(pb.salaryExpectation * DIVISION_SALARY_FACTOR[division]);
     roster.push(pb);
     processedRoles.add('PortaBandeira');
@@ -278,7 +278,7 @@ export function generateSchoolRoster(schoolName: string, division: Division): St
       potential
     };
 
-    staff.salaryExpectation = calculateSalaryExpectation(role, skills, reputation, archetype);
+    staff.salaryExpectation = calculateSalaryExpectation(role, skills, reputation, division, archetype);
     staff.salary = Math.floor(staff.salaryExpectation * DIVISION_SALARY_FACTOR[division]);
 
     roster.push(staff);
@@ -338,7 +338,7 @@ function generateMarketPool(): StaffMember[] {
                 age: msAge,
                 potential: msPotential
             };
-            ms.salaryExpectation = calculateSalaryExpectation('MestreSala', msSkills, msRep);
+            ms.salaryExpectation = calculateSalaryExpectation('MestreSala', msSkills, msRep, division);
             pool.push(ms);
             // Count as 1 iteration or 2? Let's count as 1 "unit" of work, but adds 2 staff.
 
@@ -362,7 +362,7 @@ function generateMarketPool(): StaffMember[] {
                 age: pbAge,
                 potential: pbPotential
             };
-            pb.salaryExpectation = calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep);
+            pb.salaryExpectation = calculateSalaryExpectation('PortaBandeira', pbSkills, pbRep, division);
             pool.push(pb);
 
         } else {
@@ -398,7 +398,7 @@ function generateMarketPool(): StaffMember[] {
                 age,
                 potential
             };
-            staff.salaryExpectation = calculateSalaryExpectation(role, skills, reputation, archetype);
+            staff.salaryExpectation = calculateSalaryExpectation(role, skills, reputation, division, archetype);
             pool.push(staff);
         }
     }

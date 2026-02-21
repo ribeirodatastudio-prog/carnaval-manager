@@ -160,6 +160,7 @@ export interface School {
   isPlayerControlled: boolean; // Flag indicating if this is the school managed by the player
   prestige: number; // The school's historical importance and reputation (1-200). 180-200 = Historical.
   currentDivision: Division; // The current league/division the school is competing in.
+  proLevel: 'Professional' | 'SemiProfessional' | 'SemiAmateur' | 'Amateur'; // The professionalism level of the school
 
   // Prestige Calculation Metrics
   score_bruto?: number; // Raw score from the prestige formula (for simulation/debugging)

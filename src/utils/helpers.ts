@@ -1,5 +1,18 @@
 
-import { StaffRole, StaffSkills } from '../types/models';
+import { StaffRole, StaffSkills, Division, School } from '../types/models';
+
+/**
+ * Returns the professionalism level for a given division.
+ */
+export function getProLevelForDivision(division: Division): School['proLevel'] {
+  switch (division) {
+    case 'Grupo Especial': return 'Professional';
+    case 'Série Ouro': return 'SemiProfessional';
+    case 'Série Prata': return 'SemiAmateur';
+    case 'Série Bronze': return 'Amateur';
+    case 'Grupo de Avaliação': return 'Amateur';
+  }
+}
 
 /**
  * Converts the internal skill value (1-200) to a display value (1-20).

@@ -145,30 +145,61 @@ export function processAITransfers(
     // If full, look for upgrades?
     // Prompt: "Find 1 staff from availableStaff... Resolve immediately... If accepted: assign staff to school, replace..."
 
-    // We filter available staff by budget.
-    // We assume AI offers `salaryExpectation`.
-    const candidates = updatedStaff.filter(s =>
-      !hiredStaffIds.has(s.id) &&
-      school.budget >= s.salaryExpectation * 0.8 // Can afford approx
-    );
+    // AI Logic - Two Pass System:
+    // 1. Volunteer First (always preferred for empty slots or upgrades if available)
+    // 2. Paid Staff (only if budget allows and floor is protected)
 
-    if (candidates.length === 0) return;
+    // Filter available candidates
+    const availableCandidates = updatedStaff.filter(s => !hiredStaffIds.has(s.id));
 
-    // Sort by reputation descending
-    candidates.sort((a, b) => b.reputation - a.reputation);
-
-    // Find the first candidate that is actually an upgrade or fills a vacancy
     let candidate: StaffMember | undefined;
 
-    for (const cand of candidates) {
-        const currentStaff = school.staff.find(st => st.role === cand.role);
+    // PASS 1: Volunteers (Salary Expectation == 0)
+    // Prioritize filling empty roles first
+    const volunteers = availableCandidates.filter(s => s.salaryExpectation === 0);
+    volunteers.sort((a, b) => b.reputation - a.reputation);
+
+    for (const vol of volunteers) {
+        const currentStaff = school.staff.find(st => st.role === vol.role);
+        // Priority: Empty Role > Significant Upgrade
         if (!currentStaff) {
-            candidate = cand;
+            candidate = vol;
             break;
         }
-        if (cand.reputation > currentStaff.reputation) {
-            candidate = cand;
-            break;
+        // If we have a paid staff but can get a volunteer of similar or better quality (rare but possible), take it?
+        // Or if we have a volunteer and can get a better volunteer.
+        if (vol.reputation > currentStaff.reputation) {
+             candidate = vol;
+             break;
+        }
+    }
+
+    // PASS 2: Paid Staff (if no volunteer selected)
+    if (!candidate) {
+        const paidCandidates = availableCandidates.filter(s => s.salaryExpectation > 0);
+        paidCandidates.sort((a, b) => b.reputation - a.reputation);
+
+        for (const cand of paidCandidates) {
+            // Budget Check:
+            // 1. Must be able to afford (loose check 0.8)
+            // 2. Budget Floor: Spending this salary must not consume > 60% of CURRENT remaining budget
+            //    (unless it's filling an empty role and the budget is small? No, strict rule per prompt)
+
+            const cost = cand.salaryExpectation;
+            const affordable = school.budget >= cost * 0.8;
+            const budgetFloorSafe = cost <= (school.budget * 0.60);
+
+            if (!affordable || !budgetFloorSafe) continue;
+
+            const currentStaff = school.staff.find(st => st.role === cand.role);
+            if (!currentStaff) {
+                candidate = cand;
+                break;
+            }
+            if (cand.reputation > currentStaff.reputation) {
+                candidate = cand;
+                break;
+            }
         }
     }
 
