@@ -1,14 +1,14 @@
 
 import { School, SchoolHistoryEntry, Division } from '../types/models';
 
-const K_DECAY = 0.04;
+const K_DECAY = 0.08;
 
 const WEIGHTS = {
-  titulo: { max: 18.0, min: 6.0 },
-  vice: { max: 10.0, min: 3.5 },
-  terceiro: { max: 5.5, min: 2.0 },
-  quarto: { max: 3.0, min: 1.0 },
-  quinto: { max: 1.5, min: 0.5 },
+  titulo: { max: 18.0, min: 2.0 },
+  vice: { max: 10.0, min: 1.0 },
+  terceiro: { max: 5.5, min: 0.5 },
+  quarto: { max: 3.0, min: 0.2 },
+  quinto: { max: 1.5, min: 0.1 },
 };
 
 const DIVISION_MULTIPLIERS: Record<Division, number> = {
@@ -27,11 +27,16 @@ const DIVISION_PRESENCE_BONUS: Record<Division, number> = {
   'Grupo de Avaliação': 0.3,
 };
 
-// Based on current Mangueira/Beija-Flor scores (approx 275) mapping to 195.
-// Formula: (Score / MAX_REFERENCE)^0.6 * 200 = 195
-// => 275 / MAX_REFERENCE = (195/200)^(1/0.6) = 0.975^1.666 = 0.958
-// => MAX_REFERENCE = 275 / 0.958 = 287
-const MAX_SCORE_REFERENCE = 287.0;
+const DIVISION_FLOOR: Record<Division, number> = {
+  'Grupo Especial': 50,
+  'Série Ouro': 25,
+  'Série Prata': 12,
+  'Série Bronze': 5,
+  'Grupo de Avaliação': 1,
+};
+
+// No longer using a fixed reference. We normalize against the current max raw score.
+// const MAX_SCORE_REFERENCE = 287.0;
 
 /**
  * Calculates the raw score for a single school based on its history and current status.
@@ -64,16 +69,19 @@ export function calculateRawScore(school: School, currentYear: number): number {
     processAchievements(school.history.quintos || [], WEIGHTS.quinto);
   }
 
-  // Bonus for Presence (Accumulated years)
-  score += ((school.anos_no_especial || 0) * 0.4);
-  score += ((school.anos_em_acesso || 0) * 0.1);
+  // Bonus for Presence (Accumulated years) - Logarithmic
+  const especialYears = school.anos_no_especial || 0;
+  const accessYears = school.anos_em_acesso || 0;
+
+  score += 2.0 * Math.log1p(especialYears);
+  score += 0.5 * Math.log1p(accessYears);
 
   // Bonus for Current Division (Fixed base bonus)
   score += DIVISION_PRESENCE_BONUS[school.currentDivision] || 0;
 
-  // Staff Bonus: Up to 40 points based on total reputation
+  // Staff Bonus: Up to 20 points based on total reputation (was 40)
   const staffRepSum = school.staff.reduce((sum, s) => sum + s.reputation, 0);
-  const staffBonus = Math.min(40, staffRepSum / 10);
+  const staffBonus = Math.min(20, staffRepSum / 20);
   score += staffBonus;
 
   return score;
@@ -90,23 +98,29 @@ export function recalculatePrestige(schools: School[], currentYear: number): Sch
     return { ...school, score_bruto: rawScore };
   });
 
-  // 2. Sort by Raw Score Descending (for consistent ordering if needed elsewhere, though prestige calculation is independent now)
+  // 2. Sort by Raw Score Descending
   schoolsWithScore.sort((a, b) => (b.score_bruto || 0) - (a.score_bruto || 0));
 
-  // 3. Normalize and Assign Prestige
+  // 3. Dynamic Normalization
+  // Find the maximum raw score among all schools (avoid division by zero)
+  const maxRaw = Math.max(...schoolsWithScore.map(s => s.score_bruto || 0), 1);
+
+  // 4. Normalize and Assign Prestige
   const updatedSchools = schoolsWithScore.map((school) => {
     const rawScore = school.score_bruto || 0;
 
-    // Apply power curve (0.6) to raw score relative to reference max
-    // Ensures distribution is similar to previous logic but without artificial pinning
-    const ratio = Math.pow(Math.max(0, rawScore) / MAX_SCORE_REFERENCE, 0.6);
+    // Apply power curve (0.55) to raw score relative to the current max
+    // This ensures distribution is scale-invariant
+    const ratio = Math.pow(Math.max(0, rawScore) / maxRaw, 0.55);
 
     // Map to 0-200 scale
     const calculatedPrestige = ratio * 200;
 
-    // Clamp between 1 and 200
-    // We allow reaching 200 if score >= MAX_SCORE_REFERENCE
-    const newPrestige = Math.round(Math.max(1, Math.min(200, calculatedPrestige)));
+    // Apply Division Floor
+    const floor = DIVISION_FLOOR[school.currentDivision] || 1;
+
+    // Clamp between floor and 200
+    const newPrestige = Math.round(Math.max(floor, Math.min(200, calculatedPrestige)));
 
     return { ...school, prestige: newPrestige };
   });
