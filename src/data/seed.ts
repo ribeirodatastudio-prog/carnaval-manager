@@ -26,6 +26,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 175,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 20,
     anos_em_acesso: 0,
     history: {
@@ -49,6 +50,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 150,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 15,
     anos_em_acesso: 0,
     history: {
@@ -72,6 +74,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 195,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 30,
     anos_em_acesso: 0,
     history: {
@@ -95,6 +98,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 120,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 5,
     anos_em_acesso: 0,
     history: {
@@ -118,6 +122,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 170,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 25,
     anos_em_acesso: 0,
     history: {
@@ -141,6 +146,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 130,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 8,
     anos_em_acesso: 0,
     history: {
@@ -164,6 +170,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 198,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 40,
     anos_em_acesso: 0,
     history: {
@@ -187,6 +194,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 110,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 3,
     anos_em_acesso: 0,
     history: {
@@ -210,6 +218,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 165,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 18,
     anos_em_acesso: 0,
     history: {
@@ -233,6 +242,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 140,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 10,
     anos_em_acesso: 0,
     history: {
@@ -256,6 +266,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 185,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 22,
     anos_em_acesso: 0,
     history: {
@@ -279,6 +290,7 @@ export const INITIAL_SCHOOLS: School[] = [
     isPlayerControlled: false,
     prestige: 145,
     currentDivision: 'Grupo Especial',
+    proLevel: 'Professional',
     anos_no_especial: 12,
     anos_em_acesso: 0,
     history: {

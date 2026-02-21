@@ -141,6 +141,20 @@ export default function MarketDashboard() {
       return 'High';
   };
 
+  const getProBadge = (level: string | undefined) => {
+    let color = 'bg-gray-500 text-white';
+    let label = 'AMADOR';
+    if (level === 'Professional') { color = 'bg-yellow-500 text-black border-yellow-300'; label = 'PRO'; }
+    else if (level === 'SemiProfessional') { color = 'bg-gray-300 text-black border-gray-400'; label = 'SEMI-PRO'; }
+    else if (level === 'SemiAmateur') { color = 'bg-orange-700 text-white border-orange-500'; label = 'SEMI-AMADOR'; }
+
+    return (
+        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${color} ml-2 uppercase tracking-wide`}>
+            {label}
+        </span>
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-gray-100 relative">
       {/* Top Bar / Header */}
@@ -156,13 +170,25 @@ export default function MarketDashboard() {
                 </div>
             )}
             <div>
-                <h1 className="text-2xl font-bold leading-none">Carnival Manager</h1>
-                <div className="text-sm opacity-90">
+                {playerSchool ? (
+                    <div className="flex flex-col">
+                        <h1 className="text-2xl font-bold leading-none flex items-center">
+                            {playerSchool.name}
+                        </h1>
+                         <div className="text-sm opacity-90 flex items-center mt-1">
+                            {playerSchool.currentDivision}
+                            {getProBadge(playerSchool.proLevel)}
+                        </div>
+                    </div>
+                ) : (
+                    <h1 className="text-2xl font-bold leading-none">Carnival Manager</h1>
+                )}
+                <div className="text-xs opacity-75 mt-1">
                     Year {gameState.currentYear} | Phase: <span className="font-semibold">{currentPhase}</span> | Week: {gameState.currentWeek}
                 </div>
             </div>
           </div>
-           <Link href="/devtools" className="text-xs bg-black/20 hover:bg-black/30 border border-white/20 px-2 py-1 rounded transition-colors backdrop-blur-sm">
+           <Link href="/devtools" className="text-xs bg-black/20 hover:bg-black/30 border border-white/20 px-2 py-1 rounded transition-colors backdrop-blur-sm self-start">
             🔧 DevTools
           </Link>
         </div>

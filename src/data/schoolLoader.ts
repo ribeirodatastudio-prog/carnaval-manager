@@ -4,6 +4,7 @@ import { FLAG_IMAGES } from './flagImages';
 import { REAL_STAFF_DATA } from './realStaff';
 import { generateSchoolRoster } from './genericStaffSeed';
 import { School, SchoolHistory, SchoolHistoryEntry, Division } from '../types/models';
+import { getProLevelForDivision } from '../utils/helpers';
 
 interface EscolaRaw {
   divisao_atual: string;
@@ -60,6 +61,20 @@ const colorMap = new Map<string, string[]>();
   colorMap.set(normName, [entry.cor_principal, entry.cor_secundaria]);
 });
 
+function calculateDivisionBudget(division: Division, prestige: number): number {
+  // Budget is division-anchored with prestige as a modifier within the division's range
+  const DIVISION_BUDGETS: Record<Division, { base: number; perPrestige: number }> = {
+    'Grupo Especial':    { base: 2_500_000, perPrestige: 28_000 },
+    'Série Ouro':        { base: 200_000,   perPrestige: 5_000  },
+    'Série Prata':       { base: 40_000,    perPrestige: 1_500  },
+    'Série Bronze':      { base: 8_000,     perPrestige: 600    },
+    'Grupo de Avaliação':{ base: 2_000,     perPrestige: 150    },
+  };
+
+  const { base, perPrestige } = DIVISION_BUDGETS[division];
+  return Math.floor(base + prestige * perPrestige);
+}
+
 /**
  * Loads all schools from the JSON database.
  * Calculates initial budget and morale based on prestige.
@@ -71,9 +86,10 @@ export function loadAllSchools(): School[] {
   for (const [name, data] of Object.entries(db.escolas)) {
     // Determine ID
     const id = data.id ? data.id.toString() : `generated-${generatedIdCounter++}`;
+    const division = data.divisao_atual as Division;
 
     // Calculate dynamic budget
-    const calculatedBudget = 2000000 + (data.prestige * 25000);
+    const calculatedBudget = calculateDivisionBudget(division, data.prestige);
 
     // Calculate dynamic morale
     const calculatedMorale = Math.min(100, Math.round(data.prestige / 2));
@@ -124,7 +140,8 @@ export function loadAllSchools(): School[] {
       staff: [],
       isPlayerControlled: false,
       prestige: data.prestige,
-      currentDivision: data.divisao_atual as Division,
+      currentDivision: division,
+      proLevel: getProLevelForDivision(division),
       score_bruto: data.score_bruto,
       anos_no_especial: data.anos_no_especial || 0,
       anos_em_acesso: 0,
