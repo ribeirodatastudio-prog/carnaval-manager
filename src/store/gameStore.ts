@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { GameState, School, StaffMember, TransferOffer } from '../types/models';
 import { loadAllSchools } from '../data/schoolLoader';
-import { INITIAL_MARKET_STAFF, calculateSalaryExpectation } from '../data/staffSeed';
+import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
+import { calculateSalaryExpectation } from '../utils/staffUtils';
 import { loadRealStaff } from '../data/realStaff';
 import { calculateStaffReputation } from '../services/staffService';
 import { researchEnredo } from '../services/researchEngine';

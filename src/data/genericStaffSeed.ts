@@ -1,5 +1,5 @@
 import { StaffMember, StaffRole, StaffSkills, Division, RainhaArchetype } from '../types/models';
-import { calculateSalaryExpectation } from './staffSeed';
+import { calculateSalaryExpectation } from '../utils/staffUtils';
 
 const MALE_FIRST_NAMES = [
   'Carlos', 'João', 'Pedro', 'Lucas', 'Mateus', 'Gabriel', 'Rafael', 'Felipe', 'Bruno', 'Thiago', 'Jorge', 'Luiz', 'Antônio', 'José', 'Francisco', 'Paulo', 'Roberto', 'Marcos', 'Ricardo', 'Eduardo', 'André', 'Daniel', 'Diego', 'Fábio', 'Gustavo', 'Henrique', 'Igor', 'Júnior', 'Kleber', 'Leonardo', 'Márcio', 'Nélson', 'Oswaldo', 'Renato', 'Sandro', 'Túlio', 'Vagner', 'Wellington', 'Xande', 'Alessandro', 'Bernardo', 'Caio', 'Danilo', 'Evandro', 'Flávio', 'Gilberto', 'Haroldo', 'Ivaldo', 'Jeremias', 'Kleiton'
