@@ -18,7 +18,12 @@ interface EscolaRaw {
     quartos?: SchoolHistoryEntry[];
     quintos?: SchoolHistoryEntry[];
   };
-  id?: number;
+  cores?: {
+    primaria: string;
+    secundaria: string;
+  };
+  logo?: string;
+  id?: number; // Some entries might not have ID in the raw JSON? They should.
 }
 
 interface EscolasDB {
@@ -110,7 +115,7 @@ export function loadAllSchools(): School[] {
       id: id,
       name: name,
       colors: colors,
-      flag: flagUrl,
+      logo: data.logo,
       budget: calculatedBudget,
       fanbaseMorale: calculatedMorale,
       staff: [],
