@@ -20,7 +20,9 @@ export default function RosterList({ staff }: RosterListProps) {
           <tr>
             <th className="px-4 py-3">Role</th>
             <th className="px-4 py-3">Name</th>
+            <th className="px-4 py-3 text-center">Rep</th>
             <th className="px-4 py-3">Key Skills</th>
+            <th className="px-4 py-3">History</th>
             <th className="px-4 py-3 text-right">Salary</th>
           </tr>
         </thead>
@@ -32,14 +34,22 @@ export default function RosterList({ staff }: RosterListProps) {
                 {member.name}
                 {member.archetype && <span className="ml-2 text-xs bg-purple-900 text-purple-200 px-1 rounded">{member.archetype}</span>}
               </td>
+              <td className="px-4 py-3 text-center">
+                <span className={`px-2 py-1 rounded text-xs font-bold ${member.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-700 text-gray-300'}`}>
+                    {member.reputation}
+                </span>
+              </td>
               <td className="px-4 py-3">
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {getKeySkills(member.role, member.skills).map((skill) => (
-                    <span key={skill.name} className="bg-gray-900 px-2 py-1 rounded text-xs border border-gray-600">
+                    <span key={skill.name} className="bg-gray-900 px-2 py-1 rounded text-xs border border-gray-600 whitespace-nowrap">
                       {skill.name}: <span className="text-yellow-400 font-bold">{skill.value}</span>
                     </span>
                   ))}
                 </div>
+              </td>
+              <td className="px-4 py-3 text-xs text-gray-400 max-w-[200px] truncate" title={member.historyText || "Newcomer"}>
+                 {member.historyText || "-"}
               </td>
               <td className="px-4 py-3 text-right font-mono">{formatMoney(member.salary)}</td>
             </tr>

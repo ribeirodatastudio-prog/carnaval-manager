@@ -173,6 +173,7 @@ export default function MarketDashboard() {
               <tr>
                 <th className="p-4 font-semibold border-b border-gray-700">Name</th>
                 <th className="p-4 font-semibold border-b border-gray-700">Role</th>
+                <th className="p-4 font-semibold border-b border-gray-700 text-center">Rep</th>
                 <th className="p-4 font-semibold border-b border-gray-700 w-1/3">Key Attributes (1-20)</th>
                 <th className="p-4 font-semibold border-b border-gray-700">Estimated Cost</th>
                 <th className="p-4 font-semibold border-b border-gray-700 text-center">Action</th>
@@ -181,7 +182,7 @@ export default function MarketDashboard() {
             <tbody className="divide-y divide-gray-700">
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">No staff members found matching criteria.</td>
+                  <td colSpan={6} className="p-8 text-center text-gray-500">No staff members found matching criteria.</td>
                 </tr>
               ) : (
                 filteredStaff.map((staff) => {
@@ -192,7 +193,7 @@ export default function MarketDashboard() {
 
                   return (
                     <tr key={staff.id} className="hover:bg-gray-700/50 transition-colors group">
-                      <td className="p-4 font-medium text-white relative">
+                      <td className="p-4 font-medium text-white relative min-w-[200px]">
                         <div className="flex items-center">
                             {staff.name}
                             {staff.partnerId && (
@@ -210,9 +211,19 @@ export default function MarketDashboard() {
                                 </span>
                             )}
                         </div>
+                        {staff.historyText && (
+                            <div className="text-xs text-gray-500 mt-1 truncate max-w-[250px]" title={staff.historyText}>
+                                {staff.historyText}
+                            </div>
+                        )}
                         {staff.partnerId && hoveredPartnerId === staff.partnerId && renderPartnerTooltip(staff.partnerId)}
                       </td>
                       <td className="p-4 text-gray-300">{formatRole(staff.role)}</td>
+                      <td className="p-4 text-center">
+                         <span className={`px-2 py-1 rounded text-xs font-bold ${staff.reputation >= 180 ? 'bg-yellow-900 text-yellow-300 border border-yellow-700' : 'bg-gray-800 text-gray-300 border border-gray-700'}`}>
+                            {staff.reputation}
+                         </span>
+                      </td>
                       <td className="p-4">
                         <div className="flex flex-wrap gap-2">
                           {getKeySkills(staff.role, staff.skills).map((skill) => (
