@@ -298,7 +298,7 @@ export default function MarketDashboard() {
                             return (
                                 <div key={offer.id} className="flex justify-between items-center bg-[#080C18]/50 p-3 rounded-lg border border-[#E67E2220]">
                                     <div className="text-sm">
-                                        <span className="font-bold text-[#F0E6D3]">{staff?.name}</span> <span className="text-[#8A9BB8]">({formatRole(staff?.role)})</span> pede
+                                        <span className="font-bold text-[#F0E6D3]">{staff?.name}</span> <span className="text-[#8A9BB8]">({staff ? formatRole(staff.role) : 'Desconhecido'})</span> pede
                                         <span className="text-[#2ECC71] font-mono font-bold ml-2">{formatMoney(offer.counterSalary || 0)}</span> por {offer.counterYears} anos.
                                     </div>
                                     <div className="flex gap-2">
@@ -717,7 +717,7 @@ export default function MarketDashboard() {
                                                 <div>
                                                     <div className="font-bold text-[#F0E6D3] text-lg">{staff?.name || 'Desconhecido'}</div>
                                                     <div className="text-[#8A9BB8] text-xs mt-0.5">
-                                                        {formatRole(staff?.role)} · <span className="font-mono text-[#C9A84C]">{formatMoney(o.offeredSalary)}</span> / {o.contractYears}y
+                                                        {staff ? formatRole(staff.role) : 'Desconhecido'} · <span className="font-mono text-[#C9A84C]">{formatMoney(o.offeredSalary)}</span> / {o.contractYears}y
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
