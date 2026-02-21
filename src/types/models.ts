@@ -70,10 +70,26 @@ export interface StaffMember {
   partnerId?: string; // ID of the partner (for MestreSala/PortaBandeira couples)
   synergy?: number; // Synergy level for couples (1-100 or similar scale, TBD)
   archetype?: RainhaArchetype; // Specific archetype for Rainha de Bateria
+  age?: number; // Age of the staff member
 
   // Historical Data
   historyText?: string; // "Cargos Históricos" (e.g., "Mangueira (2016-22), Imperatriz (2023-24)")
   achievements?: StaffAchievement[]; // Structured achievements for reputation calculation
+}
+
+/**
+ * Represents a transfer offer made by a school to a staff member.
+ */
+export interface TransferOffer {
+  id: string;
+  fromSchoolId: string;
+  toStaffId: string;
+  offeredSalary: number;
+  contractYears: number;        // 1, 2, or 3
+  weekMade: number;
+  status: 'Pending' | 'Accepted' | 'Rejected' | 'Countered';
+  counterSalary?: number;
+  counterYears?: number;
 }
 
 /**
@@ -163,4 +179,7 @@ export interface GameState {
   currentWeek: number; // The current week of the year (1-52)
   currentPhase: 'Market' | 'Preparation' | 'Parade' | 'Results/Offseason'; // The current phase of the game loop
   playerSchoolId: string | null; // The ID of the school the player is currently managing
+  pendingOffers: TransferOffer[]; // Offers waiting for resolution
+  resolvedOffers: TransferOffer[]; // Offers resolved this week
+  transferNews: string[]; // Market activity log
 }
