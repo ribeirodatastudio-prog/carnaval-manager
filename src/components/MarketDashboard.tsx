@@ -10,7 +10,8 @@ import { getPotentialDescriptor } from '../services/staffService';
 import { formatMoney, formatRole } from '../utils/textUtils';
 import { getKeySkills } from '../utils/helpers';
 import { ALL_ROLES } from '../utils/staffUtils';
-import RosterList from './RosterList'; // You might need to adjust this path if RosterList is not in same folder or check its content
+import RosterList from './RosterList';
+import EnredoSelectionModal from './EnredoSelectionModal';
 
 // Helper for contrast
 function getContrastColor(hex: string | undefined): string {
@@ -25,7 +26,7 @@ function getContrastColor(hex: string | undefined): string {
 }
 
 export default function MarketDashboard() {
-  const { gameState, schools, availableStaff, submitTransferOffer, advanceWeek, acceptCounter, rejectCounter } = useGameStore();
+  const { gameState, schools, availableStaff, submitTransferOffer, advanceWeek, acceptCounter, rejectCounter, focusResearch, lockInEnredo } = useGameStore();
   const { playerSchoolId, currentPhase, pendingOffers, resolvedOffers, transferNews } = gameState;
 
   const [filterRole, setFilterRole] = useState<StaffRole | 'All'>('All');
@@ -41,6 +42,7 @@ export default function MarketDashboard() {
   const [offerSalary, setOfferSalary] = useState(0);
   const [offerYears, setOfferYears] = useState(1);
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+  const [isEnredoModalOpen, setIsEnredoModalOpen] = useState(false);
 
   const playerSchool = schools.find(s => s.id === playerSchoolId);
 
@@ -201,6 +203,9 @@ export default function MarketDashboard() {
                  </button>
                  <button onClick={() => setIsRosterOpen(true)} className="bg-black/20 hover:bg-black/30 px-3 py-1 rounded text-sm border border-white/10 backdrop-blur-sm transition-colors">
                     My Roster
+                 </button>
+                 <button onClick={() => setIsEnredoModalOpen(true)} className="bg-purple-900/50 hover:bg-purple-800 text-purple-100 border border-purple-500 px-3 py-1 rounded text-sm backdrop-blur-sm transition-colors">
+                    {playerSchool?.enredo ? '📜 Enredo' : '🧪 Research'}
                  </button>
                   {/* Next Week Button */}
                  {currentPhase === 'Market' && (
@@ -546,39 +551,6 @@ export default function MarketDashboard() {
            </div>
       )}
 
-      {/* Roster Modal */}
-      {isRosterOpen && playerSchool && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-            <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-700">
-                <div
-                  className="p-4 border-b flex justify-between items-center rounded-t-lg transition-colors duration-500"
-                  style={{ backgroundColor: headerBg, borderColor: secondaryColor }}
-                >
-                    <h2 className="text-xl font-bold flex items-center gap-3" style={{ color: headerText }}>
-                         {playerSchool.flag && (
-                             <div className="w-10 h-6 relative rounded overflow-hidden shadow-sm border border-black/20">
-                                 <img src={playerSchool.flag} alt="Flag" className="w-full h-full object-cover" />
-                             </div>
-                         )}
-                        <span>
-                            Current Roster: <span style={{ color: secondaryColor === headerBg ? headerText : secondaryColor, textShadow: '0px 0px 2px rgba(0,0,0,0.5)' }}>{playerSchool.name}</span>
-                        </span>
-                    </h2>
-                    <button
-                        onClick={() => setIsRosterOpen(false)}
-                        className="opacity-70 hover:opacity-100 transition-opacity"
-                        style={{ color: headerText }}
-                    >
-                        ✕ Close
-                    </button>
-                </div>
-                <div className="p-4 overflow-auto flex-1">
-                    <RosterList staff={playerSchool.staff} />
-                </div>
-            </div>
-        </div>
-      )}
-
       {/* History Modal (League Wide) */}
       {isHistoryOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -612,6 +584,52 @@ export default function MarketDashboard() {
                     </div>
                 </div>
              </div>
+        </div>
+      )}
+
+      {/* Enredo Selection Modal */}
+      {isEnredoModalOpen && playerSchool && !playerSchool.enredo && (
+          <EnredoSelectionModal
+            isOpen={isEnredoModalOpen}
+            onClose={() => setIsEnredoModalOpen(false)}
+            candidates={playerSchool.enredoCandidates || []}
+            researchFocusId={playerSchool.researchFocusId || null}
+            onFocus={focusResearch}
+            onLockIn={(id) => {
+                lockInEnredo(id);
+                setIsEnredoModalOpen(false);
+            }}
+            schoolBudget={playerSchool.budget}
+          />
+      )}
+
+      {/* Enredo View Modal (Locked In) */}
+      {isEnredoModalOpen && playerSchool && playerSchool.enredo && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div className="bg-gray-800 rounded-lg shadow-2xl p-6 border border-gray-700 max-w-2xl w-full">
+                <div className="flex justify-between items-start mb-4">
+                    <h2 className="text-xl font-bold text-white">Current Enredo: {playerSchool.enredo.title}</h2>
+                    <button onClick={() => setIsEnredoModalOpen(false)} className="text-gray-400 hover:text-white">✕</button>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm text-gray-300">
+                    <div>Category: <span className="text-white font-bold">{playerSchool.enredo.category}</span></div>
+                    <div>Trend: <span className={`${playerSchool.enredo.trend === 'Rising' ? 'text-green-400' : 'text-white'}`}>{playerSchool.enredo.trend}</span></div>
+                    <div>Complexity: <span className="text-white">{playerSchool.enredo.complexity}</span></div>
+                    <div>Difficulty: <span className="text-white">{playerSchool.enredo.difficulty}</span></div>
+                    <div>Potential: <span className="text-yellow-400 font-bold">{playerSchool.enredo.potentialScore}</span></div>
+                    <div>Controversy: <span className="text-red-400 font-bold">{playerSchool.enredo.controversy}</span></div>
+                    <div>Appeal: <span className="text-green-400 font-bold">{playerSchool.enredo.appeal}</span></div>
+                    <div className="col-span-2 mt-2 pt-2 border-t border-gray-700">
+                        <span className="text-gray-500">History/Description:</span>
+                        <p className="text-xs italic text-gray-400 mt-1">
+                            This theme explores the depths of {playerSchool.enredo.category} culture...
+                        </p>
+                    </div>
+                </div>
+                <div className="mt-6 flex justify-end">
+                    <button onClick={() => setIsEnredoModalOpen(false)} className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded">Close</button>
+                </div>
+            </div>
         </div>
       )}
     </div>
