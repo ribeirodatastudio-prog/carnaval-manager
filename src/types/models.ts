@@ -120,6 +120,7 @@ export interface SchoolHistory {
 export interface School {
   id: string; // Unique identifier for the school
   name: string; // The display name of the school
+  logo?: string; // Path to the school's logo image
   colors: string[]; // Array of hex codes or color names representing the school's identity
   budget: number; // Current funds available for hiring and events
   fanbaseMorale: number; // Represents the happiness/engagement of the fans (0-100)

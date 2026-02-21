@@ -16,6 +16,11 @@ interface EscolaRaw {
     quartos?: SchoolHistoryEntry[];
     quintos?: SchoolHistoryEntry[];
   };
+  cores?: {
+    primaria: string;
+    secundaria: string;
+  };
+  logo?: string;
   id?: number; // Some entries might not have ID in the raw JSON? They should.
 }
 
@@ -59,10 +64,14 @@ export function loadAllSchools(): School[] {
       quintos: data.historico.quintos || [],
     };
 
+    // Parse colors
+    const colors = data.cores ? [data.cores.primaria, data.cores.secundaria] : [];
+
     const school: School = {
       id: id,
       name: name,
-      colors: [], // Placeholder, maybe add random colors later
+      colors: colors,
+      logo: data.logo,
       budget: calculatedBudget,
       fanbaseMorale: calculatedMorale,
       staff: [],

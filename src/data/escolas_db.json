@@ -6,18 +6,18 @@
       "decaimento_k": 0.04,
       "meia_vida_anos": 17.3,
       "multiplicadores_por_divisao": {
-        "Grupo Especial": 1.0,
+        "Grupo Especial": 1,
         "Série Ouro": 0.25,
         "Série Prata": 0.0625,
         "Série Bronze": 0.015,
         "Grupo de Avaliação": 0.004
       },
       "pesos_titulo_especial": [
-        18.0,
-        6.0
+        18,
+        6
       ],
       "pesos_vice_especial": [
-        10.0,
+        10,
         3.5
       ],
       "escala": "1-195 (top 2 fixas em 195)",
@@ -219,7 +219,12 @@
             "ano": 2011
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#e4267c",
+        "secundaria": "#02401b"
+      },
+      "logo": "/logos/estação_primeira_de_mangueira.jpg"
     },
     "Beija-Flor de Nilópolis": {
       "divisao_atual": "Grupo Especial",
@@ -382,7 +387,12 @@
             "ano": 2010
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#0000cc",
+        "secundaria": "#adadee"
+      },
+      "logo": "/logos/Bandeira_Beija-Flor_de_Nilópolis.png"
     },
     "Portela": {
       "divisao_atual": "Grupo Especial",
@@ -557,7 +567,12 @@
             "ano": 2016
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#002580",
+        "secundaria": "#d7d7e3"
+      },
+      "logo": "/logos/portela.jpg"
     },
     "Acadêmicos do Salgueiro": {
       "divisao_atual": "Grupo Especial",
@@ -664,7 +679,12 @@
             "ano": 2018
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#e3e3eb",
+        "secundaria": "#d1090b"
+      },
+      "logo": "/logos/acadêmicos_do_salgueiro.jpg"
     },
     "Imperatriz Leopoldinense": {
       "divisao_atual": "Grupo Especial",
@@ -771,7 +791,12 @@
             "ano": 2025
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#207f07",
+        "secundaria": "#eae6ed"
+      },
+      "logo": "/logos/imperatriz_leopoldinense.jpg"
     },
     "Império Serrano": {
       "divisao_atual": "Série Ouro",
@@ -910,7 +935,12 @@
             "ano": 1987
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#008001",
+        "secundaria": "#8dbe8e"
+      },
+      "logo": "/logos/império_serrano.jpg"
     },
     "Mocidade Independente de Padre Miguel": {
       "divisao_atual": "Série Ouro",
@@ -981,7 +1011,12 @@
             "ano": 2020
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#00a03c",
+        "secundaria": "#00701a"
+      },
+      "logo": "/logos/mocidade_independente_de_padre_miguel.jpg"
     },
     "Unidos do Viradouro": {
       "divisao_atual": "Grupo Especial",
@@ -1064,7 +1099,12 @@
             "ano": 2022
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#eb0207",
+        "secundaria": "#000000"
+      },
+      "logo": "/logos/unidos_do_viradouro.png"
     },
     "Unidos da Tijuca": {
       "divisao_atual": "Grupo Especial",
@@ -1143,7 +1183,12 @@
             "ano": 2013
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#ffff00",
+        "secundaria": "#0000cc"
+      },
+      "logo": "/logos/unidos_da_tijuca.png"
     },
     "Acadêmicos do Grande Rio": {
       "divisao_atual": "Grupo Especial",
@@ -1214,7 +1259,12 @@
             "ano": 2024
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#00ac33",
+        "secundaria": "#cf0403"
+      },
+      "logo": "/logos/acadêmicos_do_grande_rio.png"
     },
     "Unidos de Vila Isabel": {
       "divisao_atual": "Grupo Especial",
@@ -1285,7 +1335,12 @@
             "ano": 2023
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#009de0",
+        "secundaria": "#03c9f6"
+      },
+      "logo": "/logos/unidos_de_vila_isabel.jpg"
     },
     "Estácio de Sá": {
       "divisao_atual": "Série Ouro",
@@ -1347,7 +1402,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#ed0005",
+        "secundaria": "#e3e8ee"
+      },
+      "logo": "/logos/Bandeira_do_GRES_Estácio_de_Sá.png"
     },
     "União da Ilha do Governador": {
       "divisao_atual": "Série Ouro",
@@ -1390,7 +1450,12 @@
             "ano": 1989
           }
         ]
-      }
+      },
+      "cores": {
+        "primaria": "#e70f12",
+        "secundaria": "#e4e7f0"
+      },
+      "logo": "/logos/união_da_ilha_do_governador.jpg"
     },
     "São Clemente": {
       "divisao_atual": "Série Prata",
@@ -1444,7 +1509,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#000000",
+        "secundaria": "#f3e500"
+      },
+      "logo": "/logos/são_clemente.png"
     },
     "Unidos do Porto da Pedra": {
       "divisao_atual": "Série Ouro",
@@ -1482,7 +1552,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#c60001",
+        "secundaria": "#ef0512"
+      },
+      "logo": "/logos/unidos_do_porto_da_pedra.jpg"
     },
     "Unidos de Padre Miguel": {
       "divisao_atual": "Série Ouro",
@@ -1536,7 +1611,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#d50000",
+        "secundaria": "#efb0b0"
+      },
+      "logo": "/logos/unidos_de_padre_miguel.png"
     },
     "Caprichosos de Pilares": {
       "divisao_atual": "Série Prata",
@@ -1574,7 +1654,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e2e4ed",
+        "secundaria": "#000032"
+      },
+      "logo": "/logos/caprichosos_de_pilares.png"
     },
     "Acadêmicos de Santa Cruz": {
       "divisao_atual": "Série Prata",
@@ -1620,7 +1705,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#009a39",
+        "secundaria": "#00731a"
+      },
+      "logo": "/logos/acadêmicos_de_santa_cruz.png"
     },
     "Tradição": {
       "divisao_atual": "Série Prata",
@@ -1654,7 +1744,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#aadcf5",
+        "secundaria": "#2081c6"
+      },
+      "logo": "/logos/gres_tradição.jpg"
     },
     "Império da Tijuca": {
       "divisao_atual": "Série Prata",
@@ -1700,7 +1795,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#00721a",
+        "secundaria": "#009f38"
+      },
+      "logo": "/logos/império_da_tijuca.jpg"
     },
     "Paraíso do Tuiuti": {
       "divisao_atual": "Grupo Especial",
@@ -1730,7 +1830,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#f1e70d",
+        "secundaria": "#0006d5"
+      },
+      "logo": "/logos/paraíso_do_tuiuti.png"
     },
     "Inocentes de Belford Roxo": {
       "divisao_atual": "Série Ouro",
@@ -1756,7 +1861,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e5e7f0",
+        "secundaria": "#bd0303"
+      },
+      "logo": "/logos/inocentes_de_belford_roxo.png"
     },
     "Unidos do Jacarezinho": {
       "divisao_atual": "Série Ouro",
@@ -1790,7 +1900,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#dee8f3",
+        "secundaria": "#ff8cca"
+      },
+      "logo": "/logos/unidos_do_jacarezinho.png"
     },
     "Em Cima da Hora": {
       "divisao_atual": "Série Ouro",
@@ -1815,7 +1930,12 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e6e6e6",
+        "secundaria": "#010ce2"
+      },
+      "logo": "/logos/em_cima_da_hora.png"
     },
     "Renascer de Jacarepaguá": {
       "divisao_atual": "Série Prata",
@@ -1841,7 +1961,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#d60204",
+        "secundaria": "#f9fa00"
+      },
+      "logo": "/logos/renascer_de_jacarepaguá.png"
     },
     "Lins Imperial": {
       "divisao_atual": "Série Prata",
@@ -1867,7 +1992,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#008e3f",
+        "secundaria": "#007020"
+      },
+      "logo": "/logos/lins_imperial.png"
     },
     "Vizinha Faladeira": {
       "divisao_atual": "Série Prata",
@@ -1888,7 +2018,12 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e3e7f7",
+        "secundaria": "#0836f0"
+      },
+      "logo": "/logos/vizinha_faladeira.png"
     },
     "Acadêmicos da Rocinha": {
       "divisao_atual": "Série Prata",
@@ -1918,7 +2053,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e4e6ef",
+        "secundaria": "#009614"
+      },
+      "logo": "/logos/acadêmicos_da_rocinha.png"
     },
     "Unidos de Bangu": {
       "divisao_atual": "Série Ouro",
@@ -1943,7 +2083,12 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#dd0102",
+        "secundaria": "#f48482"
+      },
+      "logo": "/logos/unidos_de_bangu.png"
     },
     "Acadêmicos de Niterói": {
       "divisao_atual": "Grupo Especial",
@@ -1964,7 +2109,12 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#006dc8",
+        "secundaria": "#b5d2e2"
+      },
+      "logo": "/logos/acadêmicos_de_niterói.jpg"
     },
     "Unidos de Lucas": {
       "divisao_atual": "Série Prata",
@@ -1989,7 +2139,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#fb060f",
+        "secundaria": "#ffe5e6"
+      },
+      "logo": "/logos/unidos_de_lucas.png"
     },
     "Acadêmicos do Cubango": {
       "divisao_atual": "Série Prata",
@@ -2010,7 +2165,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#008f26",
+        "secundaria": "#006f08"
+      },
+      "logo": "/logos/acadêmicos_do_cubango.jpg"
     },
     "Leão de Nova Iguaçu": {
       "divisao_atual": "Série Prata",
@@ -2031,7 +2191,12 @@
           }
         ],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#fee003",
+        "secundaria": "#e40000"
+      },
+      "logo": "/logos/leão_de_nova_iguaçu.png"
     },
     "Arranco do Engenho de Dentro": {
       "divisao_atual": "Série Ouro",
@@ -2047,7 +2212,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#060bce",
+        "secundaria": "#e5e6e4"
+      },
+      "logo": "/logos/Bandeira_do_GRES_Arranco.png"
     },
     "Acadêmicos do Engenho da Rainha": {
       "divisao_atual": "Série Prata",
@@ -2068,7 +2238,12 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#ce0000",
+        "secundaria": "#dcdce6"
+      },
+      "logo": "/logos/acadêmicos_do_engenho_da_rainha.jpg"
     },
     "Arrastão de Cascadura": {
       "divisao_atual": "Série Prata",
@@ -2089,11 +2264,16 @@
         ],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e0e4f3",
+        "secundaria": "#0d6a18"
+      },
+      "logo": "/logos/arrastão_de_cascadura.png"
     },
     "Botafogo Samba Clube": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 12,
       "titulos": 0,
       "titulos_2div": 0,
@@ -2105,11 +2285,16 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#000000",
+        "secundaria": "#262626"
+      },
+      "logo": "/logos/botafogo_samba_clube.png"
     },
     "União do Parque Acari": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 12,
       "titulos": 0,
       "titulos_2div": 0,
@@ -2121,11 +2306,16 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#ffcb00",
+        "secundaria": "#dee8f1"
+      },
+      "logo": "/logos/união_do_parque_acari.jpg"
     },
     "Acadêmicos de Vigário Geral": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 12,
       "titulos": 0,
       "titulos_2div": 0,
@@ -2137,11 +2327,16 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#df0303",
+        "secundaria": "#0309b2"
+      },
+      "logo": "/logos/acadêmicos_de_vigário_geral.png"
     },
     "União de Maricá": {
       "divisao_atual": "Série Ouro",
-      "score_bruto": 3.0,
+      "score_bruto": 3,
       "prestige": 12,
       "titulos": 0,
       "titulos_2div": 0,
@@ -2153,7 +2348,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#f8cd1c",
+        "secundaria": "#de0d2c"
+      },
+      "logo": "/logos/união_de_maricá.png"
     },
     "Chatuba de Mesquita": {
       "divisao_atual": "Série Prata",
@@ -2169,7 +2369,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e1e4ed",
+        "secundaria": "#006000"
+      },
+      "logo": "/logos/chatuba_de_mesquita.png"
     },
     "Unidos de Santa Tereza": {
       "divisao_atual": "Série Prata",
@@ -2185,7 +2390,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#0008ba",
+        "secundaria": "#041ce0"
+      },
+      "logo": "/logos/Bandeira_do_GRES_Unidos_da_Vila_Santa_Tereza.png"
     },
     "Independentes de Olaria": {
       "divisao_atual": "Série Prata",
@@ -2201,7 +2411,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e6d5df",
+        "secundaria": "#24348c"
+      },
+      "logo": "/logos/independentes_de_olaria.jpg"
     },
     "Flamanguaça": {
       "divisao_atual": "Série Prata",
@@ -2217,7 +2432,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#010101",
+        "secundaria": "#363435"
+      },
+      "logo": "/logos/fla_manguaça.jpg"
     },
     "Feitiço Carioca": {
       "divisao_atual": "Série Prata",
@@ -2233,7 +2453,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#19a3ee",
+        "secundaria": "#2f98cb"
+      },
+      "logo": "/logos/feitiço_carioca.jpg"
     },
     "Alegria do Vilar": {
       "divisao_atual": "Série Prata",
@@ -2249,7 +2474,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#ffff00",
+        "secundaria": "#fd0000"
+      },
+      "logo": "/logos/alegria_do_vilar.png"
     },
     "Acadêmicos do Dendê": {
       "divisao_atual": "Série Prata",
@@ -2265,7 +2495,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#0a0daa",
+        "secundaria": "#1312db"
+      },
+      "logo": "/logos/acadêmicos_do_dendê.png"
     },
     "Império da Uva": {
       "divisao_atual": "Série Prata",
@@ -2281,7 +2516,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#054c00",
+        "secundaria": "#e1dcf2"
+      },
+      "logo": "/logos/império_da_uva.jpg"
     },
     "Mocidade Unida do Santa Marta": {
       "divisao_atual": "Série Prata",
@@ -2297,7 +2537,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#000000",
+        "secundaria": "#03a0f0"
+      },
+      "logo": "/logos/mocidade_unida_do_santa_marta.png"
     },
     "Siri de Ramos": {
       "divisao_atual": "Série Prata",
@@ -2313,7 +2558,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e0e0de",
+        "secundaria": "#039533"
+      },
+      "logo": "/logos/siri_de_ramos.jpg"
     },
     "Independente da Praça da Bandeira": {
       "divisao_atual": "Série Prata",
@@ -2329,7 +2579,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#cfc5bb",
+        "secundaria": "#012a00"
+      },
+      "logo": "/logos/independente_da_praça_da_bandeira.png"
     },
     "Acadêmicos do Engenho Novo": {
       "divisao_atual": "Série Prata",
@@ -2345,7 +2600,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#feef0a",
+        "secundaria": "#322f87"
+      },
+      "logo": "/logos/unidos_do_engenho_novo.png"
     },
     "Acadêmicos da Abolição": {
       "divisao_atual": "Série Prata",
@@ -2361,7 +2621,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#dcdce6",
+        "secundaria": "#033f10"
+      },
+      "logo": "/logos/acadêmicos_da_abolição.png"
     },
     "Tubarão de Mesquita": {
       "divisao_atual": "Série Prata",
@@ -2377,7 +2642,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#060809",
+        "secundaria": "#e5e5e5"
+      },
+      "logo": "/logos/tubarão_de_mesquita.png"
     },
     "Boi da Ilha do Governador": {
       "divisao_atual": "Série Bronze",
@@ -2393,7 +2663,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#000000",
+        "secundaria": "#e6e7f0"
+      },
+      "logo": "/logos/boi_da_ilha_do_governador.png"
     },
     "Sereno de Campo Grande": {
       "divisao_atual": "Série Bronze",
@@ -2409,7 +2684,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e6e6f3",
+        "secundaria": "#0c1ccc"
+      },
+      "logo": "/logos/sereno_de_campo_grande.png"
     },
     "Imperadores Rubro-Negro": {
       "divisao_atual": "Série Bronze",
@@ -2425,7 +2705,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#080808",
+        "secundaria": "#7d0c0e"
+      },
+      "logo": "/logos/imperadores_rubro_negro.png"
     },
     "Flor da Mina do Andaraí": {
       "divisao_atual": "Série Bronze",
@@ -2441,7 +2726,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#d70304",
+        "secundaria": "#00aa34"
+      },
+      "logo": "/logos/flor_da_mina_do_andaraí.png"
     },
     "Bangay": {
       "divisao_atual": "Série Bronze",
@@ -2457,7 +2747,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#000000",
+        "secundaria": "#fd018a"
+      },
+      "logo": "/logos/bangay.png"
     },
     "Acadêmicos do Viradouro": {
       "divisao_atual": "Série Bronze",
@@ -2473,7 +2768,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#eb0207",
+        "secundaria": "#000000"
+      },
+      "logo": "/logos/acadêmicos_do_viradouro.png"
     },
     "Unidos da Barra da Tijuca": {
       "divisao_atual": "Série Bronze",
@@ -2489,7 +2789,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#01a54e",
+        "secundaria": "#0268b3"
+      },
+      "logo": "/logos/unidos_da_barra_da_tijuca.jpg"
     },
     "Alegria de Copacabana": {
       "divisao_atual": "Série Bronze",
@@ -2505,7 +2810,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#a00000",
+        "secundaria": "#ec3237"
+      },
+      "logo": "/logos/alegria_de_copacabana.jpeg"
     },
     "Império de Nova Iguaçu": {
       "divisao_atual": "Série Bronze",
@@ -2521,7 +2831,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#1c9bbc",
+        "secundaria": "#ce943e"
+      },
+      "logo": "/logos/imperio_de_nova_iguaçu.jpg"
     },
     "Unidos do Realengo": {
       "divisao_atual": "Série Bronze",
@@ -2537,7 +2852,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#0306c2",
+        "secundaria": "#e2d855"
+      },
+      "logo": "/logos/unidos_do_realengo.png"
     },
     "Concentra Imperial": {
       "divisao_atual": "Série Bronze",
@@ -2553,7 +2873,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#cb0610",
+        "secundaria": "#cd9a31"
+      },
+      "logo": "/logos/concentra_imperial.jpg"
     },
     "União do Parque Curicica": {
       "divisao_atual": "Série Bronze",
@@ -2569,7 +2894,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e6e4ea",
+        "secundaria": "#0001b9"
+      },
+      "logo": "/logos/união_do_parque_curicica.png"
     },
     "Unidos da Vila Rica": {
       "divisao_atual": "Série Bronze",
@@ -2585,7 +2915,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#000a80",
+        "secundaria": "#fff115"
+      },
+      "logo": "/logos/Bandeira_do_GRES_Unidos_da_Villa_Rica.png"
     },
     "Mocidade Unida de Jacarepaguá": {
       "divisao_atual": "Série Bronze",
@@ -2601,7 +2936,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#07723a",
+        "secundaria": "#d1e4da"
+      },
+      "logo": "/logos/unidos_de_jacarepagua.jpg"
     },
     "Acadêmicos de Jacarepaguá": {
       "divisao_atual": "Série Bronze",
@@ -2617,7 +2957,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#00532f",
+        "secundaria": "#363581"
+      },
+      "logo": "/logos/acadêmicos_de_jacarepaguá.png"
     },
     "União de Cosmos": {
       "divisao_atual": "Série Bronze",
@@ -2633,7 +2978,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#087609",
+        "secundaria": "#e0e0f0"
+      },
+      "logo": "/logos/Bandeira_do_GRES_Unidos_de_Cosmos.png"
     },
     "Raça Rubro-Negra": {
       "divisao_atual": "Série Bronze",
@@ -2649,7 +2999,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#d92b34",
+        "secundaria": "#000000"
+      },
+      "logo": "/logos/raça_rubro_negra.png"
     },
     "Gato de Bonsucesso": {
       "divisao_atual": "Série Bronze",
@@ -2665,7 +3020,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#0004c0",
+        "secundaria": "#dedeea"
+      },
+      "logo": "/logos/gato_de_bonsucesso.png"
     },
     "Império de Padre Miguel": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2681,7 +3041,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#009900",
+        "secundaria": "#e4e4e4"
+      },
+      "logo": "/logos/imperio_de_padre_miguel.jpg"
     },
     "Rosa de Ouro": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2697,7 +3062,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#ad7173",
+        "secundaria": "#a5999d"
+      },
+      "logo": "/logos/rosa_de_ouro.jpg"
     },
     "Coroado de Jacarepaguá": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2713,7 +3083,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#f3e00c",
+        "secundaria": "#272421"
+      },
+      "logo": "/logos/coroado_de_jacarepaguá.png"
     },
     "Flor da Cidade": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2729,7 +3104,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#d10415",
+        "secundaria": "#cabba4"
+      },
+      "logo": "/logos/flor_da_cidade.jpg"
     },
     "Mocidade Unida da Cidade de Deus": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2745,7 +3125,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#0e0e8f",
+        "secundaria": "#d7d8e6"
+      },
+      "logo": "/logos/mocidade_unida_da_cidade_de_deus.png"
     },
     "Arame de Ricardo": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2761,7 +3146,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#0387e8",
+        "secundaria": "#e5e6ef"
+      },
+      "logo": "/logos/arame_de_ricardo.png"
     },
     "Novo Império": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2777,7 +3167,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#003dba",
+        "secundaria": "#dfdfdf"
+      },
+      "logo": "/logos/novo_imperio.jpg"
     },
     "Juventude Imperial": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2793,7 +3188,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#005200",
+        "secundaria": "#e6e5e3"
+      },
+      "logo": "/logos/juventude_imperial.jpeg"
     },
     "Império Ricardense": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2809,7 +3209,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#e5c200",
+        "secundaria": "#d8dcf0"
+      },
+      "logo": "/logos/império_ricardense.png"
     },
     "Mocidade Independente do Estácio": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2841,7 +3246,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#0a1a9e",
+        "secundaria": "#e6e6ed"
+      },
+      "logo": "/logos/Bandeira_do_GRES_Acadêmicos_do_Sossego.png"
     },
     "Unidos de São Carlos": {
       "divisao_atual": "Grupo de Avaliação",
@@ -2857,7 +3267,12 @@
         "titulos": [],
         "vices": [],
         "terceiros": []
-      }
+      },
+      "cores": {
+        "primaria": "#000000",
+        "secundaria": "#d8d8d8"
+      },
+      "logo": "/logos/união_de_são_carlos.jpg"
     }
   }
 }
