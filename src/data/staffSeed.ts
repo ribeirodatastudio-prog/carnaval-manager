@@ -62,7 +62,7 @@ const getPrimarySkillValue = (role: StaffRole, skills: StaffSkills): number => {
   }
 };
 
-const calculateSalaryExpectation = (role: StaffRole, skills: StaffSkills, reputation: number, archetype?: RainhaArchetype): number => {
+export const calculateSalaryExpectation = (role: StaffRole, skills: StaffSkills, reputation: number, archetype?: RainhaArchetype): number => {
   if (role === 'RainhaDeBateria') {
     if (archetype === 'Celebridade' || archetype === 'PostoPago') return 0;
     if (archetype === 'CriaDaComunidade') return getRandomSalary(2000, 5000);
