@@ -121,6 +121,7 @@ export interface School {
   id: string; // Unique identifier for the school
   name: string; // The display name of the school
   colors: string[]; // Array of hex codes or color names representing the school's identity
+  flag?: string; // URL/Path to the school's flag image
   budget: number; // Current funds available for hiring and events
   fanbaseMorale: number; // Represents the happiness/engagement of the fans (0-100)
   staff: StaffMember[]; // Collection of staff members currently hired by the school
