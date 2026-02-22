@@ -211,6 +211,8 @@ export interface TrackState {
   budgetAllocated: number;   // Total R$ committed to this track so far this season.
   staffFocused: boolean;     // Is the responsible staff member focused here this week?
   projectedCompletion: number | null; // Week number it will finish at current pace. null = not started.
+  projectedEarly: number | null; // Best case completion week (tight management)
+  projectedLate: number | null; // Worst case completion week (loose management)
   finishingRisk: number;     // 0–100. Risk of problems if completed within 2 weeks of parade.
   weeklyBurnRate: number;    // R$ consumed per week at current allocation.
   carCountBonus: number;     // Quality ceiling addition from cars

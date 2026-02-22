@@ -92,7 +92,10 @@ export default function PreparationDashboard() {
   const divisionGuidelines = guidelines[playerSchool.currentDivision] || guidelines['Grupo de Avaliação'];
 
   // --- Feature 2a: Budget Panel Stats ---
-  const weeklyTotalBurn = Object.values(prep.tracks).reduce((sum, t) => sum + t.weeklyBurnRate, 0);
+  const weeklyTotalBurn = Object.values(prep.tracks).reduce(
+    (sum, t) => sum + (t.progress >= 100 ? 0 : t.weeklyBurnRate),
+    0
+  );
   const weeksAdvance = prep.isBiWeekly ? 2 : 1;
   const weeklySpendDisplay = weeklyTotalBurn * weeksAdvance;
   const runwayWeeks = Math.floor(playerSchool.budget / (weeklyTotalBurn || 1));
@@ -271,8 +274,9 @@ export default function PreparationDashboard() {
       <main className="flex-1 overflow-y-auto p-6 flex flex-col gap-8 custom-scrollbar">
 
         {/* TRACKS GRID */}
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-            {(Object.entries(prep.tracks) as [ProductionTrack, typeof prep.tracks.Alegorias][]).map(([key, track]) => {
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {(['Alegorias', 'Fantasias', 'Harmonia'] as ProductionTrack[]).map(key => {
+                const track = prep.tracks[key];
                 const staffName = {
                     Alegorias: playerSchool.staff.find(s => s.role === 'MestreDeBarracao')?.name ?? 'Vago',
                     Fantasias: playerSchool.staff.find(s => s.role === 'DiretorDeCarnaval')?.name ?? 'Vago',
@@ -349,9 +353,29 @@ export default function PreparationDashboard() {
                             </div>
                             <div className="bg-[#080C18] p-2 rounded border border-[#1E2D50]">
                                 <span className="text-[#4A5A7A] block text-[9px] uppercase tracking-wider mb-1">Previsão</span>
-                                <span className={track.finishingRisk > 50 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'}>
-                                    {track.projectedCompletion ? `Semana ${track.projectedCompletion}` : '---'}
-                                </span>
+                                {track.projectedEarly !== null && track.projectedLate !== null ? (
+                                  <div>
+                                    {track.projectedEarly === track.projectedLate ? (
+                                      // Tight range (elite staff): show single week
+                                      <span className={track.finishingRisk > 50 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'} style={{ fontSize: '13px' }}>
+                                        Sem. {track.projectedEarly}
+                                      </span>
+                                    ) : (
+                                      // Wide range: show spread
+                                      <div>
+                                        <span className={track.finishingRisk > 50 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'} style={{ fontSize: '11px' }}>
+                                          Sem. {track.projectedEarly}–{track.projectedLate}
+                                        </span>
+                                        {/* Show range width as an indicator of planning quality */}
+                                        <div className="text-[8px] text-[#4A5A7A] mt-0.5">
+                                          ±{Math.round((track.projectedLate - track.projectedEarly) / 2)} sem de incerteza
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span className="text-[#4A5A7A]">---</span>
+                                )}
                             </div>
                         </div>
 
@@ -399,6 +423,9 @@ export default function PreparationDashboard() {
                         {isDone && (
                             <div className="mt-auto pt-4 border-t border-[#1E2D50] text-center">
                                 <span className="text-xs uppercase tracking-widest font-black text-[#2ECC71]">Concluído</span>
+                                <div className="text-[10px] text-[#2ECC71] font-mono mt-1 text-center">
+                                  ✓ Sem gastos desta etapa
+                                </div>
                             </div>
                         )}
                     </div>
@@ -478,6 +505,56 @@ export default function PreparationDashboard() {
                                 {prep.bateria.rehearsalsHeld} <span className="text-[10px] text-[#E74C3C]">(-{prep.bateria.rehearsalsMissed})</span>
                             </div>
                         </div>
+                    </div>
+
+                    {/* Bateria Budget Slider — moved from track grid */}
+                    {(() => {
+                      const bateriaTrack = prep.tracks.Bateria;
+                      const guide = ({ 'Grupo Especial': 15000, 'Série Ouro': 2500, 'Série Prata': 800, 'Série Bronze': 250, 'Grupo de Avaliação': 65 } as Record<string, number>)[playerSchool.currentDivision] || 65;
+                      const ratio = bateriaTrack.weeklyBurnRate / guide;
+                      const thumbColor = ratio > 2.0 ? '#E74C3C' : ratio > 1.2 ? '#E67E22' : '#C9A84C';
+                      const sliderMaxVal = ({ 'Grupo Especial': 200000, 'Série Ouro': 30000, 'Série Prata': 8000, 'Série Bronze': 2500, 'Grupo de Avaliação': 600 } as Record<string, number>)[playerSchool.currentDivision] || 600;
+                      return (
+                        <div className="flex flex-col gap-2">
+                          <div className="flex justify-between items-end">
+                            <span className="text-[10px] uppercase tracking-wider text-[#8A9BB8] font-bold">Orçamento Semanal</span>
+                            <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(bateriaTrack.weeklyBurnRate)}</span>
+                          </div>
+                          <input
+                            type="range"
+                            min={1000}
+                            max={sliderMaxVal}
+                            step={100}
+                            value={bateriaTrack.weeklyBurnRate}
+                            onChange={(e) => setTrackBudget('Bateria', Number(e.target.value))}
+                            className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
+                            style={{ accentColor: thumbColor }}
+                          />
+                          <div className="text-[9px] text-[#4A5A7A] text-center font-mono">
+                            Recomendado: {formatMoney(guide)}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Budget effect on bateria — show impact of spend */}
+                    <div className="bg-[#080C18] border border-[#1E2D50] rounded-lg p-3 text-xs">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-[#4A5A7A] uppercase tracking-wider font-bold text-[9px]">Investimento Semanal</span>
+                        <span className="font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Bateria.weeklyBurnRate)}</span>
+                      </div>
+                      {(() => {
+                        const guidelines: Record<string, number> = { 'Grupo Especial': 15000, 'Série Ouro': 2500, 'Série Prata': 800, 'Série Bronze': 250, 'Grupo de Avaliação': 65 };
+                        const guide = guidelines[playerSchool.currentDivision] || 65;
+                        const ratio = prep.tracks.Bateria.weeklyBurnRate / guide;
+                        const effect = ratio <= 0 ? 'Ensaios mínimos' : ratio < 0.5 ? 'Condições precárias' : ratio < 1.0 ? 'Abaixo do ideal' : ratio < 1.5 ? 'Boas condições' : 'Estrutura premium';
+                        const effectColor = ratio < 0.5 ? '#E74C3C' : ratio < 1.0 ? '#F1C40F' : ratio < 1.5 ? '#2ECC71' : '#C9A84C';
+                        return (
+                          <div className="text-[10px] font-bold" style={{ color: effectColor }}>
+                            {effect} — forma cresce {ratio < 1 ? 'mais devagar' : 'mais rápido'}, energia {ratio < 1 ? 'depleta mais rápido' : 'dura mais'}
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* Gig Button */}

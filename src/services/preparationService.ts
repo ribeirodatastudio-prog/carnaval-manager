@@ -18,6 +18,8 @@ export function initializePreparationState(school: School): PreparationState {
     budgetAllocated: 0,
     staffFocused: false,
     projectedCompletion: null,
+    projectedEarly: null,
+    projectedLate: null,
     finishingRisk: 0,
     weeklyBurnRate: baseBudget,
     carCountBonus: 0
@@ -179,15 +181,25 @@ export function tickPreparation(
   prep.tracks = advanceTracks(prep.tracks, school, weeksAdvanced, news);
 
   // 2. Advance bateria form
-  const bateriaResult = advanceBateria(prep.bateria, school, currentWeek, weeksAdvanced, news);
+  const bateriaResult = advanceBateria(
+    prep.bateria,
+    school,
+    currentWeek,
+    weeksAdvanced,
+    news,
+    prep.tracks.Bateria.weeklyBurnRate
+  );
   prep.bateria = bateriaResult.bateria;
   let budgetDelta = bateriaResult.budgetDelta;
 
   // 3. Update staff stress
-  prep.staffStress = advanceStress(prep.staffStress, school, weeksUntilParade, weeksAdvanced);
+  prep.staffStress = advanceStress(prep.staffStress, school, weeksUntilParade, weeksAdvanced, prep.tracks);
 
   // 4. Update total budget spent (from tracks this tick)
-  const trackSpend = Object.values(prep.tracks).reduce((sum, t) => sum + t.weeklyBurnRate * weeksAdvanced, 0);
+  const trackSpend = Object.values(prep.tracks).reduce(
+    (sum, t) => sum + (t.progress >= 100 ? 0 : t.weeklyBurnRate * weeksAdvanced),
+    0
+  );
   prep.totalBudgetSpent += trackSpend + budgetDelta;
 
   // 5. Deduct from school budget
@@ -244,7 +256,7 @@ export function tickPreparation(
   }
 
   // 6. Update projected completion for each track
-  prep.tracks = updateProjections(prep.tracks, weeksUntilParade);
+  prep.tracks = updateProjections(prep.tracks, weeksUntilParade, school);
 
   return {
     updatedSchool: {
@@ -355,26 +367,81 @@ function calculateTrackQuality(
   return Math.min(100 + ceilingBonus, Math.floor(base));
 }
 
+function calculateRangeWidth(trackName: ProductionTrack, school: School): number {
+  const trackStaff: Record<ProductionTrack, { role: string; skill: keyof import('../types/models').StaffSkills }> = {
+    Alegorias: { role: 'MestreDeBarracao',   skill: 'logistica' },
+    Fantasias: { role: 'DiretorDeCarnaval',  skill: 'gestaoDeRecursos' },
+    Bateria:   { role: 'MestreDeBateria',    skill: 'lideranca' },
+    Harmonia:  { role: 'DiretorDeHarmonia',  skill: 'logistica' },
+  };
+
+  const { role, skill } = trackStaff[trackName];
+  const staffMember = school.staff.find(s => s.role === role);
+  const carnavalesco = school.staff.find(s => s.role === 'Carnavalesco');
+
+  // Primary staff skill (0–200). Missing staff = 0.
+  const primarySkill = staffMember ? (staffMember.skills as any)[skill] : 0;
+  // Carnavalesco planning bonus — gestaoDeRecursos helps precision across all tracks
+  const carnavalescoBonus = carnavalesco ? carnavalesco.skills.gestaoDeRecursos / 200 : 0;
+
+  // Combined precision: 0.0 (no staff) to 1.0 (maxed out)
+  const precision = Math.min(1.0, (primarySkill / 200) * 0.7 + carnavalescoBonus * 0.3);
+
+  // Range width in weeks:
+  // precision 1.0 → ±1 week (total range = 2 weeks) — elite planning
+  // precision 0.5 → ±3 weeks (total range = 6 weeks) — average
+  // precision 0.0 → ±7 weeks (total range = 14 weeks) — no staff, pure guessing
+  const halfRange = Math.round(7 - precision * 6); // 1 to 7
+  return halfRange;
+}
+
 function updateProjections(
   tracks: Record<ProductionTrack, TrackState>,
-  weeksUntilParade: number
+  weeksUntilParade: number,
+  school: School
 ): Record<ProductionTrack, TrackState> {
   const updated = { ...tracks };
   for (const [trackName, track] of Object.entries(updated) as [ProductionTrack, TrackState][]) {
     if (track.progress >= 100) {
-      updated[trackName] = { ...track, projectedCompletion: 45 - weeksUntilParade, finishingRisk: 0 };
+      updated[trackName] = {
+        ...track,
+        projectedCompletion: 45 - weeksUntilParade,
+        projectedEarly: 45 - weeksUntilParade,
+        projectedLate: 45 - weeksUntilParade,
+        finishingRisk: 0
+      };
       continue;
     }
     if (track.progress === 0) {
-      updated[trackName] = { ...track, projectedCompletion: null };
+      updated[trackName] = {
+        ...track,
+        projectedCompletion: null,
+        projectedEarly: null,
+        projectedLate: null
+      };
       continue;
     }
+
     const weeksPassed = Math.max(1, 36 - weeksUntilParade);
     const progressPerWeek = track.progress / weeksPassed;
-    const weeksLeft = (100 - track.progress) / progressPerWeek;
-    const projectedWeek = Math.round((45 - weeksUntilParade) + weeksLeft);
-    const finishingRisk = projectedWeek >= 43 ? Math.min(100, (projectedWeek - 42) * 30) : 0;
-    updated[trackName] = { ...track, projectedCompletion: projectedWeek, finishingRisk };
+    const weeksNeeded = (100 - track.progress) / progressPerWeek;
+    const currentWeekNum = 45 - weeksUntilParade;
+    const midpoint = Math.round(currentWeekNum + weeksNeeded);
+
+    const halfRange = calculateRangeWidth(trackName as ProductionTrack, school);
+    const early = midpoint - halfRange;
+    const late = midpoint + halfRange;
+
+    // finishingRisk based on LATE end of range (worst case)
+    const finishingRisk = late >= 43 ? Math.min(100, (late - 42) * 20) : 0;
+
+    updated[trackName] = {
+      ...track,
+      projectedCompletion: midpoint,
+      projectedEarly: early,
+      projectedLate: late,
+      finishingRisk
+    };
   }
   return updated;
 }
@@ -384,7 +451,8 @@ function advanceBateria(
   school: School,
   currentWeek: number,
   weeksAdvanced: number,
-  news: string[]
+  news: string[],
+  bateriaWeeklyBudget: number
 ): { bateria: BateriaState; incomeGenerated: number; budgetDelta: number } {
   const mestre = school.staff.find(s => s.role === 'MestreDeBateria');
 
@@ -428,16 +496,30 @@ function advanceBateria(
     ? Math.max(30, divisionBase - 40)
     : divisionBase;
 
+  // Budget Multipliers
+  const BATERIA_GUIDELINES: Record<string, number> = {
+    'Grupo Especial':    15000,
+    'Série Ouro':         2500,
+    'Série Prata':         800,
+    'Série Bronze':        250,
+    'Grupo de Avaliação':   65,
+  };
+  const guideline = BATERIA_GUIDELINES[school.currentDivision] ?? 65;
+
+  const spendRatio = bateriaWeeklyBudget / guideline;
+  const budgetMultiplier = spendRatio <= 0 ? 0.5 : Math.min(1.4, 0.5 + 0.5 * Math.sqrt(spendRatio));
+  const energyDecayMultiplier = spendRatio <= 0 ? 1.5 : Math.max(0.6, 1.0 / Math.sqrt(spendRatio));
+
   let formChange = 0;
   if (!outsideGigActive && bateria.energy > 20) {
     const skillFactor = (mestreRitmica + mestreLideranca) / 400;
     const availFactor = availability / 100;
     const energyFactor = bateria.energy / 100;
-    formChange = (3 + skillFactor * 7) * availFactor * energyFactor * weeksAdvanced;
+    formChange = (3 + skillFactor * 7) * availFactor * energyFactor * budgetMultiplier * weeksAdvanced;
 
     // Energy Cost - Mocidade Bonus Logic
     const isMocidade = school.uniqueBonus === 'mocidade_bateria';
-    let energyCostCalc = (3 + (1 - mestreResiliencia / 200) * 5) * weeksAdvanced;
+    let energyCostCalc = (3 + (1 - mestreResiliencia / 200) * 5) * weeksAdvanced * energyDecayMultiplier;
     if (isMocidade) energyCostCalc *= 0.7; // 30% slower decay
 
     const energyCost = outsideGigActive ? 0 : energyCostCalc;
@@ -482,11 +564,35 @@ function advanceStress(
   staffStress: StaffStress[],
   school: School,
   weeksUntilParade: number,
-  weeksAdvanced: number
+  weeksAdvanced: number,
+  tracks: Record<ProductionTrack, TrackState>
 ): StaffStress[] {
   return staffStress.map(ss => {
     const staffMember = school.staff.find(s => s.id === ss.staffId);
     if (!staffMember) return ss;
+
+    // Timeline pressure: if projectedLate is within 3 weeks of parade (week 45), big stress spike
+    let timelinePressure = 0;
+    const TRACK_OWNER_ROLE: Record<string, ProductionTrack> = {
+      MestreDeBarracao:  'Alegorias',
+      DiretorDeCarnaval: 'Fantasias',
+      MestreDeBateria:   'Bateria',
+      DiretorDeHarmonia: 'Harmonia',
+      Carnavalesco:      'Alegorias', // Carnavalesco also stressed by Alegorias risk
+    };
+
+    const ownedTrack = TRACK_OWNER_ROLE[staffMember.role];
+    const trackState = ownedTrack ? tracks[ownedTrack] : null;
+
+    if (trackState && trackState.projectedLate !== null && trackState.progress < 100) {
+      // const weeksToParade = 45 - (45 - weeksUntilParade); // = weeksUntilParade
+      // const lateMargin = trackState.projectedLate - 45; // positive = safe, negative = overrun
+      if (trackState.projectedLate >= 43 && weeksUntilParade <= 8) {
+        // Worst case: finishing dangerously close or after parade
+        timelinePressure = Math.min(30, (43 - trackState.projectedLate + 8) * 5);
+        // e.g. projectedLate=44 → 5 pts, projectedLate=46 → 15 pts
+      }
+    }
 
     const timePressure = Math.max(0, Math.min(100, ((36 - weeksUntilParade) / 36) * 80));
 
@@ -541,7 +647,7 @@ function advanceStress(
     // But I will stick to "Do not touch... simulation" (this is prep though).
     // I'll stick to the original formula structure but add the multiplier.
 
-    const rawStress = timePressure - resilienciaBuffer - experienceBuffer + (focusCost * weeksAdvanced);
+    const rawStress = timePressure - resilienciaBuffer - experienceBuffer + (focusCost * weeksAdvanced) + timelinePressure;
     const newStressCalc = Math.max(0, Math.min(100, rawStress * growthMultiplier));
 
     const energyChange = ss_state.isResting ? 15 * weeksAdvanced : -4 * weeksAdvanced;
