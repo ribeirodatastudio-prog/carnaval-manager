@@ -1,0 +1,18 @@
+$ next dev
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+✓ Ready in 1121ms
+○ Compiling / ...
+ GET / 200 in 4.9s (compile: 3.9s, render: 972ms)
+ GET /flags/acad%C3%83%C2%AAmicos_do_salgueiro.jpg 404 in 1178ms (compile: 844ms, render: 334ms)
+ GET /flags/Bandeira_Beija-Flor_de_Nil%C3%83%C2%B3polis.png 404 in 1202ms (compile: 907ms, render: 295ms)
+ GET /flags/esta%C3%83%C2%A7%C3%83%C2%A3o_primeira_de_mangueira.jpg 404 in 1248ms (compile: 969ms, render: 279ms)
+ GET /flags/acad%C3%83%C2%AAmicos_do_grande_rio.png 404 in 1180ms (compile: 1015ms, render: 165ms)

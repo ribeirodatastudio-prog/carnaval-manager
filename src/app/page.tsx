@@ -29,7 +29,7 @@ const ARCHETYPE_COLORS: Record<SchoolArchetype, string> = {
 };
 
 export default function Home() {
-  const { gameState, setPlayerSchool, schools, chooseMarketStart, simulateMarketAndJump } = useGameStore();
+  const { gameState, setPlayerSchool, schools, chooseMarketStart, simulateMarketAndJump, simulateFullSeasonAndJump } = useGameStore();
   const { playerSchoolId, startPhaseChosen } = gameState;
 
   if (gameState.playerFired) {
@@ -96,7 +96,7 @@ export default function Home() {
         </div>
 
         {/* Cards Container */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-6xl z-10">
 
             {/* Card 1: Mercado Completo */}
             <button
@@ -161,6 +161,41 @@ export default function Home() {
 
                     <div className="flex items-center gap-2 text-[#2ECC71] font-bold uppercase tracking-wider text-sm group-hover:gap-4 transition-all">
                         Simular Mercado <span>→</span>
+                    </div>
+                </div>
+            </button>
+
+             {/* Card 3: Pular para Desfile (Test Mode) */}
+             <button
+                onClick={() => simulateFullSeasonAndJump()}
+                className="group relative overflow-hidden rounded-xl text-left transition-all duration-300 hover:-translate-y-2 flex flex-col h-full bg-[#0F1629] border border-[#1E2D50] hover:border-[#E74C3C]"
+                onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 40px -12px #E74C3C40`;
+                }}
+                onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = `none`;
+                }}
+            >
+                <div className="p-8 flex flex-col h-full relative">
+                     {/* Background accent */}
+                     <div
+                        className="absolute right-0 top-0 w-48 h-48 opacity-5 rounded-full blur-3xl pointer-events-none transform translate-x-1/3 -translate-y-1/3"
+                        style={{ backgroundColor: '#E74C3C' }}
+                    />
+
+                    <div className="uppercase tracking-widest text-xs font-bold text-[#E74C3C] mb-2">Modo Teste</div>
+                    <h3 className="text-2xl font-black text-[#F0E6D3] mb-4">Pular para Desfile</h3>
+                    <p className="text-[#8A9BB8] text-sm leading-relaxed mb-6 flex-1">
+                        Simula toda a temporada com resultados ótimos (100% de progresso, bateria 95) e vai direto para a Semana 45.
+                    </p>
+
+                    <div className="bg-[#1E2D50]/50 border border-[#E74C3C]/30 rounded p-3 mb-8 text-xs text-[#E74C3C] flex gap-2 items-start">
+                        <span>🚀</span>
+                        <span>Use para testar o sistema de Desfile e Apuração sem jogar a fase de gestão.</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[#E74C3C] font-bold uppercase tracking-wider text-sm group-hover:gap-4 transition-all">
+                        Ir para Avenida <span>→</span>
                     </div>
                 </div>
             </button>

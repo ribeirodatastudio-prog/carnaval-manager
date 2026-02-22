@@ -3,8 +3,7 @@ import {
   DesfileResult,
   SchoolApuracaoResult,
   Quesito,
-  QuitoResult,
-  Division
+  QuitoResult
 } from '../types/models';
 import { calculateQuitoQualityIndexes } from './desfileService';
 
@@ -16,7 +15,7 @@ function boxMullerRandom(): number {
     return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
 }
 
-function rollJudgeScore(qualityIndex: number): number {
+export function rollJudgeScore(qualityIndex: number): number {
     // qualityIndex 0–100 → judge score 9.0–10.0
     // Distribution: higher quality = higher mean, tighter spread
 
@@ -35,7 +34,7 @@ function rollJudgeScore(qualityIndex: number): number {
     return Math.round(Math.max(9.0, Math.min(10.0, raw)) * 10) / 10;
 }
 
-function resolveQuesito(qualityIndex: number): QuitoResult {
+export function resolveQuesito(qualityIndex: number): QuitoResult {
     // 1. Roll 6 judge scores
     const allScores = Array.from({ length: 6 }, () => rollJudgeScore(qualityIndex));
 
@@ -95,11 +94,7 @@ export function runFullApuracao(
     schools: School[],
     desfileResult: DesfileResult | null
 ): SchoolApuracaoResult[] {
-    // Filter for Grupo Especial only (since Desfile/Apuracao is mainly for player's division)
-    // Assuming player is in Grupo Especial or we want to simulate the player's division.
-    // The prompt says "Runs for ALL Grupo Especial schools".
-    // I will filter by 'Grupo Especial'.
-
+    // Filter for Grupo Especial only
     const divisionSchools = schools.filter(s => s.currentDivision === 'Grupo Especial');
 
     const results: SchoolApuracaoResult[] = divisionSchools.map(school => {
@@ -110,57 +105,15 @@ export function runFullApuracao(
             qualityIndexes = desfileResult.quitoQualityIndexes;
         } else {
             // AI School: Generate synthetic indexes
-            // Pass empty incidents array for AI for now (could generate random AI incidents here if desired)
             qualityIndexes = calculateQuitoQualityIndexes(school, []);
         }
 
         return computeSchoolApuracao(school, qualityIndexes);
     });
 
-    // Sort by Total Descending
-    results.sort((a, b) => b.finalTotal - a.finalTotal);
-
-    // Assign Ranks (handling ties if any, though sort is stable-ish)
-    results.forEach((r, i) => {
-        r.finalRank = i + 1;
-    });
-
-    // Handle Ties: If totals are equal, they share rank?
-    // Prompt says "Two schools CAN tie... Show it."
-    // So if A=269.5 and B=269.5, both should have same rank or just ordered arbitrarily?
-    // Usually tie-breaker is reverse order of reading.
-    // But for simplicity and UI "Classificação", usually distinct ranks 1, 2, 3...
-    // If I want to support shared rank:
-    for (let i = 1; i < results.length; i++) {
-        if (results[i].finalTotal === results[i-1].finalTotal) {
-            // Use reverse quesito tie breaker?
-            // "Tie-breaking rules (usually reverse order of quesitos read)"
-            // Let's implement that for realism.
-            // Quesito order read: Bateria -> ... -> MSPB.
-            // Reverse: MSPB -> ... -> Bateria.
-
-            const qOrder: Quesito[] = [
-                'MestreSalaPortaBandeira', 'ComissaoDeFrente', 'Fantasia', 'AlegoriasAderecos',
-                'Enredo', 'Evolucao', 'Harmonia', 'SambaEnredo', 'Bateria'
-            ];
-
-            let broken = false;
-            for (const q of qOrder) {
-                const s1 = results[i-1].quesitos[q].total;
-                const s2 = results[i].quesitos[q].total;
-                if (s1 !== s2) {
-                    // If previous is actually lower in this tie-breaker, swap?
-                    // But we already sorted by total.
-                    // We need to resort the whole array with tie-breaker logic.
-                    broken = true;
-                    break;
-                }
-            }
-        }
-    }
-
-    // Proper Sort with Tie Breaker
+    // Sort by Total Descending with Tie Breaker (Reverse Quesito Order)
     results.sort((a, b) => {
+        // Primary: Final Total
         if (b.finalTotal !== a.finalTotal) return b.finalTotal - a.finalTotal;
 
         // Tie Breaker: Reverse Quesito Order
@@ -170,15 +123,15 @@ export function runFullApuracao(
         ];
 
         for (const q of qOrder) {
-             const valA = a.quesitos[q].total;
-             const valB = b.quesitos[q].total;
+             const valA = a.quesitos[q] ? a.quesitos[q].total : 0;
+             const valB = b.quesitos[q] ? b.quesitos[q].total : 0;
              if (valB !== valA) return valB - valA;
         }
 
         return 0; // Absolute tie
     });
 
-    // Re-assign ranks
+    // Assign Ranks
     results.forEach((r, i) => r.finalRank = i + 1);
 
     return results;

@@ -173,6 +173,95 @@ const applyMoralePersonality = (delta: number, school: School, trackQuality?: nu
     return delta;
 };
 
+// --- Logic Helper for Simulating Market & Setup ---
+const performMarketSimulation = (
+    currentSchools: School[],
+    currentAvailableStaff: StaffMember[],
+    playerSchoolId: string | null,
+    currentChosenSamba: SambaEnredo | null
+) => {
+    if (!playerSchoolId) return null;
+
+    let updatedSchools = [...currentSchools];
+    let updatedAvailableStaff = [...currentAvailableStaff];
+
+    // Simulate Weeks 1-8 Market
+    for (let week = 1; week <= 8; week++) {
+      const aiResult = processAITransfers(updatedSchools, updatedAvailableStaff, week, 8);
+      updatedSchools = aiResult.updatedSchools;
+      updatedAvailableStaff = aiResult.updatedStaff;
+    }
+
+    const playerSchoolIdx = updatedSchools.findIndex(s => s.id === playerSchoolId);
+    if (playerSchoolIdx === -1) return null;
+
+    let playerSchool = { ...updatedSchools[playerSchoolIdx] };
+    const unfilledRoles = ALL_ROLES.filter(role => !playerSchool.staff.some(s => s.role === role));
+
+    // Fill player roles
+    for (const role of unfilledRoles) {
+      const candidates = updatedAvailableStaff
+        .filter(s => s.role === role && s.salaryExpectation <= playerSchool.budget)
+        .sort((a, b) => b.reputation - a.reputation);
+
+      if (candidates.length > 0) {
+        const hired = candidates[0];
+        playerSchool = {
+          ...playerSchool,
+          budget: playerSchool.budget - hired.salaryExpectation,
+          staff: [...playerSchool.staff, {
+            ...hired,
+            currentSchoolId: playerSchool.id,
+            salary: hired.salaryExpectation,
+            contractYears: 1,
+          }],
+        };
+        updatedAvailableStaff = updatedAvailableStaff.filter(s => s.id !== hired.id);
+      }
+    }
+
+    // Pick Enredo
+    if (playerSchool.enredoCandidates && playerSchool.enredoCandidates.length > 0) {
+      const bestEnredo = [...playerSchool.enredoCandidates]
+        .sort((a, b) => b.potentialScore - a.potentialScore)[0];
+
+      playerSchool = {
+        ...playerSchool,
+        enredo: bestEnredo,
+        enredoCandidates: [],
+        researchFocusId: null,
+      };
+    }
+
+    // Pick Samba
+    let chosenSambaEnredo = currentChosenSamba;
+    if (playerSchool.enredo && !chosenSambaEnredo) {
+      const process = generateSambaSelectionProcess(playerSchool.enredo, playerSchool);
+      const bestSamba = process.candidates.reduce((prev, current) =>
+        (prev.melodia + prev.grito + prev.apeloComunidade) > (current.melodia + current.grito + current.apeloComunidade) ? prev : current
+      );
+      chosenSambaEnredo = bestSamba;
+      playerSchool = { ...playerSchool, sambaEnredo: bestSamba };
+    }
+
+    // Initialize Preparation
+    if (playerSchool.enredo && playerSchool.sambaEnredo) {
+        playerSchool = {
+            ...playerSchool,
+            preparation: initializePreparationState(playerSchool)
+        };
+    }
+
+    updatedSchools[playerSchoolIdx] = playerSchool;
+
+    return {
+        updatedSchools,
+        updatedAvailableStaff,
+        chosenSambaEnredo,
+        playerSchoolIdx
+    };
+};
+
 interface GameStoreState {
   gameState: GameState;
   schools: School[];
@@ -199,6 +288,7 @@ interface GameStoreState {
   resetAfterBankruptcy: () => void;
 
   simulateMarketAndJump: () => void;
+  simulateFullSeasonAndJump: () => void; // New Action
   chooseMarketStart: () => void;
 
   startDesfile: () => void;
@@ -612,38 +702,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (!staff) return 'Staff not found.';
 
     // Feature 1: Staff Cost Multiplier Check
-    // The adjusted salary logic handles the "display", but does validation use it?
-    // "multiply the offered salary minimum threshold by playerSchool.preparation?.staffCostMultiplier ?? 1.0 when validating."
-    // But `submitTransferOffer` doesn't validate against *minimum* salary (expectation), it only validates budget?
-    // Ah, usually there's logic "staff won't accept if offer < expectation".
-    // But that logic happens in `resolveOffer`.
-    // However, if the UI prevents submitting below adjusted, `submitTransferOffer` receives the value.
-    // I should probably ensure the offer is reasonable relative to expectation?
-    // But typically `submitTransferOffer` just sends it, and `resolveOffer` decides.
-    // Wait, prompt: "Apply staffCostMultiplier in gameStore.ts inside submitTransferOffer: multiply the offered salary minimum threshold by ... when validating. This means for Potência schools the minimum offer the game considers valid is 15% higher... NOTE: this affects staff cost perception, not the actual offer mechanism"
-    // The prompt implies I should check expectation here?
-    // Currently `submitTransferOffer` checks: `if (offeredSalary <= 0) return 'Invalid salary'`.
-    // It doesn't check against expectation.
-    // But `resolveOffer` uses `calculateAdjustedSalary` logic or similar?
-    // Let's assume validation means "Is this offer valid to be SENT".
-    // I will add a check if necessary, or just rely on `calculateAdjustedSalary` being used in UI.
-    // However, `resolveOffer` is where the decision happens.
-    // I will update `resolveOffer` logic implicitly if it uses `calculateAdjustedSalary`?
-    // `resolveOffer` is in `transferService`.
-    // The prompt says "Do not touch ... transfer offer mechanics".
-    // BUT "Apply staffCostMultiplier in gameStore.ts inside submitTransferOffer...".
-    // This implies I SHOULD modify `submitTransferOffer`.
-    // Maybe I should return error if offer < Adjusted Expectation?
-    // "the minimum offer the game considers valid is 15% higher".
-    // Yes, I should block it here.
-
     const costMult = getStaffCostMultiplier(school);
-    // Adjusted Expectation
     const adjustedExpectation = calculateAdjustedSalary(staff, school);
 
-    // Feature 1: Validate against adjusted expectation (Soft or Hard limit?)
-    // Prompt says: "multiply the offered salary minimum threshold by ... when validating."
-    // We treat adjustedExpectation as the minimum valid offer to even attempt.
     if (offeredSalary < adjustedExpectation) return `Offer too low. Minimum expected: ${formatMoney(adjustedExpectation)}`;
 
     if (offeredSalary <= 0) return 'Invalid salary';
@@ -1063,93 +1124,92 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   simulateMarketAndJump: () =>
     set((state) => {
-      if (!state.gameState.playerSchoolId) return {};
-
-      let updatedSchools = [...state.schools];
-      let updatedAvailableStaff = [...state.availableStaff];
-
-      for (let week = 1; week <= 8; week++) {
-        const aiResult = processAITransfers(updatedSchools, updatedAvailableStaff, week, 8);
-        updatedSchools = aiResult.updatedSchools;
-        updatedAvailableStaff = aiResult.updatedStaff;
-      }
-
-      const playerSchoolIdx = updatedSchools.findIndex(s => s.id === state.gameState.playerSchoolId);
-      if (playerSchoolIdx === -1) return {};
-
-      let playerSchool = { ...updatedSchools[playerSchoolIdx] };
-      const unfilledRoles = ALL_ROLES.filter(role => !playerSchool.staff.some(s => s.role === role));
-
-      for (const role of unfilledRoles) {
-        const candidates = updatedAvailableStaff
-          .filter(s => s.role === role && s.salaryExpectation <= playerSchool.budget)
-          .sort((a, b) => b.reputation - a.reputation);
-
-        if (candidates.length > 0) {
-          const hired = candidates[0];
-          playerSchool = {
-            ...playerSchool,
-            budget: playerSchool.budget - hired.salaryExpectation,
-            staff: [...playerSchool.staff, {
-              ...hired,
-              currentSchoolId: playerSchool.id,
-              salary: hired.salaryExpectation,
-              contractYears: 1,
-            }],
-          };
-          updatedAvailableStaff = updatedAvailableStaff.filter(s => s.id !== hired.id);
-        }
-      }
-
-      if (playerSchool.enredoCandidates && playerSchool.enredoCandidates.length > 0) {
-        const bestEnredo = [...playerSchool.enredoCandidates]
-          .sort((a, b) => b.potentialScore - a.potentialScore)[0];
-
-        playerSchool = {
-          ...playerSchool,
-          enredo: bestEnredo,
-          enredoCandidates: [],
-          researchFocusId: null,
-        };
-      }
-
-      let chosenSambaEnredo = state.gameState.chosenSambaEnredo;
-
-      // Auto-select Samba if needed
-      if (playerSchool.enredo && !chosenSambaEnredo) {
-        const process = generateSambaSelectionProcess(playerSchool.enredo, playerSchool);
-        // Pick the one with highest potential (sum of stats) or random?
-        // Let's pick random to simulate variety, or the "best" visible stats.
-        const bestSamba = process.candidates.reduce((prev, current) =>
-          (prev.melodia + prev.grito + prev.apeloComunidade) > (current.melodia + current.grito + current.apeloComunidade) ? prev : current
+        const result = performMarketSimulation(
+            state.schools,
+            state.availableStaff,
+            state.gameState.playerSchoolId,
+            state.gameState.chosenSambaEnredo
         );
-        chosenSambaEnredo = bestSamba;
-        playerSchool = { ...playerSchool, sambaEnredo: bestSamba };
-      }
 
-      // Initialize Preparation State
-      if (playerSchool.enredo && playerSchool.sambaEnredo) {
-          playerSchool = {
-              ...playerSchool,
-              preparation: initializePreparationState(playerSchool)
-          };
-      }
+        if (!result) return {};
 
-      updatedSchools[playerSchoolIdx] = playerSchool;
+        return {
+            schools: result.updatedSchools,
+            availableStaff: result.updatedAvailableStaff,
+            gameState: {
+                ...state.gameState,
+                currentWeek: 9,
+                currentPhase: 'Preparation',
+                preparationSubPhase: 'BiWeekly',
+                startPhaseChosen: true,
+                pendingSambaSelection: null,
+                chosenSambaEnredo: result.chosenSambaEnredo
+            },
+        };
+    }),
 
-      return {
-        schools: updatedSchools,
-        availableStaff: updatedAvailableStaff,
-        gameState: {
-          ...state.gameState,
-          currentWeek: 9,
-          currentPhase: 'Preparation',
-          preparationSubPhase: 'BiWeekly',
-          startPhaseChosen: true,
-          pendingSambaSelection: null,
-          chosenSambaEnredo
-        },
-      };
+  simulateFullSeasonAndJump: () =>
+    set((state) => {
+        const result = performMarketSimulation(
+            state.schools,
+            state.availableStaff,
+            state.gameState.playerSchoolId,
+            state.gameState.chosenSambaEnredo
+        );
+
+        if (!result) return {};
+
+        const { updatedSchools, updatedAvailableStaff, playerSchoolIdx } = result;
+        let playerSchool = updatedSchools[playerSchoolIdx];
+
+        // Simulate Perfect Preparation
+        if (playerSchool.preparation) {
+            const perfectTracks: Record<ProductionTrack, any> = { ...playerSchool.preparation.tracks };
+
+            (['Alegorias', 'Fantasias', 'Harmonia', 'Bateria'] as ProductionTrack[]).forEach(t => {
+                perfectTracks[t] = {
+                    ...perfectTracks[t],
+                    progress: 100,
+                    quality: 95, // High quality
+                    finishingRisk: 0,
+                    projectedCompletion: 40
+                };
+            });
+
+            const perfectBateria = {
+                ...playerSchool.preparation.bateria,
+                form: 90, // Optimal
+                energy: 80
+            };
+
+            playerSchool = {
+                ...playerSchool,
+                fanbaseMorale: 90, // High morale
+                preparation: {
+                    ...playerSchool.preparation,
+                    tracks: perfectTracks,
+                    bateria: perfectBateria,
+                    weeksUntilParade: 0,
+                    alegoriaCarCount: 5, // Default good amount
+                }
+            };
+
+            updatedSchools[playerSchoolIdx] = playerSchool;
+        }
+
+        return {
+            schools: updatedSchools,
+            availableStaff: updatedAvailableStaff,
+            gameState: {
+                ...state.gameState,
+                currentWeek: 45,
+                currentPhase: 'Parade',
+                preparationSubPhase: null,
+                startPhaseChosen: true,
+                pendingSambaSelection: null,
+                chosenSambaEnredo: result.chosenSambaEnredo
+            },
+        };
     }),
 
   chooseMarketStart: () =>
