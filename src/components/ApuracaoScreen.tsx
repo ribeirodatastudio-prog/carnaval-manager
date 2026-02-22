@@ -53,7 +53,7 @@ export default function ApuracaoScreen() {
             startApuracao();
         } else {
             // Initialize running totals
-            const initial = {};
+            const initial: Record<string, number> = {};
             apuracaoResults.forEach(r => initial[r.schoolId] = 0);
             setRunningTotals(initial);
         }
@@ -173,7 +173,7 @@ export default function ApuracaoScreen() {
             setIsComplete(true);
             setIsPlaying(false);
             // Ensure final totals match exactly (floating point drift safety)
-            const finals = {};
+            const finals: Record<string, number> = {};
             apuracaoResults.forEach(r => finals[r.schoolId] = r.finalTotal);
             setRunningTotals(finals);
         } else {
@@ -184,7 +184,7 @@ export default function ApuracaoScreen() {
 
     const finishInstant = () => {
         if (!apuracaoResults) return;
-        const finals = {};
+        const finals: Record<string, number> = {};
         apuracaoResults.forEach(r => finals[r.schoolId] = r.finalTotal);
         setRunningTotals(finals);
         setIsComplete(true);
