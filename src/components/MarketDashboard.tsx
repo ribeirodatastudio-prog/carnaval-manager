@@ -46,6 +46,7 @@ export default function MarketDashboard() {
   const [offerYears, setOfferYears] = useState(1);
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [isEnredoModalOpen, setIsEnredoModalOpen] = useState(false);
+  const [offerMoneyToVolunteer, setOfferMoneyToVolunteer] = useState(false);
 
   const playerSchool = schools.find(s => s.id === playerSchoolId);
 
@@ -67,8 +68,15 @@ export default function MarketDashboard() {
       )
     : null;
 
+  useEffect(() => {
+    if (hideFilled && filterRole !== 'All' && playerSchool?.staff.some(s => s.role === filterRole)) {
+      setFilterRole('All');
+    }
+  }, [hideFilled]);
+
   const openOfferModal = (staff: StaffMember) => {
       setSelectedStaff(staff);
+      setOfferMoneyToVolunteer(false);
       const baseSalary = calculateAdjustedSalary(staff, playerSchool?.prestige || 100);
       setOfferSalary(baseSalary > 0 ? baseSalary : staff.salaryExpectation); // Default
       setOfferYears(1);
@@ -84,6 +92,13 @@ export default function MarketDashboard() {
   };
 
   const handleAdvanceWeek = () => {
+      // If at week 7 with no enredo, force the enredo selection modal
+      if (gameState.currentWeek === 7 && !playerSchool?.enredo) {
+          setIsEnredoModalOpen(true);
+          setMessage('⚠️ Defina seu enredo antes de avançar para a última semana de mercado!');
+          setTimeout(() => setMessage(null), 4000);
+          return;
+      }
       advanceWeek();
       setIsResultsModalOpen(true);
   };
@@ -95,7 +110,16 @@ export default function MarketDashboard() {
       }
       return true;
   });
-  const uniqueRoles = Array.from(new Set(availableStaff.map(s => s.role)));
+  const uniqueRoles = Array.from(new Set(
+    availableStaff
+      .filter(s => {
+        if (hideFilled && playerSchool) {
+          return !playerSchool.staff.some(ps => ps.role === s.role);
+        }
+        return true;
+      })
+      .map(s => s.role)
+  ));
   const counteredOffers = resolvedOffers.filter(o => o.status === 'Countered');
 
   const findPartner = (partnerId: string): StaffMember | null => {
@@ -546,33 +570,50 @@ export default function MarketDashboard() {
                 </div>
 
                 {playerSchool?.enredo ? (
-                     <div className="flex flex-col gap-2">
-                        <div className="text-sm font-bold text-[#F0E6D3]">{playerSchool.enredo.title}</div>
-                        <div className="text-xs text-[#8A9BB8]">{playerSchool.enredo.category}</div>
-                        <button
-                            onClick={() => setIsEnredoModalOpen(true)}
-                            className="mt-2 text-[10px] font-bold uppercase tracking-widest text-[#C9A84C] hover:text-[#E8C96A] text-left"
-                        >
-                            Ver Detalhes →
+                  // LOCKED IN — existing code, no change
+                  <div className="flex flex-col gap-2">
+                    <div className="text-sm font-bold text-[#F0E6D3]">{playerSchool.enredo.title}</div>
+                    <div className="text-xs text-[#8A9BB8]">{playerSchool.enredo.category}</div>
+                    <button onClick={() => setIsEnredoModalOpen(true)} className="mt-2 text-[10px] font-bold uppercase tracking-widest text-[#C9A84C] hover:text-[#E8C96A] text-left">
+                      Ver Detalhes →
+                    </button>
+                  </div>
+                ) : playerSchool?.researchFocusId ? (
+                  // ACTIVELY RESEARCHING — new state
+                  (() => {
+                    const focused = playerSchool.enredoCandidates?.find(e => e.id === playerSchool.researchFocusId);
+                    const revealed = focused?.statsRevealed ?? 0;
+                    const total = 5;
+                    const pct = Math.round((revealed / total) * 100);
+                    return (
+                      <div className="flex flex-col gap-3">
+                        <div className="text-[10px] text-[#C9A84C] font-bold uppercase tracking-widest">Pesquisando...</div>
+                        <div className="text-sm font-bold text-[#F0E6D3] leading-snug line-clamp-2">{focused?.title}</div>
+                        <div className="flex flex-col gap-1">
+                          <div className="flex justify-between text-[10px] text-[#8A9BB8] font-bold uppercase">
+                            <span>Progresso</span>
+                            <span className="text-[#C9A84C]">{revealed}/{total} atributos</span>
+                          </div>
+                          <div className="h-1.5 bg-[#161E35] rounded-full overflow-hidden border border-[#1E2D50]">
+                            <div className="h-full bg-[#C9A84C] rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                        <button onClick={() => setIsEnredoModalOpen(true)} className="text-[10px] font-bold uppercase tracking-widest text-[#8A9BB8] hover:text-[#F0E6D3] text-left">
+                          Ver Todos os Candidatos →
                         </button>
-                     </div>
+                      </div>
+                    );
+                  })()
                 ) : (
-                    <div className="flex flex-col gap-3">
-                        <p className="text-xs text-[#8A9BB8] leading-relaxed">
-                            Pesquise temas para o Carnaval 2026. Escolha com sabedoria.
-                        </p>
-                        <button
-                            onClick={() => setIsEnredoModalOpen(true)}
-                            className="w-full py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-colors"
-                            style={{
-                                background: '#161E35',
-                                border: '1px solid #C9A84C',
-                                color: '#C9A84C'
-                            }}
-                        >
-                            Pesquisar Agora
-                        </button>
-                    </div>
+                  // NO RESEARCH — existing "Pesquisar Agora" button, no change
+                  <div className="flex flex-col gap-3">
+                    <p className="text-xs text-[#8A9BB8] leading-relaxed">Pesquise temas para o Carnaval 2026. Escolha com sabedoria.</p>
+                    <button onClick={() => setIsEnredoModalOpen(true)}
+                      className="w-full py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-colors"
+                      style={{ background: '#161E35', border: '1px solid #C9A84C', color: '#C9A84C' }}>
+                      Pesquisar Agora
+                    </button>
+                  </div>
                 )}
             </div>
 
@@ -628,21 +669,79 @@ export default function MarketDashboard() {
 
                   {/* Salary Slider */}
                   <div className="mb-6">
-                      <label className="block text-[#8A9BB8] text-xs font-bold uppercase tracking-wider mb-2">Oferta Salarial (Anual)</label>
-                      <div className="flex justify-between items-center mb-3">
-                           <span className="text-xs text-[#4A5A7A] font-mono">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 0.5))}</span>
-                           <span className="text-2xl font-black font-mono text-[#C9A84C]">{formatMoney(offerSalary)}</span>
-                           <span className="text-xs text-[#4A5A7A] font-mono">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 2.5))}</span>
+                    <label className="block text-[#8A9BB8] text-xs font-bold uppercase tracking-wider mb-2">
+                      Oferta Salarial (Anual)
+                    </label>
+
+                    {selectedStaff.salaryExpectation === 0 ? (
+                      // VOLUNTEER: offer money option
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between bg-[#080C18] p-3 rounded-lg border border-[#1E2D50]">
+                          <span className="text-xs text-[#8A9BB8]">Este membro é voluntário. Deseja oferecer pagamento?</span>
+                          <button
+                            onClick={() => {
+                              const newVal = !offerMoneyToVolunteer;
+                              setOfferMoneyToVolunteer(newVal);
+                              setOfferSalary(newVal ? 1200 : 0);
+                            }}
+                            className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${
+                              offerMoneyToVolunteer
+                                ? 'bg-[#C9A84C] border-[#C9A84C] text-[#080C18]'
+                                : 'bg-transparent border-[#2A3F6B] text-[#8A9BB8] hover:border-[#C9A84C]'
+                            }`}
+                          >
+                            {offerMoneyToVolunteer ? 'Sim, pagar' : 'Não, voluntário'}
+                          </button>
+                        </div>
+
+                        {offerMoneyToVolunteer && (
+                          <>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-xs text-[#4A5A7A] font-mono">R$ 1.200</span>
+                              <span className="text-2xl font-black font-mono text-[#C9A84C]">{formatMoney(offerSalary)}</span>
+                              <span className="text-xs text-[#4A5A7A] font-mono">R$ 12.000</span>
+                            </div>
+                            <input
+                              type="range"
+                              min={1200}
+                              max={12000}
+                              step={600}
+                              value={offerSalary}
+                              onChange={(e) => setOfferSalary(Number(e.target.value))}
+                              className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
+                            />
+                            <p className="text-[10px] text-[#4A5A7A] italic">
+                              Oferecer pagamento aumenta a probabilidade de aceite e a fidelidade do membro.
+                            </p>
+                          </>
+                        )}
+
+                        {!offerMoneyToVolunteer && (
+                          <div className="text-center py-2">
+                            <span className="text-2xl font-black font-mono text-[#8A9BB8]">R$ 0,00</span>
+                            <p className="text-[10px] text-[#4A5A7A] mt-1">Convite como voluntário</p>
+                          </div>
+                        )}
                       </div>
-                      <input
-                        type="range"
-                        min={Math.floor(selectedStaff.salaryExpectation * 0.5)}
-                        max={Math.floor(selectedStaff.salaryExpectation * 2.5)}
-                        step={1000}
-                        value={offerSalary}
-                        onChange={(e) => setOfferSalary(Number(e.target.value))}
-                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
-                      />
+                    ) : (
+                      // PAID STAFF: existing slider — no change
+                      <>
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-xs text-[#4A5A7A] font-mono">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 0.5))}</span>
+                          <span className="text-2xl font-black font-mono text-[#C9A84C]">{formatMoney(offerSalary)}</span>
+                          <span className="text-xs text-[#4A5A7A] font-mono">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 2.5))}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min={Math.floor(selectedStaff.salaryExpectation * 0.5)}
+                          max={Math.floor(selectedStaff.salaryExpectation * 2.5)}
+                          step={1000}
+                          value={offerSalary}
+                          onChange={(e) => setOfferSalary(Number(e.target.value))}
+                          className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
+                        />
+                      </>
+                    )}
                   </div>
 
                   {/* Contract Years */}

@@ -129,7 +129,16 @@ export const calculateSalaryExpectation = (
   // Add some small variance (+/- 10%)
   const variance = (Math.random() * 0.2) + 0.9; // 0.9 to 1.1
 
-  return Math.floor(salary * variance);
+  let result = Math.floor(salary * variance);
+
+  // Floor: if role has ANY expected payment in this division, enforce minimum R$1,200
+  const roleRange = SALARY_RANGES[role]?.[division];
+  const isIntendedToBePaid = roleRange && (roleRange[0] > 0 || roleRange[1] > 0);
+  if (isIntendedToBePaid && result > 0 && result < 1200) {
+    result = 1200;
+  }
+
+  return result;
 };
 
 export const ALL_ROLES: StaffRole[] = [

@@ -702,6 +702,50 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   chooseSamba: (sambaId) =>
     set((state) => {
+      if (sambaId === '__comprado__') {
+        const custo_map: Record<string, number> = {
+          'Grupo Especial': 500000, 'Série Ouro': 100000,
+          'Série Prata': 30000, 'Série Bronze': 10000, 'Grupo de Avaliação': 3000,
+        };
+        const school = state.schools.find(s => s.id === state.gameState.playerSchoolId);
+        if (!school) return {};
+        const custo = custo_map[school.currentDivision] ?? 10000;
+
+        const sambaComprado: SambaEnredo = {
+          id: '__comprado__',
+          title: `Samba Encomendado — ${school.enredo?.title ?? 'Enredo Oficial'}`,
+          compositors: ['Compositores Contratados'],
+          melodia: Math.floor(Math.random() * 15) + 78,       // 78-92
+          grito: Math.floor(Math.random() * 15) + 72,          // 72-86
+          apeloComunidade: Math.floor(Math.random() * 20) + 55, // 55-74 (less "soul")
+          isEncomendado: true,
+          letra: Math.floor(Math.random() * 15) + 80,
+          ritmo: Math.floor(Math.random() * 10) + 82,
+          sinergiaBateria: Math.floor(Math.random() * 15) + 70,
+          emocao: Math.floor(Math.random() * 20) + 60,
+          aderenciaAoEnredo: 95,
+          versatilidade: 80
+        };
+
+        // Deduct cost from school budget
+        const schoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+        const updatedSchools = [...state.schools];
+        updatedSchools[schoolIdx] = { ...school, budget: school.budget - custo, sambaEnredo: sambaComprado };
+
+        return {
+          schools: updatedSchools,
+          gameState: {
+            ...state.gameState,
+            chosenSambaEnredo: sambaComprado,
+            pendingSambaSelection: null,
+             transferNews: [
+              ...state.gameState.transferNews,
+              `🎵 Samba-Enredo ENCOMENDADO: "${sambaComprado.title}"!`
+            ]
+          }
+        };
+      }
+
       if (!state.gameState.pendingSambaSelection) return {};
 
       const chosen = state.gameState.pendingSambaSelection.candidates.find(s => s.id === sambaId);
