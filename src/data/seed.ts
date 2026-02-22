@@ -39,6 +39,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-2',
@@ -63,6 +64,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-3',
@@ -87,6 +89,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-4',
@@ -111,6 +114,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-5',
@@ -135,6 +139,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-6',
@@ -159,6 +164,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-7',
@@ -183,6 +189,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-8',
@@ -207,6 +214,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-9',
@@ -231,6 +239,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-10',
@@ -255,6 +264,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-11',
@@ -279,6 +289,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-12',
@@ -303,5 +314,6 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
 ];

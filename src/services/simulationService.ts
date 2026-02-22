@@ -51,26 +51,86 @@ function calculateParadeScore(school: School): number {
     const enredoScore = enredo.potentialScore * (1 - execGap / 200);
     score += enredoScore;
 
-    // 3. Visual / Fantasia: REDUCED from prestige*0.3 to prestige*0.12 (max ~24 pts)
-    const fantasiaModifier = 1 - (execGap * 0.003);
-    const visualScore = (school.prestige * 0.12) * fantasiaModifier;
-    score += visualScore;
+    // 3. Visual / Fantasia / Harmonia (Preparation Dependent)
+    let preparationScore = 0;
 
-    // 4. Harmonia: INCREASED noise range so upsets are possible
+    if (school.preparation) {
+        // PLAYER LOGIC
+        const prep = school.preparation;
+
+        // Track Quality Bonuses
+        // Max: 20 (Aleg) + 12 (Fant) + 8 (Harm) = 40 pts
+        const alegBonus = (prep.tracks.Alegorias.quality / 100) * 20;
+        const fantBonus = (prep.tracks.Fantasias.quality / 100) * 12;
+        const harmBonus = (prep.tracks.Harmonia.quality / 100) * 8;
+
+        // Progress Penalties
+        const alegPenalty = prep.tracks.Alegorias.progress < 100 ? ((100 - prep.tracks.Alegorias.progress) / 100) * -15 : 0;
+        const fantPenalty = prep.tracks.Fantasias.progress < 100 ? ((100 - prep.tracks.Fantasias.progress) / 100) * -10 : 0;
+        const harmPenalty = prep.tracks.Harmonia.progress < 100 ? ((100 - prep.tracks.Harmonia.progress) / 100) * -8 : 0;
+
+        // Finishing Risk Penalty
+        const riskPenalty = (prep.tracks.Alegorias.finishingRisk / 100) * -10;
+
+        // Bateria Score (Max 25)
+        // Optimal form: 75-95.
+        const form = prep.bateria.form;
+        let bateriaScore = 0;
+        if (form >= 75 && form <= 95) {
+            bateriaScore = (form / 100) * 25; // Good peak
+        } else if (form < 75) {
+            bateriaScore = (form / 100) * 15; // Under-prepared
+        } else {
+            bateriaScore = 15; // Over-peaked/Burnout (flat 15)
+        }
+
+        preparationScore = alegBonus + fantBonus + harmBonus + alegPenalty + fantPenalty + harmPenalty + riskPenalty + bateriaScore;
+
+    } else {
+        // AI LOGIC (Synthetic)
+        // Estimate quality based on Prestige (40-70 base + variance)
+        const prestigeFactor = school.prestige / 200; // 0.25 - 1.0
+
+        // Synthetic Quality (0-100)
+        const synQuality = 40 + (prestigeFactor * 40) + (Math.random() * 20); // 40-100 range
+
+        const alegBonus = (synQuality / 100) * 20;
+        const fantBonus = (synQuality / 100) * 12;
+        const harmBonus = (synQuality / 100) * 8;
+
+        // AI assumed to finish everything (no penalty)
+
+        // Bateria: AI tends to be consistent
+        const synForm = 70 + (prestigeFactor * 20) + (Math.random() * 10); // 70-100
+        let bateriaScore = 0;
+        if (synForm >= 75 && synForm <= 95) {
+             bateriaScore = (synForm / 100) * 25;
+        } else {
+             bateriaScore = 18; // AI decent average
+        }
+
+        preparationScore = alegBonus + fantBonus + harmBonus + bateriaScore;
+
+        // Small randomization for AI variety
+        preparationScore += (Math.random() - 0.5) * 5;
+    }
+    score += preparationScore;
+
+    // 4. Harmonia Noise / Controversy
     // All schools get some noise (not just high-controversy), but controversy amplifies it
-    const baseNoise = (Math.random() - 0.5) * 20;  // ±10 for everyone
-    const controversyNoise = enredo.controversy > 70 ? (Math.random() - 0.5) * 20 : 0;
+    const baseNoise = (Math.random() - 0.5) * 10;  // Reduced noise since preparation adds variance
+    const controversyNoise = enredo.controversy > 70 ? (Math.random() - 0.5) * 15 : 0;
     score += baseNoise + controversyNoise;
 
     // 5. Animação (unchanged)
-    const animacaoBonus = (enredo.appeal / 100) * (school.fanbaseMorale / 100) * 20;
+    const animacaoBonus = (enredo.appeal / 100) * (school.fanbaseMorale / 100) * 15; // Reduced max from 20 to 15
     score += animacaoBonus;
 
     // 6. Staff aggregate skill bonus (NEW — rewards investing in good staff)
     // Sum the top 4 staff reputation scores, normalized
     const staffReps = school.staff.map(s => s.reputation).sort((a, b) => b - a).slice(0, 4);
     const avgTopRep = staffReps.length > 0 ? staffReps.reduce((a, b) => a + b, 0) / staffReps.length : 0;
-    score += (avgTopRep / 200) * 30; // Max 30 pts for a full squad of rep-200 staff
+    score += (avgTopRep / 200) * 20; // Reduced from 30 to 20 to balance with prep
 
     // 7. Samba-Enredo Score (existing, unchanged)
     let sambaScoreValue = 0;

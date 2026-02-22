@@ -169,37 +169,6 @@ export interface SchoolHistory {
 }
 
 /**
- * School represents a Samba School in the game.
- * It holds all data related to the school's resources, personnel, and status.
- */
-export interface School {
-  id: string; // Unique identifier for the school
-  name: string; // The display name of the school
-  logo?: string; // Path to the school's logo image
-  colors: string[]; // Array of hex codes or color names representing the school's identity
-  flag?: string; // URL/Path to the school's flag image
-  budget: number; // Current funds available for hiring and events
-  fanbaseMorale: number; // Represents the happiness/engagement of the fans (0-100)
-  staff: StaffMember[]; // Collection of staff members currently hired by the school
-  isPlayerControlled: boolean; // Flag indicating if this is the school managed by the player
-  prestige: number; // The school's historical importance and reputation (1-200). 180-200 = Historical.
-  currentDivision: Division; // The current league/division the school is competing in.
-  proLevel: 'Professional' | 'SemiProfessional' | 'SemiAmateur' | 'Amateur'; // The professionalism level of the school
-
-  // Prestige Calculation Metrics
-  score_bruto?: number; // Raw score from the prestige formula (for simulation/debugging)
-  anos_no_especial: number; // Consecutive/Total years in Special Group
-  anos_em_acesso: number; // Years outside Special Group
-
-  history: SchoolHistory; // Detailed history
-
-  enredo: Enredo | null; // The current year's theme. Null if not yet researched/chosen.
-  enredoCandidates?: Enredo[]; // The pool of available themes to research/choose from.
-  researchFocusId?: string | null; // The ID of the candidate currently being researched.
-  sambaEnredo?: SambaEnredo | null; // The chosen samba-enredo for the year.
-}
-
-/**
  * SambaEnredo represents a candidate or chosen samba for the school.
  */
 export interface SambaEnredo {
@@ -229,6 +198,101 @@ export interface SambaSelectionProcess {
   chosen: SambaEnredo | null;
 }
 
+// --- Preparation Phase Types ---
+
+export type ProductionTrack = 'Alegorias' | 'Fantasias' | 'Bateria' | 'Harmonia';
+
+export interface TrackState {
+  track: ProductionTrack;
+  progress: number;          // 0–100. 100 = complete.
+  quality: number;           // 0–100. Affected by budget invested and staff skill.
+  budgetAllocated: number;   // Total R$ committed to this track so far this season.
+  staffFocused: boolean;     // Is the responsible staff member focused here this week?
+  projectedCompletion: number | null; // Week number it will finish at current pace. null = not started.
+  finishingRisk: number;     // 0–100. Risk of problems if completed within 2 weeks of parade.
+  weeklyBurnRate: number;    // R$ consumed per week at current allocation.
+}
+
+export interface BateriaState {
+  form: number;              // 0–100. The current performance level of the bateria.
+  energy: number;            // 0–100. Stamina pool. Low energy = diminishing returns from rehearsals.
+  peakWeek: number | null;   // The week they reached peak form. null = haven't peaked yet.
+  availabilityThisWeek: number; // 0–100. % of drummers available this week.
+  outsideGigActive: boolean; // True if a gig is happening this week (player-initiated or event).
+  gigIncome: number;         // R$ earned from outside gigs this season.
+  rehearsalsHeld: number;    // Total rehearsals held this season.
+  rehearsalsMissed: number;  // Total missed due to gigs or events.
+}
+
+export interface StaffStress {
+  staffId: string;
+  stressLevel: number;       // 0–100. Shown as signals, not raw number, in UI.
+  energy: number;            // 0–100. Depletes with focus weeks, recovers with rest weeks.
+  isResting: boolean;        // True if the player assigned a rest week.
+}
+
+export type EventSeverity = 'Minor' | 'Major';
+export type EventDomain = 'Production' | 'Staff' | 'Community' | 'External' | 'Bateria';
+
+export interface PreparationEvent {
+  id: string;
+  week: number;              // The week it fired.
+  severity: EventSeverity;
+  domain: EventDomain;
+  title: string;
+  description: string;
+  optionA: { label: string; effect: string; };  // effect is a description string for display
+  optionB: { label: string; effect: string; };
+  chosen: 'A' | 'B' | null; // null = pending player decision
+  resolved: boolean;
+}
+
+export interface PreparationState {
+  tracks: Record<ProductionTrack, TrackState>;
+  bateria: BateriaState;
+  staffStress: StaffStress[];
+  events: PreparationEvent[];          // All events fired this season
+  pendingEvent: PreparationEvent | null; // Event awaiting player decision
+  isBiWeekly: boolean;                 // true for weeks 9–28, false for 29–44
+  weeksUntilParade: number;            // Countdown. 36 at start, 0 at parade.
+  totalBudgetSpent: number;            // Total R$ spent across all tracks this season.
+  majorEventFiredThisSeason: boolean;  // Only one major per season.
+}
+
+// --------------------------------
+
+/**
+ * School represents a Samba School in the game.
+ * It holds all data related to the school's resources, personnel, and status.
+ */
+export interface School {
+  id: string; // Unique identifier for the school
+  name: string; // The display name of the school
+  logo?: string; // Path to the school's logo image
+  colors: string[]; // Array of hex codes or color names representing the school's identity
+  flag?: string; // URL/Path to the school's flag image
+  budget: number; // Current funds available for hiring and events
+  fanbaseMorale: number; // Represents the happiness/engagement of the fans (0-100)
+  staff: StaffMember[]; // Collection of staff members currently hired by the school
+  isPlayerControlled: boolean; // Flag indicating if this is the school managed by the player
+  prestige: number; // The school's historical importance and reputation (1-200). 180-200 = Historical.
+  currentDivision: Division; // The current league/division the school is competing in.
+  proLevel: 'Professional' | 'SemiProfessional' | 'SemiAmateur' | 'Amateur'; // The professionalism level of the school
+
+  // Prestige Calculation Metrics
+  score_bruto?: number; // Raw score from the prestige formula (for simulation/debugging)
+  anos_no_especial: number; // Consecutive/Total years in Special Group
+  anos_em_acesso: number; // Years outside Special Group
+
+  history: SchoolHistory; // Detailed history
+
+  enredo: Enredo | null; // The current year's theme. Null if not yet researched/chosen.
+  enredoCandidates?: Enredo[]; // The pool of available themes to research/choose from.
+  researchFocusId?: string | null; // The ID of the candidate currently being researched.
+  sambaEnredo?: SambaEnredo | null; // The chosen samba-enredo for the year.
+  preparation: PreparationState | null;  // null during Market phase, initialized at week 9.
+}
+
 /**
  * GameState tracks the global progression of the game.
  * It manages the timeline and the player's current context.
@@ -247,4 +311,5 @@ export interface GameState {
   showEnredoDeadlineScreen: boolean; // true = block UI, show enredo selection
   pendingSambaSelection: SambaSelectionProcess | null;
   chosenSambaEnredo: SambaEnredo | null;
+  preparationSubPhase: 'BiWeekly' | 'Weekly' | null;  // null outside Preparation phase
 }
