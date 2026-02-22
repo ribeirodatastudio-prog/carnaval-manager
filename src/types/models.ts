@@ -333,6 +333,89 @@ export interface School {
   uniqueBonus: string | null; // Identifier for school-specific legendary bonuses
 }
 
+// --- Desfile & Apuração Types ---
+
+export type Quesito =
+  | 'Bateria'
+  | 'SambaEnredo'
+  | 'Harmonia'
+  | 'Evolucao'
+  | 'Enredo'
+  | 'AlegoriasAderecos'
+  | 'Fantasia'
+  | 'ComissaoDeFrente'
+  | 'MestreSalaPortaBandeira';
+
+export interface QuitoResult {
+  allScores: number[];          // 6 scores (9.0–10.0)
+  discarded: number[];          // 3 discarded scores
+  surviving: number[];          // 3 surviving scores
+  total: number;                // Sum of surviving (0–30.0)
+}
+
+export interface SchoolApuracaoResult {
+  schoolId: string;
+  schoolName: string;
+  quesitos: Record<Quesito, QuitoResult>;
+  finalTotal: number;           // Sum of all 9 quesito totals (0–270.0)
+  finalRank: number;
+}
+
+export type ParadeSegmentType =
+  | 'ComissaoDeFrente'
+  | 'AlaInicial'
+  | 'BateriaEntrance'
+  | 'AlegoriaPrincipal'
+  | 'AlasDesenvolvimento'
+  | 'AlegoriasSecundarias'
+  | 'DestaquesECasais'
+  | 'AlaComunidade'
+  | 'InterpretePeak'
+  | 'AlegoriaConclusao'
+  | 'CabosDaEscola';
+
+export type IncidentType =
+  | 'BateriaFalter'
+  | 'FloatBreakdown'
+  | 'WingGap'
+  | 'InterpreteCrack'
+  | 'CrowdInvasion'
+  | 'RainhaFall'
+  | 'FlagDropped'
+  | 'UnexpectedBrilhance'
+  | 'JudgeControversy';
+
+export interface ParadeIncident {
+  id: string;
+  type: IncidentType;
+  segmentIndex: number;
+  resolved: boolean;
+  playerChoice?: 'intervene' | 'accept';
+  narrativeText: string;
+  // Stored for flavor in apuração narrative — affects qualityIndex, not raw scores
+  quitoImpact: Partial<Record<Quesito, number>>; // modifier to qualityIndex (-15 to +15)
+}
+
+export interface ParadeSegment {
+  index: number;
+  type: ParadeSegmentType;
+  label: string;
+  staffFeatured: string[];
+  qualityRating: number;
+  crowdReaction: 'Frio' | 'Aquecendo' | 'Empolgado' | 'Delirio';
+  isComplete: boolean;
+  incidentId?: string;
+  narrativeText: string;
+}
+
+export interface DesfileResult {
+  segments: ParadeSegment[];
+  incidents: ParadeIncident[];
+  overallCrowdMomentum: number;  // 0–100, final state
+  // These feed into apuração quesito quality indexes
+  quitoQualityIndexes: Record<Quesito, number>;
+}
+
 /**
  * GameState tracks the global progression of the game.
  * It manages the timeline and the player's current context.
@@ -340,7 +423,7 @@ export interface School {
 export interface GameState {
   currentYear: number; // The current year in the game simulation (starts at 1 or 2026)
   currentWeek: number; // The current week of the year (1-52)
-  currentPhase: 'Market' | 'Preparation' | 'Parade' | 'Results/Offseason'; // The current phase of the game loop
+  currentPhase: 'Market' | 'Preparation' | 'Parade' | 'Apuracao' | 'Results/Offseason'; // The current phase of the game loop
   playerSchoolId: string | null; // The ID of the school the player is currently managing
   pendingOffers: TransferOffer[]; // Offers waiting for resolution
   resolvedOffers: TransferOffer[]; // Offers resolved this week
@@ -356,4 +439,10 @@ export interface GameState {
   startPhaseChosen: boolean;
   playerFired: boolean;
   firedFromSchoolId: string | null;
+
+  // Act I & II State
+  desfileResult: DesfileResult | null;
+  paradeSegmentIndex: number;
+  paradeIncidentPending: ParadeIncident | null;
+  apuracaoResults: SchoolApuracaoResult[] | null;
 }
