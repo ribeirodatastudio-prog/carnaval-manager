@@ -4,6 +4,9 @@ import React from 'react';
 import { useGameStore } from '../store/gameStore';
 import { SchoolArchetype } from '../types/models';
 import MarketDashboard from '../components/MarketDashboard';
+import PreparationDashboard from '../components/PreparationDashboard';
+import DesfileScreen from '../components/DesfileScreen';
+import ApuracaoScreen from '../components/ApuracaoScreen';
 import ConfettiBackground from '../components/ConfettiBackground';
 import Badge from '../components/Badge';
 import DemissaoScreen from '../components/DemissaoScreen';
@@ -31,6 +34,33 @@ export default function Home() {
 
   if (gameState.playerFired) {
     return <DemissaoScreen />;
+  }
+
+  if (gameState.currentPhase === 'Preparation') {
+    return <PreparationDashboard />;
+  }
+
+  if (gameState.currentPhase === 'Parade') {
+    return <DesfileScreen />;
+  }
+
+  if (gameState.currentPhase === 'Apuracao') {
+    return <ApuracaoScreen />;
+  }
+
+  if (gameState.currentPhase === 'Results/Offseason') {
+      return (
+          <div className="flex flex-col items-center justify-center min-h-screen bg-[#080C18] text-[#F0E6D3] p-8">
+              <h1 className="text-4xl font-black uppercase text-[#C9A84C] mb-4">Fim da Temporada {gameState.currentYear}</h1>
+              <p className="mb-8 text-[#8A9BB8]">Os resultados foram processados. Prepare-se para o próximo ano.</p>
+              <button
+                  onClick={() => useGameStore.getState().advanceWeek()}
+                  className="px-8 py-4 bg-[#C9A84C] text-[#080C18] font-black uppercase rounded hover:scale-105 transition-transform"
+              >
+                  Iniciar Temporada {gameState.currentYear + 1}
+              </button>
+          </div>
+      );
   }
 
   // --- Start Phase Choice Screen ---

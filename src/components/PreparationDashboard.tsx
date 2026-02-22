@@ -52,7 +52,8 @@ export default function PreparationDashboard() {
   const isCritical = weeksLeft <= 3;
 
   // Calculate Advance Button Text
-  const advanceText = prep.isBiWeekly ? 'Avançar 2 Semanas' : 'Avançar 1 Semana';
+  let advanceText = prep.isBiWeekly ? 'Avançar 2 Semanas' : 'Avançar 1 Semana';
+  if (weeksLeft <= 1) advanceText = 'IR PARA O DESFILE';
 
   // Event Modal Logic
   const pendingEvent = prep.pendingEvent;

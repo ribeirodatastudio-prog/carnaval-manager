@@ -1,4 +1,4 @@
-import { School, Division, SchoolHistoryEntry, Enredo } from '../types/models';
+import { School, Division, SchoolHistoryEntry, Enredo, SchoolApuracaoResult } from '../types/models';
 import { recalculatePrestige } from './prestigeService';
 
 export interface YearlyResult {
@@ -319,4 +319,137 @@ export function runSimulation(initialSchools: School[], startYear: number, total
   }
 
   return { finalSchools: schools, history: historyLog, prestigeEvolution };
+}
+
+/**
+ * Finalizes the season for the player, using explicit Apuracao results for Grupo Especial
+ * and simulating other divisions.
+ */
+export function finalizeSeason(
+  currentSchools: School[],
+  specialGroupResults: SchoolApuracaoResult[],
+  year: number
+): { schools: School[], history: YearlyResult[] } {
+    let schools: School[] = JSON.parse(JSON.stringify(currentSchools));
+    const historyLog: YearlyResult[] = [];
+
+    const schoolsByDivision: Record<Division, School[]> = {
+      'Grupo Especial': [],
+      'Série Ouro': [],
+      'Série Prata': [],
+      'Série Bronze': [],
+      'Grupo de Avaliação': []
+    };
+
+    schools.forEach(s => {
+      if (schoolsByDivision[s.currentDivision]) {
+        schoolsByDivision[s.currentDivision].push(s);
+      }
+    });
+
+    const rankedByDivision: Record<Division, School[]> = { ...schoolsByDivision };
+
+    // 1. Grupo Especial (From Apuracao Results)
+    // specialGroupResults is already sorted by rank
+    const specialGroupRanked = specialGroupResults.map(r => {
+        return schoolsByDivision['Grupo Especial'].find(s => s.id === r.schoolId);
+    }).filter((s): s is School => !!s);
+
+    // Ensure we caught everyone (in case of ID mismatch, fallback to existing list)
+    if (specialGroupRanked.length === schoolsByDivision['Grupo Especial'].length) {
+        rankedByDivision['Grupo Especial'] = specialGroupRanked;
+    }
+
+    // 2. Other Divisions (Simulated)
+    const otherDivisions: Division[] = ['Série Ouro', 'Série Prata', 'Série Bronze', 'Grupo de Avaliação'];
+
+    for (const div of otherDivisions) {
+      const divisionSchools = schoolsByDivision[div];
+      if (divisionSchools.length === 0) continue;
+
+      const scoredSchools = divisionSchools.map(school => {
+        const finalScore = calculateParadeScore(school);
+        return { ...school, tempScore: finalScore };
+      });
+
+      scoredSchools.sort((a, b) => b.tempScore - a.tempScore);
+
+      // Relegation/Promotion Logic (Simplified from runSimulation)
+      const numCandidates = 5;
+      const numVictims = 2; // Standard for lower divisions in this logic
+
+      const candidateStartIndex = Math.max(0, scoredSchools.length - numCandidates);
+      const candidates = scoredSchools.slice(candidateStartIndex);
+      const safeSchoolsFromBottom = scoredSchools.slice(0, candidateStartIndex);
+
+      const shuffledCandidates = [...candidates].sort(() => Math.random() - 0.5);
+      const victims = shuffledCandidates.slice(0, numVictims);
+      const survivors = shuffledCandidates.slice(numVictims);
+
+      const nonRelegatedPool = [...safeSchoolsFromBottom, ...survivors];
+      nonRelegatedPool.sort((a, b) => b.tempScore - a.tempScore);
+
+      // Construct Final Ranked List
+      const finalRankedList = [...nonRelegatedPool, ...victims];
+      rankedByDivision[div] = finalRankedList;
+    }
+
+    // 3. Update History
+    for (const div of DIVISIONS) {
+        const list = rankedByDivision[div];
+        list.forEach((s, index) => {
+            const rank = index + 1;
+            const entry: SchoolHistoryEntry = { divisao: div, ano: year };
+            const schoolInMain = schools.find(sch => sch.id === s.id);
+            if (schoolInMain) {
+                if (rank === 1) {
+                    schoolInMain.history.titulos.push(entry);
+                    schoolInMain.history.totalTitles += 1;
+                    historyLog.push({ year, championId: s.id, championName: s.name, division: div });
+                } else if (rank === 2) {
+                    schoolInMain.history.vices.push(entry);
+                    schoolInMain.history.totalRunnerUps += 1;
+                } else if (rank === 3) {
+                    schoolInMain.history.terceiros.push(entry);
+                } else if (rank === 4) {
+                    schoolInMain.history.quartos.push(entry);
+                } else if (rank === 5) {
+                    schoolInMain.history.quintos.push(entry);
+                }
+
+                if (div === 'Grupo Especial') {
+                    schoolInMain.anos_no_especial += 1;
+                } else {
+                    schoolInMain.anos_em_acesso += 1;
+                }
+            }
+        });
+    }
+
+    // 4. Promotions and Relegations
+    const moveSchool = (schoolId: string, newDiv: Division) => {
+      const s = schools.find(sc => sc.id === schoolId);
+      if (s) s.currentDivision = newDiv;
+    };
+
+    const processInterDivisionMoves = (higherDiv: Division, lowerDiv: Division, numDown: number, numUp: number) => {
+        const higherList = rankedByDivision[higherDiv];
+        const lowerList = rankedByDivision[lowerDiv];
+        if (higherList.length > 0 && lowerList.length > 0) {
+            const relegated = higherList.slice(-numDown);
+            relegated.forEach(s => moveSchool(s.id, lowerDiv));
+            const promoted = lowerList.slice(0, numUp);
+            promoted.forEach(s => moveSchool(s.id, higherDiv));
+        }
+    };
+
+    processInterDivisionMoves('Grupo Especial', 'Série Ouro', 1, 1);
+    processInterDivisionMoves('Série Ouro', 'Série Prata', 2, 2);
+    processInterDivisionMoves('Série Prata', 'Série Bronze', 2, 2);
+    processInterDivisionMoves('Série Bronze', 'Grupo de Avaliação', 2, 2);
+
+    // 5. Recalculate Prestige
+    schools = recalculatePrestige(schools, year);
+
+    return { schools, history: historyLog };
 }

@@ -8,7 +8,8 @@ import {
   EnredoCategory,
   SambaSelectionProcess,
   SambaEnredo,
-  ProductionTrack
+  ProductionTrack,
+  Quesito
 } from '../types/models';
 import { loadAllSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
@@ -25,8 +26,10 @@ import {
   calculateTrendMap
 } from '../services/researchEngine';
 import { generateSambaSelectionProcess } from '../services/sambaEnredoEngine';
-import { runSimulation, SimulationResult } from '../services/simulationService';
+import { runSimulation, SimulationResult, finalizeSeason } from '../services/simulationService';
 import { resolveOffer, processAITransfers } from '../services/transferService';
+import { runDesfile } from '../services/desfileService';
+import { runFullApuracao } from '../services/apuracaoService';
 import { formatMoney } from '../utils/textUtils';
 import {
   initializePreparationState,
@@ -197,6 +200,13 @@ interface GameStoreState {
 
   simulateMarketAndJump: () => void;
   chooseMarketStart: () => void;
+
+  startDesfile: () => void;
+  advanceDesfileSegment: () => void;
+  resolveDesfileIncident: (choice: 'intervene' | 'accept') => void;
+  completeDesfile: () => void;
+  startApuracao: () => void;
+  finalizeApuracao: () => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -216,6 +226,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     startPhaseChosen: false,
     playerFired: false,
     firedFromSchoolId: null,
+    desfileResult: null,
+    paradeSegmentIndex: 0,
+    paradeIncidentPending: null,
+    apuracaoResults: null,
   },
   schools: initialSchools,
   availableStaff: initialStaff,
@@ -1142,5 +1156,114 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     set((state) => ({
       gameState: { ...state.gameState, startPhaseChosen: true },
     })),
+
+  startDesfile: () =>
+    set((state) => {
+      const school = state.schools.find(s => s.id === state.gameState.playerSchoolId);
+      if (!school) return {};
+      const result = runDesfile(school);
+      return {
+        gameState: {
+          ...state.gameState,
+          desfileResult: result,
+          paradeSegmentIndex: 0,
+          paradeIncidentPending: result.incidents.find(i => i.segmentIndex === 0 && !i.resolved) || null
+        }
+      };
+    }),
+
+  advanceDesfileSegment: () =>
+    set((state) => {
+      const nextIndex = state.gameState.paradeSegmentIndex + 1;
+      const result = state.gameState.desfileResult;
+      if (!result) return {};
+
+      // Check for incident at next segment
+      const incident = result.incidents.find(i => i.segmentIndex === nextIndex && !i.resolved);
+
+      return {
+        gameState: {
+          ...state.gameState,
+          paradeSegmentIndex: nextIndex,
+          paradeIncidentPending: incident || null
+        }
+      };
+    }),
+
+  resolveDesfileIncident: (choice) =>
+    set((state) => {
+      const incident = state.gameState.paradeIncidentPending;
+      const result = state.gameState.desfileResult;
+      if (!incident || !result) return {};
+
+      const newIndexes = { ...result.quitoQualityIndexes };
+
+      if (choice === 'intervene') {
+          Object.entries(incident.quitoImpact).forEach(([q, val]) => {
+              if (val !== undefined) {
+                  const quesito = q as Quesito;
+                  if (val < 0) {
+                      // Penalty: Refund 50%
+                      newIndexes[quesito] = Math.min(100, newIndexes[quesito] + Math.abs(val) * 0.5);
+                  } else {
+                      // Bonus: Add 50% more
+                      newIndexes[quesito] = Math.min(100, newIndexes[quesito] + val * 0.5);
+                  }
+              }
+          });
+      }
+
+      const updatedIncidents = result.incidents.map(i =>
+          i.id === incident.id ? { ...i, resolved: true, playerChoice: choice } : i
+      );
+
+      return {
+        gameState: {
+          ...state.gameState,
+          desfileResult: {
+              ...result,
+              incidents: updatedIncidents,
+              quitoQualityIndexes: newIndexes
+          },
+          paradeIncidentPending: null
+        }
+      };
+    }),
+
+  completeDesfile: () =>
+    set((state) => ({
+      gameState: {
+        ...state.gameState,
+        currentPhase: 'Apuracao'
+      }
+    })),
+
+  startApuracao: () =>
+    set((state) => {
+        const results = runFullApuracao(state.schools, state.gameState.desfileResult);
+        return {
+            gameState: {
+                ...state.gameState,
+                apuracaoResults: results
+            }
+        };
+    }),
+
+  finalizeApuracao: () =>
+    set((state) => {
+      const { schools } = finalizeSeason(
+          state.schools,
+          state.gameState.apuracaoResults || [],
+          state.gameState.currentYear
+      );
+
+      return {
+          schools: schools,
+          gameState: {
+              ...state.gameState,
+              currentPhase: 'Results/Offseason'
+          }
+      };
+    }),
 
 }));
