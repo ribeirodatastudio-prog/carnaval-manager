@@ -98,8 +98,54 @@ export default function PreparationDashboard() {
   const runwayColor = runwayWeeks < 6 ? '#E74C3C' : runwayWeeks < 12 ? '#F1C40F' : '#2ECC71';
   const isRunwayCritical = runwayWeeks < 6;
 
+  // Feature 5b: Situational Assessment
+  function getSituationalAssessment(prep: any, weeksLeft: number): string {
+    const issues: string[] = [];
+    const goods: string[] = [];
+
+    Object.entries(prep.tracks).forEach(([name, track]: [string, any]) => {
+      if (track.progress >= 100) {
+        goods.push(name + ' concluída');
+      } else if (track.finishingRisk > 50) {
+        issues.push(name + ' em risco de atraso');
+      } else if (track.progress < 30 && weeksLeft < 15) {
+        issues.push(name + ' muito atrasada');
+      }
+    });
+
+    if (prep.bateria.form < 40 && weeksLeft < 10) issues.push('Bateria não aqueceu');
+    if (prep.bateria.form > 95) issues.push('Bateria passou do pico');
+    if (prep.bateria.energy < 25) issues.push('Bateria esgotada');
+
+    if (issues.length === 0 && goods.length >= 3) return '✅ Preparação em dia. Continue assim.';
+    if (issues.length === 0) return '📋 Situação controlada. Acompanhe os prazos.';
+    if (issues.length >= 3) return '🚨 ' + issues.slice(0, 2).join('. ') + '. Atenção urgente.';
+    return '⚠️ ' + issues.join('. ') + '.';
+  }
+
+  // Feature 5c: Rival Ghost Bars
+  const rivalSchool = schools
+    .filter(s => s.id !== playerSchoolId && s.currentDivision === playerSchool.currentDivision)
+    .sort((a, b) => b.prestige - a.prestige)[0];
+
+  const weeksElapsed = 36 - prep.weeksUntilParade;
+  const rivalProgressBase = Math.min(100, (weeksElapsed / 22) * 100);
+  const rivalPrestigeFactor = rivalSchool ? (rivalSchool.prestige / 200) : 0.7;
+
+  const getRivalProgress = (trackRatio: number) =>
+    Math.min(100, rivalProgressBase * (0.8 + rivalPrestigeFactor * 0.4) * trackRatio + (Math.random() * 5 - 2.5));
+
+  const rivalProgress: Record<string, number> = {
+    Alegorias: getRivalProgress(1.0),
+    Fantasias: getRivalProgress(0.95),
+    Bateria:   getRivalProgress(0.9),
+    Harmonia:  getRivalProgress(0.85),
+  };
+
   // Advance Block Check
   const canAdvance = !showCarModal && !pendingEvent;
+  const situationalText = getSituationalAssessment(prep, weeksLeft);
+  const situationalIsBad = situationalText.includes('⚠️') || situationalText.includes('🚨');
 
   return (
     <div className="flex flex-col h-screen bg-[#080C18] text-[#F0E6D3] relative font-sans overflow-hidden">
@@ -161,6 +207,10 @@ export default function PreparationDashboard() {
                     .join(' · ')}
                 </div>
             )}
+            {/* Feature 5b: Situational Text */}
+            <div className="text-xs text-center mt-1 font-bold" style={{ color: situationalIsBad ? '#E74C3C' : '#2ECC71' }}>
+              {situationalText}
+            </div>
         </div>
 
         <div className="flex items-center gap-4 relative z-10">
@@ -270,6 +320,25 @@ export default function PreparationDashboard() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Feature 5c: Rival Ghost Bar */}
+                        {rivalSchool && (
+                          <div className="mt-1">
+                            <div className="text-[9px] text-[#4A5A7A] flex justify-between mb-0.5">
+                              <span>Rival: {rivalSchool.name.split(' ').slice(0, 2).join(' ')}</span>
+                              <span className="font-mono">{Math.floor(rivalProgress[key])}%</span>
+                            </div>
+                            <div className="h-1 bg-[#161E35] rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full opacity-50"
+                                style={{
+                                  width: `${rivalProgress[key]}%`,
+                                  background: '#E74C3C'
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
 
                         {/* Stats Row */}
                         <div className="grid grid-cols-2 gap-4 text-xs font-bold font-mono">

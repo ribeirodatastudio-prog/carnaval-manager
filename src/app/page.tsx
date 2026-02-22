@@ -2,10 +2,28 @@
 
 import React from 'react';
 import { useGameStore } from '../store/gameStore';
+import { SchoolArchetype } from '../types/models';
 import MarketDashboard from '../components/MarketDashboard';
 import ConfettiBackground from '../components/ConfettiBackground';
 import Badge from '../components/Badge';
 import DemissaoScreen from '../components/DemissaoScreen';
+
+const UNIQUE_BONUS_LABELS: Record<string, string> = {
+  mangueira_magnetismo: '⭐ Magnetismo de Mangueira',
+  beija_flor_maquina:   '⚙️ A Máquina de Nilópolis',
+  portela_patrimonio:   '📜 Patrimônio do Samba',
+  mocidade_bateria:     '🥁 Bateria Lendária',
+  imperio_comunidade:   '❤️ Escola do Povo',
+  estacio_bercoBerco:   '🎶 Berço do Samba',
+};
+
+const ARCHETYPE_COLORS: Record<SchoolArchetype, string> = {
+  Potencia:  '#C9A84C', // gold
+  Familia:   '#2ECC71', // green
+  Guerreira: '#E74C3C', // red
+  Comercial: '#3498DB', // blue
+  Revelacao: '#9B59B6', // purple
+};
 
 export default function Home() {
   const { gameState, setPlayerSchool, schools, chooseMarketStart, simulateMarketAndJump } = useGameStore();
@@ -236,8 +254,21 @@ export default function Home() {
                                                 <h3 className="text-lg font-black leading-tight mb-1" style={{ color: school.colors[0] || '#F0E6D3' }}>
                                                     {school.name}
                                                 </h3>
-                                                <div className="text-[10px] text-[#4A5A7A] uppercase tracking-widest font-bold">
-                                                    {school.currentDivision}
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {school.archetype && (
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border" style={{
+                                                            color: ARCHETYPE_COLORS[school.archetype],
+                                                            borderColor: ARCHETYPE_COLORS[school.archetype],
+                                                            backgroundColor: `${ARCHETYPE_COLORS[school.archetype]}20`
+                                                        }}>
+                                                            {school.archetype}
+                                                        </span>
+                                                    )}
+                                                    {school.uniqueBonus && UNIQUE_BONUS_LABELS[school.uniqueBonus] && (
+                                                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border border-[#C9A84C] bg-[#C9A84C20] text-[#C9A84C]">
+                                                            {UNIQUE_BONUS_LABELS[school.uniqueBonus]}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -102,6 +102,16 @@ export default function SambaEnredoModal() {
                       {getVeredictoGeral(samba).text}
                     </span>
                   </div>
+
+                  {/* Scout Hint */}
+                  <div className="mt-3 border-t border-[#1E2D5040] pt-3">
+                    <div className="text-[9px] uppercase tracking-widest text-[#9B59B6] font-bold mb-1">
+                      🎙️ Reação da Quadra
+                    </div>
+                    <p className="text-xs text-[#8A9BB8] italic leading-relaxed">
+                      "{samba.scoutHint}"
+                    </p>
+                  </div>
                 </div>
 
                 <div className="bg-[#E74C3C15] p-3 rounded-lg text-center mb-6 border border-[#E74C3C30]">

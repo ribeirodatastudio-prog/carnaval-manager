@@ -3,7 +3,7 @@ import escolasCores from './logos/escolas_cores_v2.json';
 import { FLAG_IMAGES } from './flagImages';
 import { REAL_STAFF_DATA } from './realStaff';
 import { generateSchoolRoster } from './genericStaffSeed';
-import { School, SchoolHistory, SchoolHistoryEntry, Division } from '../types/models';
+import { School, SchoolHistory, SchoolHistoryEntry, Division, SchoolArchetype, NeighborhoodType, FanbaisPersonality } from '../types/models';
 import { getProLevelForDivision } from '../utils/helpers';
 
 interface EscolaRaw {
@@ -84,6 +84,41 @@ function calculateDivisionBudget(division: Division, prestige: number): number {
   return budget;
 }
 
+const SCHOOL_DNA_MAP: Record<string, {
+  archetype: SchoolArchetype;
+  neighborhoodType: NeighborhoodType;
+  fanbaisPersonality: FanbaisPersonality;
+  uniqueBonus: string | null;
+}> = {
+  'Estação Primeira de Mangueira':        { archetype: 'Potencia',  neighborhoodType: 'SuburbioHistorico',   fanbaisPersonality: 'Apaixonada', uniqueBonus: 'mangueira_magnetismo' },
+  'Beija-Flor de Nilópolis':              { archetype: 'Potencia',  neighborhoodType: 'BaixadaFluminense',   fanbaisPersonality: 'Exigente',   uniqueBonus: 'beija_flor_maquina' },
+  'Portela':                              { archetype: 'Potencia',  neighborhoodType: 'SuburbioHistorico',   fanbaisPersonality: 'Exigente',   uniqueBonus: 'portela_patrimonio' },
+  'Acadêmicos do Salgueiro':              { archetype: 'Familia',   neighborhoodType: 'SuburbioHistorico',   fanbaisPersonality: 'Apaixonada', uniqueBonus: null },
+  'Imperatriz Leopoldinense':             { archetype: 'Potencia',  neighborhoodType: 'ZonaNortePeriferica', fanbaisPersonality: 'Exigente',   uniqueBonus: null },
+  'Império Serrano':                      { archetype: 'Familia',   neighborhoodType: 'SuburbioHistorico',   fanbaisPersonality: 'Fiel',       uniqueBonus: 'imperio_comunidade' },
+  'Mocidade Independente de Padre Miguel':{ archetype: 'Familia',   neighborhoodType: 'BaixadaFluminense',   fanbaisPersonality: 'Apaixonada', uniqueBonus: 'mocidade_bateria' },
+  'Unidos do Viradouro':                  { archetype: 'Guerreira', neighborhoodType: 'Interior',            fanbaisPersonality: 'Apaixonada', uniqueBonus: null },
+  'Unidos da Tijuca':                     { archetype: 'Comercial', neighborhoodType: 'ZonaSulCentro',       fanbaisPersonality: 'Fiel',       uniqueBonus: null },
+  'Acadêmicos do Grande Rio':             { archetype: 'Guerreira', neighborhoodType: 'BaixadaFluminense',   fanbaisPersonality: 'Apaixonada', uniqueBonus: null },
+  'Unidos de Vila Isabel':                { archetype: 'Familia',   neighborhoodType: 'ZonaSulCentro',       fanbaisPersonality: 'Fiel',       uniqueBonus: null },
+  'Paraíso do Tuiuti':                    { archetype: 'Guerreira', neighborhoodType: 'ZonaNortePeriferica', fanbaisPersonality: 'Apaixonada', uniqueBonus: null },
+  'Acadêmicos de Niterói':               { archetype: 'Revelacao', neighborhoodType: 'Interior',            fanbaisPersonality: 'Fiel',       uniqueBonus: null },
+  'Estácio de Sá':                        { archetype: 'Familia',   neighborhoodType: 'SuburbioHistorico',   fanbaisPersonality: 'Apaixonada', uniqueBonus: 'estacio_bercoBerco' },
+  'União da Ilha do Governador':          { archetype: 'Familia',   neighborhoodType: 'ZonaNortePeriferica', fanbaisPersonality: 'Fiel',       uniqueBonus: null },
+  'Inocentes de Belford Roxo':            { archetype: 'Revelacao', neighborhoodType: 'BaixadaFluminense',   fanbaisPersonality: 'Apaixonada', uniqueBonus: null },
+};
+
+function getFallbackDNA(division: Division): { archetype: SchoolArchetype, neighborhoodType: NeighborhoodType, fanbaisPersonality: FanbaisPersonality, uniqueBonus: string | null } {
+  if (division === 'Grupo Especial') return { archetype: 'Potencia', neighborhoodType: 'ZonaNortePeriferica', fanbaisPersonality: 'Exigente', uniqueBonus: null };
+  if (division === 'Série Ouro') return { archetype: 'Familia', neighborhoodType: 'ZonaNortePeriferica', fanbaisPersonality: 'Fiel', uniqueBonus: null };
+  if (division === 'Série Prata') return { archetype: 'Guerreira', neighborhoodType: 'BaixadaFluminense', fanbaisPersonality: 'Apaixonada', uniqueBonus: null };
+  return { archetype: 'Revelacao', neighborhoodType: 'BaixadaFluminense', fanbaisPersonality: 'Fiel', uniqueBonus: null };
+}
+
+function assignSchoolDNA(name: string, division: Division) {
+    return SCHOOL_DNA_MAP[name] || getFallbackDNA(division);
+}
+
 /**
  * Loads all schools from the JSON database.
  * Calculates initial budget and morale based on prestige.
@@ -101,7 +136,15 @@ export function loadAllSchools(): School[] {
     const calculatedBudget = calculateDivisionBudget(division, data.prestige);
 
     // Calculate dynamic morale
-    const calculatedMorale = Math.min(100, Math.round(data.prestige / 2));
+    let calculatedMorale = Math.min(100, Math.round(data.prestige / 2));
+
+    // Get DNA first to check for bonuses
+    const dna = assignSchoolDNA(name, division);
+
+    // Feature 2: Portela Morale Bonus
+    if (dna.uniqueBonus === 'portela_patrimonio') {
+        calculatedMorale = Math.min(100, calculatedMorale + 10);
+    }
 
     // Construct History Object
     const history: SchoolHistory = {
@@ -157,6 +200,11 @@ export function loadAllSchools(): School[] {
       history: history,
       enredo: null,
       preparation: null,
+      // New DNA fields
+      archetype: dna.archetype,
+      neighborhoodType: dna.neighborhoodType,
+      fanbaisPersonality: dna.fanbaisPersonality,
+      uniqueBonus: dna.uniqueBonus
     };
 
     // Identify roles covered by REAL staff

@@ -32,10 +32,6 @@ function getStaffSkillBonus(school: School, role: StaffRole, skills: (keyof Staf
 
   const total = skills.reduce((sum, sk) => sum + staff.skills[sk], 0);
   const avg = total / skills.length;
-
-  // Normalize: skill 100 = 0 bonus, skill 150 = +10, skill 50 = -10
-  // Range: 1-200. Avg 100. (150-100)/5 = 10. (200-100)/5 = 20.
-  // Max bonus +20, Min bonus -20.
   return Math.round((avg - 100) / 5);
 }
 
@@ -43,30 +39,23 @@ function clamp(val: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, val));
 }
 
-function generateSambaStats(school: School, isEncomendado: boolean): Omit<SambaEnredo, 'id' | 'title' | 'compositors' | 'isEncomendado'> {
-  // Staff Bonuses
+function generateSambaStats(school: School, isEncomendado: boolean): Omit<SambaEnredo, 'id' | 'title' | 'compositors' | 'isEncomendado' | 'scoutHint'> {
   const interpreteBonus = getStaffSkillBonus(school, 'Interprete', ['fama', 'expressaoCorporal']);
   const mestreBonus = getStaffSkillBonus(school, 'MestreDeBateria', ['ritmica', 'lideranca']);
   const carnavalescoBonus = getStaffSkillBonus(school, 'Carnavalesco', ['criatividade', 'plastica']);
   const diretorBonus = getStaffSkillBonus(school, 'DiretorDeCarnaval', ['gestaoDeRecursos', 'lideranca']);
 
-  // Base range: 40-80 + Bonus + Variance (-10 to +10)
   const baseMin = 40;
   const baseMax = 80;
 
   const roll = (bonus: number) => {
     const base = Math.floor(Math.random() * (baseMax - baseMin + 1)) + baseMin;
-    const variance = Math.floor(Math.random() * 21) - 10; // -10 to 10
-
+    const variance = Math.floor(Math.random() * 21) - 10;
     let val = base + bonus + variance;
 
-    // Encomendado: Higher floor, less variance (handled by tighter range in logic below if needed,
-    // but user said "slightly higher floor stats but less variance")
     if (isEncomendado) {
-       // Boost floor by 10, reduce variance effect by clamping
        val = Math.max(val, 60);
     }
-
     return clamp(val, 1, 100);
   };
 
@@ -83,55 +72,128 @@ function generateSambaStats(school: School, isEncomendado: boolean): Omit<SambaE
   };
 }
 
+function generateScoutHint(stats: {
+  letra: number; ritmo: number; sinergiaBateria: number;
+  emocao: number; aderenciaAoEnredo: number; versatilidade: number;
+}): string {
+  const hidden = [
+    { name: 'ritmo', val: stats.ritmo },
+    { name: 'sinergiaComBateria', val: stats.sinergiaBateria },
+    { name: 'letra', val: stats.letra },
+    { name: 'emocao', val: stats.emocao },
+    { name: 'aderencia', val: stats.aderenciaAoEnredo },
+    { name: 'versatilidade', val: stats.versatilidade },
+  ];
+
+  const best = [...hidden].sort((a, b) => b.val - a.val)[0];
+  const worst = [...hidden].sort((a, b) => a.val - b.val)[0];
+
+  const HINT_MAP: Record<string, { high: string[]; low: string[] }> = {
+    ritmo: {
+      high: [
+        'A bateria aprendeu em dois ensaios. O groove encaixa perfeitamente.',
+        'Os ritmistas já marcam o tempo sozinhos. Samba feito para a nossa bateria.',
+      ],
+      low: [
+        'O andamento confunde a bateria. Vai precisar de muita adaptação.',
+        'Os mestres de ala reclamaram do tempo — não é natural para o repique.',
+      ],
+    },
+    sinergiaComBateria: {
+      high: [
+        'O Mestre sorriu quando ouviu. Disse que é o samba que ele esperava.',
+        'Parece que foi escrito especificamente para a nossa bateria.',
+      ],
+      low: [
+        'O Mestre de Bateria saiu do ensaio sem comentar. Mau sinal.',
+        'Vai funcionar, mas não é o que a nossa bateria pede naturalmente.',
+      ],
+    },
+    letra: {
+      high: [
+        'Compositores experientes. A letra vai emocionar os juízes.',
+        'Cada verso tem a ver com o enredo. Perfeito para a comissão julgadora.',
+      ],
+      low: [
+        'A letra é fraca — mistura temas sem conexão clara com o enredo.',
+        'Bonito de cantar, mas a letra confunde mais do que conta.',
+      ],
+    },
+    emocao: {
+      high: [
+        'Teve componente chorando no ensaio. Samba que vai emocionar a Sapucaí.',
+        'A torcida pediu bis duas vezes. Carrega muito sentimento.',
+      ],
+      low: [
+        'Animado, mas não toca fundo. Falta alma para a passarela.',
+        'Tecnicamente bom, emocionalmente neutro.',
+      ],
+    },
+    aderencia: {
+      high: [
+        'O Carnavalesco ficou feliz. Cada parte do samba conta o enredo.',
+        'Os alegoristas disseram que parece que o samba foi feito junto com os carros.',
+      ],
+      low: [
+        'O samba canta outra coisa. A ligação com o enredo é forçada.',
+        'Parece que os compositores não leram o enredo com cuidado.',
+      ],
+    },
+    versatilidade: {
+      high: [
+        'O puxador testou variações na quadra e todas funcionaram.',
+        'Fácil de adaptar ao vivo — o Intérprete vai ter liberdade na avenida.',
+      ],
+      low: [
+        'Só funciona do jeito que está. Qualquer variação soa estranha.',
+        'O intérprete vai precisar ser cirúrgico — não tem margem para improvisos.',
+      ],
+    },
+  };
+
+  const bestHints = HINT_MAP[best.name]?.high ?? ['Forte nos bastidores.'];
+  const worstHints = HINT_MAP[worst.name]?.low ?? ['Ponto fraco identificado.'];
+
+  if (Math.random() < 0.6) {
+    return bestHints[Math.floor(Math.random() * bestHints.length)];
+  } else {
+    return worstHints[Math.floor(Math.random() * worstHints.length)];
+  }
+}
+
 export function generateSambaSelectionProcess(enredo: Enredo, school: School): SambaSelectionProcess {
   const candidates: SambaEnredo[] = [];
   const categoryTitles = TITLES_BY_CATEGORY[enredo.category] || TITLES_BY_CATEGORY['Abstrato'];
 
-  // Always 3 candidates
   const titles = getRandomItems(categoryTitles, 3);
 
-  // Candidate 1: Competition (Generic)
-  candidates.push({
-    id: `samba-1-${Date.now()}`,
-    title: titles[0],
-    compositors: getRandomItems(COMPOSITOR_NAMES, 3),
-    isEncomendado: false,
-    ...generateSambaStats(school, false)
-  });
+  // Helper to generate and enhance
+  const createCandidate = (id: string, title: string, compositorCount: number, isEncomendado: boolean) => {
+      let stats = generateSambaStats(school, isEncomendado);
 
-  // Candidate 2: Competition (Generic)
-  candidates.push({
-    id: `samba-2-${Date.now()}`,
-    title: titles[1],
-    compositors: getRandomItems(COMPOSITOR_NAMES, 4),
-    isEncomendado: false,
-    ...generateSambaStats(school, false)
-  });
+      // Feature 2: Estácio Bonus
+      if (school.uniqueBonus === 'estacio_bercoBerco') {
+          stats.letra = Math.min(100, stats.letra + 8);
+          stats.emocao = Math.min(100, stats.emocao + 8);
+      }
 
-  // Candidate 3: Could be Encomendado or Competition?
-  // "Subheader explaining the model: 'Ala de Compositores' (competition) or 'Samba Encomendado' (commissioned)"
-  // The prompt implies the whole process can be one or the other, OR the candidates can be mixed?
-  // "Encomendado sambas should have slightly higher floor stats... Competition sambas have more variance"
-  // Usually a school picks ONE model. But here we are generating 3 candidates.
-  // Maybe we simulate that one partnership is "Pro" (Encomendado style) or just high level?
-  // Let's stick to 3 competition sambas for now unless there's a setting.
-  // Wait, if it's "Samba Encomendado", usually you don't choose between 3 options in the same way (you pay for one).
-  // But the UI shows 3 cards.
-  // Let's assume these are 3 finalist sambas from the "Ala de Compositores".
-  // I will make one of them "Encomendado" style (High Floor) just to vary the gameplay,
-  // representing a "heavyweight partnership".
-  // Or maybe randomize if one is Encomendado.
-  // Let's make the 3rd one have a chance to be "Encomendado" (meaning a Star Partnership).
+      const scoutHint = generateScoutHint(stats);
+
+      return {
+        id,
+        title,
+        compositors: getRandomItems(COMPOSITOR_NAMES, compositorCount),
+        isEncomendado,
+        ...stats,
+        scoutHint
+      };
+  };
+
+  candidates.push(createCandidate(`samba-1-${Date.now()}`, titles[0], 3, false));
+  candidates.push(createCandidate(`samba-2-${Date.now()}`, titles[1], 4, false));
 
   const isThirdEncomendado = Math.random() > 0.7;
-
-  candidates.push({
-    id: `samba-3-${Date.now()}`,
-    title: titles[2],
-    compositors: getRandomItems(COMPOSITOR_NAMES, 5),
-    isEncomendado: isThirdEncomendado,
-    ...generateSambaStats(school, isThirdEncomendado)
-  });
+  candidates.push(createCandidate(`samba-3-${Date.now()}`, titles[2], 5, isThirdEncomendado));
 
   return {
     candidates,

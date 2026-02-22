@@ -37,7 +37,7 @@ const mockSchool: School = {
     anos_em_acesso: 0,
     history: { totalTitles: 0, totalRunnerUps: 0, titulos: [], vices: [], terceiros: [], quartos: [], quintos: [] },
     enredo: mockEnredo,
-    preparation: null
+    preparation: null, archetype: "Potencia", neighborhoodType: "ZonaNortePeriferica", fanbaisPersonality: "Exigente", uniqueBonus: null
 };
 
 console.log("Generating Samba Selection Process...");
