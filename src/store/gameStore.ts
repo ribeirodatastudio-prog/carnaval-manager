@@ -584,6 +584,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (!school) return 'School not found.';
     if (!staff) return 'Staff not found.';
 
+    if (offeredSalary <= 0) return 'Invalid salary';
     if (school.budget < offeredSalary) return 'Insufficient budget.';
 
     const conflict = pendingOffers.find(o => {
