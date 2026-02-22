@@ -28,7 +28,8 @@ export default function PreparationDashboard() {
     setTrackBudget,
     setStaffRest,
     resolvePreparationEvent,
-    initiateBateriaGig
+    initiateBateriaGig,
+    setAlegoriaCarCount
   } = useGameStore();
 
   const { playerSchoolId, preparationSubPhase } = gameState;
@@ -36,6 +37,8 @@ export default function PreparationDashboard() {
   const prep = playerSchool?.preparation;
 
   const [activeTab, setActiveTab] = useState<'Overview' | 'Staff'>('Overview');
+  // Local state for the car selection modal
+  const [selectedCarCount, setSelectedCarCount] = useState<number | null>(null);
 
   if (!playerSchool || !prep) return <div className="p-10 text-white">Carregando Preparação...</div>;
 
@@ -53,6 +56,50 @@ export default function PreparationDashboard() {
 
   // Event Modal Logic
   const pendingEvent = prep.pendingEvent;
+
+  // --- Feature 1: Alegoria Car Count Modal ---
+  const showCarModal = prep.alegoriaCarCount === null && gameState.currentWeek >= 9;
+
+  const carLimits = {
+    'Grupo Especial': { min: 5, max: 8 },
+    'Série Ouro': { min: 3, max: 6 },
+    'Série Prata': { min: 2, max: 5 },
+    'Série Bronze': { min: 1, max: 4 },
+    'Grupo de Avaliação': { min: 1, max: 3 },
+  }[playerSchool.currentDivision] || { min: 1, max: 3 };
+
+  const recommendedCars = carLimits.min + 1;
+
+  // --- Feature 2c: Division-aware slider max ---
+  const sliderMax: Record<string, number> = {
+      'Grupo Especial': 200000,
+      'Série Ouro': 30000,
+      'Série Prata': 8000,
+      'Série Bronze': 2500,
+      'Grupo de Avaliação': 600,
+  };
+  const maxBurn = sliderMax[playerSchool.currentDivision] || 600;
+
+  // --- Feature 2b: Guidelines ---
+  const guidelines: Record<string, Record<ProductionTrack, number>> = {
+      'Grupo Especial': { Alegorias: 45000, Fantasias: 25000, Bateria: 15000, Harmonia: 15000 },
+      'Série Ouro':     { Alegorias: 8000,  Fantasias: 4000,  Bateria: 2500,  Harmonia: 2500 },
+      'Série Prata':    { Alegorias: 2200,  Fantasias: 1200,  Bateria: 800,   Harmonia: 800 },
+      'Série Bronze':   { Alegorias: 650,   Fantasias: 350,   Bateria: 250,   Harmonia: 250 },
+      'Grupo de Avaliação': { Alegorias: 165, Fantasias: 85,  Bateria: 65,    Harmonia: 65 },
+  };
+  const divisionGuidelines = guidelines[playerSchool.currentDivision] || guidelines['Grupo de Avaliação'];
+
+  // --- Feature 2a: Budget Panel Stats ---
+  const weeklyTotalBurn = Object.values(prep.tracks).reduce((sum, t) => sum + t.weeklyBurnRate, 0);
+  const weeksAdvance = prep.isBiWeekly ? 2 : 1;
+  const weeklySpendDisplay = weeklyTotalBurn * weeksAdvance;
+  const runwayWeeks = Math.floor(playerSchool.budget / (weeklyTotalBurn || 1));
+  const runwayColor = runwayWeeks < 6 ? '#E74C3C' : runwayWeeks < 12 ? '#F1C40F' : '#2ECC71';
+  const isRunwayCritical = runwayWeeks < 6;
+
+  // Advance Block Check
+  const canAdvance = !showCarModal && !pendingEvent;
 
   return (
     <div className="flex flex-col h-screen bg-[#080C18] text-[#F0E6D3] relative font-sans overflow-hidden">
@@ -117,28 +164,52 @@ export default function PreparationDashboard() {
         </div>
 
         <div className="flex items-center gap-4 relative z-10">
-            <div
-                className="px-5 py-2.5 rounded-xl text-right min-w-[160px] backdrop-blur-md"
-                style={{
-                    background: 'rgba(0,0,0,0.4)',
-                    border: '1px solid rgba(201, 168, 76, 0.3)',
-                }}
-              >
-                <div className="text-[10px] uppercase tracking-widest text-[#C9A84C] opacity-80 font-bold">Orçamento</div>
-                <div
-                    className="text-xl font-black font-mono"
-                    style={{ color: playerSchool.budget < 500000 ? '#E74C3C' : '#C9A84C' }}
+             {/* Feature 2a: Budget Panel */}
+             <div className="flex flex-col items-end gap-1">
+                 <div
+                    className="px-5 py-2 rounded-xl text-right min-w-[160px] backdrop-blur-md"
+                    style={{
+                        background: 'rgba(0,0,0,0.4)',
+                        border: '1px solid rgba(201, 168, 76, 0.3)',
+                    }}
                 >
-                    {formatMoney(playerSchool.budget)}
-                </div>
+                    <div className="text-[10px] uppercase tracking-widest text-[#C9A84C] opacity-80 font-bold">Orçamento</div>
+                    <div
+                        className="text-xl font-black font-mono"
+                        style={{ color: playerSchool.budget < 500000 ? '#E74C3C' : '#C9A84C' }}
+                    >
+                        {formatMoney(playerSchool.budget)}
+                    </div>
+                 </div>
+
+                 {/* Budget Details Panel */}
+                 <div className="bg-black/40 backdrop-blur-md rounded px-3 py-1.5 text-xs font-mono border border-white/10 flex gap-4">
+                     <div>
+                        <span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Gasto Sem:</span>
+                        <span className="text-[#E74C3C]">{formatMoney(weeklySpendDisplay)}</span>
+                     </div>
+                      <div>
+                        <span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Total:</span>
+                        <span className="text-[#F0E6D3]">{formatMoney(prep.totalBudgetSpent)}</span>
+                     </div>
+                      <div className={isRunwayCritical ? 'animate-pulse' : ''}>
+                        <span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Reserva:</span>
+                        <span style={{ color: runwayColor }}>{runwayWeeks} sem</span>
+                     </div>
+                 </div>
             </div>
+
             <button
-                onClick={() => advanceWeek()}
-                className="text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg shadow-[#C9A84C20]"
-                style={{
+                onClick={() => canAdvance && advanceWeek()}
+                disabled={!canAdvance}
+                className={`text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg transition-all duration-200 transform shadow-lg shadow-[#C9A84C20] ${
+                    canAdvance
+                    ? 'hover:scale-105 active:scale-95 text-[#080C18]'
+                    : 'opacity-50 cursor-not-allowed bg-[#161E35] text-[#8A9BB8]'
+                }`}
+                style={canAdvance ? {
                     background: 'linear-gradient(135deg, #E8C96A 0%, #C9A84C 100%)',
-                    color: '#080C18',
-                }}
+                } : {}}
             >
                 {advanceText} →
             </button>
@@ -160,6 +231,13 @@ export default function PreparationDashboard() {
 
                 const isDone = track.progress >= 100;
                 const isRisk = track.finishingRisk > 0 && !isDone;
+
+                // Feature 2b: Guideline Logic
+                const guideline = divisionGuidelines[key];
+                const ratio = track.weeklyBurnRate / guideline;
+                let thumbColor = '#C9A84C'; // Gold (<= 120%)
+                if (ratio > 2.0) thumbColor = '#E74C3C'; // Red (> 200%)
+                else if (ratio > 1.2) thumbColor = '#E67E22'; // Orange (120-200%)
 
                 return (
                     <div key={key} className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 flex flex-col gap-4 relative overflow-hidden group hover:border-[#2A3F6B] transition-colors shadow-lg">
@@ -214,17 +292,24 @@ export default function PreparationDashboard() {
                                 <div>
                                     <div className="flex justify-between items-end mb-1">
                                         <span className="text-[10px] uppercase tracking-wider text-[#8A9BB8] font-bold">Orçamento Semanal</span>
-                                        <span className="text-[10px] font-mono text-[#C9A84C]">{formatMoney(track.weeklyBurnRate)}</span>
+                                        <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(track.weeklyBurnRate)}</span>
                                     </div>
                                     <input
                                         type="range"
                                         min={1000} // Minimal burn
-                                        max={200000} // Max burn
-                                        step={5000}
+                                        max={maxBurn} // Feature 2c: Division aware max
+                                        step={100}
                                         value={track.weeklyBurnRate}
                                         onChange={(e) => setTrackBudget(key, Number(e.target.value))}
-                                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
+                                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
+                                        style={{
+                                            accentColor: thumbColor // Dynamic color
+                                        }}
                                     />
+                                    {/* Guideline Label */}
+                                    <div className="text-[9px] text-[#4A5A7A] mt-1 text-center font-mono">
+                                        Recomendado: {formatMoney(guideline)}
+                                    </div>
                                 </div>
                                 {/* Focus Toggle */}
                                 <label className="flex items-center justify-between cursor-pointer p-2 rounded bg-[#161E35] border border-[#1E2D50] hover:border-[#2A3F6B] transition-colors">
@@ -454,6 +539,83 @@ export default function PreparationDashboard() {
                 </button>
               </div>
             </div>
+          </div>
+      )}
+
+      {/* Feature 1: Alegoria Car Count Modal (Blocking) */}
+      {showCarModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-fade-in">
+              <div className="rounded-xl p-8 max-w-2xl w-full border border-[#C9A84C] shadow-2xl bg-[#080C18] relative">
+                  <div className="text-[#C9A84C] text-xs font-black uppercase tracking-widest mb-2 text-center">
+                    Planejamento Artístico
+                  </div>
+                  <h2 className="text-3xl font-black text-[#F0E6D3] mb-6 text-center leading-none">
+                    Defina a Grandiosidade
+                  </h2>
+                  <p className="text-[#8A9BB8] text-center mb-8 max-w-lg mx-auto">
+                      Quantos carros alegóricos sua escola levará para a avenida? Mais carros aumentam o potencial de notas, mas custam muito mais caro para manter.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                     {Array.from({ length: carLimits.max - carLimits.min + 1 }, (_, i) => carLimits.min + i).map(count => {
+                         const isSelected = selectedCarCount === count;
+                         const isRecommended = count === recommendedCars;
+                         const burnIncrease = Math.round((1 + Math.max(0, count - carLimits.min) * 0.15) * 100 - 100);
+
+                         return (
+                             <button
+                                key={count}
+                                onClick={() => setSelectedCarCount(count)}
+                                className={`p-6 rounded-xl border-2 transition-all relative ${
+                                    isSelected
+                                    ? 'border-[#C9A84C] bg-[#161E35] scale-105 shadow-xl shadow-[#C9A84C20]'
+                                    : 'border-[#1E2D50] bg-[#0F1629] hover:border-[#4A5A7A] opacity-70 hover:opacity-100'
+                                }`}
+                             >
+                                 {isRecommended && (
+                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#080C18] text-[9px] font-black uppercase px-2 py-0.5 rounded">
+                                         Recomendado
+                                     </div>
+                                 )}
+                                 <div className="text-4xl font-black mb-2 text-[#F0E6D3]">{count}</div>
+                                 <div className="text-xs uppercase tracking-widest font-bold text-[#8A9BB8] mb-4">Carros</div>
+
+                                 {count > carLimits.min && (
+                                     <div className="text-xs text-[#E74C3C] font-mono bg-black/30 p-1 rounded">
+                                         +{burnIncrease}% Custo
+                                     </div>
+                                 )}
+                                 {count === carLimits.min && (
+                                     <div className="text-xs text-[#2ECC71] font-mono bg-black/30 p-1 rounded">
+                                         Custo Base
+                                     </div>
+                                 )}
+                             </button>
+                         )
+                     })}
+                  </div>
+
+                  <div className="flex justify-center gap-4">
+                     {/* Warning Deadline */}
+                     {gameState.currentWeek >= 11 && (
+                         <div className="absolute bottom-4 left-4 text-[#E74C3C] text-xs font-bold animate-pulse">
+                             ⚠️ Decisão Atrasada!
+                         </div>
+                     )}
+
+                     <button
+                        onClick={() => selectedCarCount && setAlegoriaCarCount(selectedCarCount)}
+                        disabled={!selectedCarCount}
+                        className={`px-10 py-4 rounded-xl font-black uppercase tracking-widest text-lg transition-all ${
+                            selectedCarCount
+                            ? 'bg-[#C9A84C] text-[#080C18] hover:scale-105 shadow-lg shadow-[#C9A84C40]'
+                            : 'bg-[#161E35] text-[#4A5A7A] cursor-not-allowed'
+                        }`}
+                     >
+                         Confirmar Planejamento
+                     </button>
+                  </div>
+              </div>
           </div>
       )}
 

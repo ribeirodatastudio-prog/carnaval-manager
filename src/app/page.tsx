@@ -5,10 +5,15 @@ import { useGameStore } from '../store/gameStore';
 import MarketDashboard from '../components/MarketDashboard';
 import ConfettiBackground from '../components/ConfettiBackground';
 import Badge from '../components/Badge';
+import DemissaoScreen from '../components/DemissaoScreen';
 
 export default function Home() {
   const { gameState, setPlayerSchool, schools } = useGameStore();
   const { playerSchoolId } = gameState;
+
+  if (gameState.playerFired) {
+    return <DemissaoScreen />;
+  }
 
   if (!playerSchoolId) {
     const divisions = [

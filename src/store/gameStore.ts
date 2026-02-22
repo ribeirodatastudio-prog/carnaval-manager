@@ -31,7 +31,8 @@ import {
   initializePreparationState,
   tickPreparation,
   maybeGenerateEvent,
-  resolveEventEffect
+  resolveEventEffect,
+  chooseAlegoriaCarCount
 } from '../services/preparationService';
 
 /**
@@ -192,6 +193,8 @@ interface GameStoreState {
   setStaffRest: (staffId: string, resting: boolean) => void;
   resolvePreparationEvent: (eventId: string, choice: 'A' | 'B') => void;
   initiateBateriaGig: () => void;
+  setAlegoriaCarCount: (count: number) => void;
+  resetAfterBankruptcy: () => void;
 }
 
 /**
@@ -212,6 +215,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     pendingSambaSelection: null,
     chosenSambaEnredo: null,
     preparationSubPhase: null,
+    playerFired: false,
+    firedFromSchoolId: null,
   },
   schools: initialSchools,
   availableStaff: initialStaff,
@@ -265,6 +270,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       let newTransferNews = [...state.gameState.transferNews];
       // Reset news? Usually yes for a new week update.
       newTransferNews = [];
+      let playerFired = false;
+      let firedFromSchoolId = null;
 
       if (currentPhase === 'Market') {
         // A. Resolve Player Offers
@@ -482,6 +489,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                     pSchool = tickResult.updatedSchool;
                     newTransferNews.push(...tickResult.newsItems);
 
+                    // Bankruptcy Check
+                    if (pSchool.preparation.isBankrupt) {
+                       playerFired = true;
+                       firedFromSchoolId = pSchool.id;
+                    }
+
                     // Maybe generate event
                     const prep = pSchool.preparation!;
                     if (!prep.pendingEvent) {
@@ -561,7 +574,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           pendingOffers: [],
           resolvedOffers: newResolvedOffers,
           transferNews: newTransferNews,
-          hallOfFame
+          hallOfFame,
+          playerFired: state.gameState.playerFired || playerFired,
+          firedFromSchoolId: state.gameState.firedFromSchoolId || firedFromSchoolId,
         },
       };
     }),
@@ -968,6 +983,50 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const updatedSchools = [...state.schools];
       updatedSchools[pSchoolIdx] = updatedSchool;
       return { schools: updatedSchools };
+    }),
+
+  setAlegoriaCarCount: (count) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+
+      const newPrep = chooseAlegoriaCarCount(school, count);
+
+      const updatedSchool = { ...school, preparation: newPrep };
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+
+      return { schools: updatedSchools };
+    }),
+
+  resetAfterBankruptcy: () =>
+    set((state) => {
+      const updatedSchools = state.schools.map(s => {
+          if (s.id === state.gameState.playerSchoolId) {
+              return { ...s, isPlayerControlled: false }; // Fired school is now AI controlled
+          }
+          return s;
+      });
+
+      return {
+          schools: updatedSchools,
+          gameState: {
+              ...state.gameState,
+              currentWeek: 1,
+              currentPhase: 'Market',
+              playerSchoolId: null,
+              playerFired: false,
+              firedFromSchoolId: null,
+              pendingOffers: [],
+              resolvedOffers: [],
+              transferNews: [],
+              showEnredoDeadlineScreen: false,
+              pendingSambaSelection: null,
+              chosenSambaEnredo: null,
+              preparationSubPhase: null
+          }
+      };
     }),
 
 }));

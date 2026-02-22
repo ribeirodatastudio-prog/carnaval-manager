@@ -72,7 +72,16 @@ function calculateDivisionBudget(division: Division, prestige: number): number {
   };
 
   const { base, perPrestige } = DIVISION_BUDGETS[division];
-  return Math.floor(base + prestige * perPrestige);
+  let budget = Math.floor(base + prestige * perPrestige);
+
+  // Apply multipliers for lower divisions (Feature 2d)
+  if (division === 'Série Ouro') {
+    budget = Math.max(1_500_000, budget * 3);
+  } else if (division === 'Série Prata') {
+    budget = Math.max(400_000, budget * 3);
+  }
+
+  return budget;
 }
 
 /**

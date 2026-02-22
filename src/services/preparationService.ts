@@ -20,6 +20,7 @@ export function initializePreparationState(school: School): PreparationState {
     projectedCompletion: null,
     finishingRisk: 0,
     weeklyBurnRate: baseBudget,
+    carCountBonus: 0
   });
 
   const safeBaseBurn = school.budget * 0.02;
@@ -60,7 +61,41 @@ export function initializePreparationState(school: School): PreparationState {
     weeksUntilParade: 36,
     totalBudgetSpent: 0,
     majorEventFiredThisSeason: false,
+    alegoriaCarCount: null,
+    isBankrupt: false,
+    bankruptAtWeek: null
   };
+}
+
+export function chooseAlegoriaCarCount(school: School, count: number): PreparationState {
+  if (!school.preparation) throw new Error("No preparation state");
+  const prep = { ...school.preparation };
+  const division = school.currentDivision;
+
+  const limits = {
+    'Grupo Especial': { min: 5, max: 8 },
+    'Série Ouro': { min: 3, max: 6 },
+    'Série Prata': { min: 2, max: 5 },
+    'Série Bronze': { min: 1, max: 4 },
+    'Grupo de Avaliação': { min: 1, max: 3 },
+  }[division] || { min: 1, max: 3 };
+
+  if (count < limits.min || count > limits.max) {
+    throw new Error(`Invalid car count for ${division}. Must be between ${limits.min} and ${limits.max}.`);
+  }
+
+  const carCountBonus = Math.max(0, count - limits.min) * 8;
+  const burnRateMultiplier = 1 + Math.max(0, count - limits.min) * 0.15;
+
+  prep.alegoriaCarCount = count;
+  prep.tracks = { ...prep.tracks };
+  prep.tracks.Alegorias = {
+    ...prep.tracks.Alegorias,
+    carCountBonus,
+    weeklyBurnRate: Math.floor(prep.tracks.Alegorias.weeklyBurnRate * burnRateMultiplier)
+  };
+
+  return prep;
 }
 
 export function tickPreparation(
@@ -93,6 +128,58 @@ export function tickPreparation(
 
   // 5. Deduct from school budget
   const totalCost = trackSpend;
+  const newBudget = Math.max(0, school.budget - totalCost + bateriaResult.incomeGenerated);
+
+  // Bankruptcy Detection
+  if (newBudget <= 0 && !prep.isBankrupt && (36 - prep.weeksUntilParade) >= 4) {
+      prep.isBankrupt = true;
+      prep.bankruptAtWeek = currentWeek;
+      news.push("⚠️ A ESCOLA FALIU! Os recursos acabaram.");
+  }
+
+  // Automatic Event Injection (Budget Crisis)
+  // Approximate initial budget as current + spent
+  const initialBudgetEstimate = newBudget + prep.totalBudgetSpent;
+  const budgetPct = initialBudgetEstimate > 0 ? newBudget / initialBudgetEstimate : 0;
+
+  if (!prep.pendingEvent && !prep.isBankrupt) {
+      if (budgetPct < 0.10) {
+          const title = 'Alerta Vermelho — Falência Iminente';
+          // Check if fired before
+          if (!prep.events.some(e => e.title === title)) {
+              prep.pendingEvent = {
+                  id: `event-auto-bankrupt-${currentWeek}`,
+                  week: currentWeek,
+                  severity: 'Major',
+                  domain: 'External',
+                  title,
+                  description: 'A escola não tem mais como pagar suas despesas. A diretoria exige uma decisão drástica.',
+                  optionA: { label: 'Vender equipamentos', effect: 'ALEGORIAS_QUALITY_DOWN_20_AND_FANTASIAS_QUALITY_DOWN_20' },
+                  optionB: { label: 'Aceitar a falência', effect: 'TRIGGER_BANKRUPTCY' },
+                  chosen: null,
+                  resolved: false
+              };
+              prep.events.push(prep.pendingEvent); // Add to history so it doesn't fire again immediately if ignored (though pending blocks tick usually)
+          }
+      } else if (budgetPct < 0.25) {
+          const title = 'Crise Financeira';
+           if (!prep.events.some(e => e.title === title)) {
+              prep.pendingEvent = {
+                  id: `event-auto-crisis-${currentWeek}`,
+                  week: currentWeek,
+                  severity: 'Minor',
+                  domain: 'External',
+                  title,
+                  description: 'O orçamento está perigosamente baixo. Sem ação, a escola pode não concluir o desfile.',
+                  optionA: { label: 'Cortar gastos em 30%', effect: 'ALL_TRACKS_BURN_RATE_DOWN_30PCT' },
+                  optionB: { label: 'Campanha comunitária', effect: 'BUDGET_PLUS_20K_AND_MORALE_UP_5' },
+                  chosen: null,
+                  resolved: false
+              };
+              prep.events.push(prep.pendingEvent);
+          }
+      }
+  }
 
   // 6. Update projected completion for each track
   prep.tracks = updateProjections(prep.tracks, weeksUntilParade);
@@ -101,7 +188,7 @@ export function tickPreparation(
     updatedSchool: {
       ...school,
       preparation: prep,
-      budget: Math.max(0, school.budget - totalCost + bateriaResult.incomeGenerated),
+      budget: newBudget,
     },
     newsItems: news,
   };
@@ -194,6 +281,12 @@ function calculateTrackQuality(
     base += (rep / 200) * 20; // +0–20 based on reputation
   }
   if (focused) base += 5;
+
+  if (track === 'Alegorias') {
+      const bonus = school.preparation?.tracks.Alegorias.carCountBonus || 0;
+      base += bonus;
+  }
+
   return Math.min(100, Math.floor(base));
 }
 
@@ -634,6 +727,26 @@ export function resolveEventEffect(
           });
       }
 
+       // Burn Rate Cut 30%
+      if (part.includes('ALL_TRACKS_BURN_RATE_DOWN_30PCT')) {
+          ['Alegorias', 'Fantasias', 'Bateria', 'Harmonia'].forEach(t => {
+              const tr = t as ProductionTrack;
+              updates.preparation.tracks[tr].weeklyBurnRate = Math.floor(updates.preparation.tracks[tr].weeklyBurnRate * 0.7);
+          });
+      }
+
+      // Bankruptcy Trigger
+      if (part.includes('TRIGGER_BANKRUPTCY')) {
+          updates.preparation.isBankrupt = true;
+          // Calculate approximate week if we can, or let it stay null until next tick?
+          // The prompt says "In resolveEventEffect... set prep.isBankrupt = true"
+          // It doesn't strictly say set bankruptAtWeek, but better to set it if possible.
+          // Since we don't have currentWeek, we can rely on weeksUntilParade.
+          if (updates.preparation.weeksUntilParade !== undefined) {
+             updates.preparation.bankruptAtWeek = 45 - updates.preparation.weeksUntilParade;
+          }
+      }
+
       // Staff Effects
       if (part.includes('CARNAVALESCO_REST')) {
           const carnavalesco = school.staff.find(s => s.role === 'Carnavalesco');
@@ -659,9 +772,7 @@ export function resolveEventEffect(
               const amount = parseInt(part.match(/CONTROVERSY_SCORE_UP_(\d+)/)?.[1] ?? '0');
               updates.enredo = { ...school.enredo, controversy: Math.min(100, school.enredo.controversy + amount) };
           }
-          if (part.includes('CONTROVERSY_DOWN')) { // Assuming default amount or just -10 if simpler
-              // Prompt didn't specify amount for generic DOWN but optionB in Major Event said CONTROVERSY_DOWN
-              // Let's assume -10
+          if (part.includes('CONTROVERSY_DOWN')) {
               updates.enredo = { ...school.enredo, controversy: Math.max(0, school.enredo.controversy - 10) };
           }
       }
