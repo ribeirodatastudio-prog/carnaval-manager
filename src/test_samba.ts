@@ -12,7 +12,8 @@ const mockEnredo: Enredo = {
     appeal: 80,
     sponsorValue: 0,
     trend: 'Rising',
-    statsRevealed: 5
+    statsRevealed: 5,
+    researchProgress: 0
 };
 
 const mockSchool: School = {
