@@ -1,5 +1,5 @@
 
-import { StaffMember, Division, StaffAchievement, StaffRole } from '../types/models';
+import { StaffMember, Division, StaffAchievement, StaffRole, School } from '../types/models';
 
 const K_DECAY = 0.04;
 
@@ -170,7 +170,8 @@ export function processRetirements(
 
 export function processStaffDevelopment(
   staff: StaffMember[],
-  carnavalScore: number // 0-100
+  carnavalScore: number, // 0-100
+  school?: School
 ): { updatedStaff: StaffMember[]; updates: string[] } {
     const updates: string[] = [];
     const updatedStaff = staff.map(member => {
@@ -180,7 +181,12 @@ export function processStaffDevelopment(
 
     // Base growth chance: better carnival = better development environment
     // carnavalScore 0 = 5% chance, carnavalScore 100 = 40% chance
-    const baseChance = 0.05 + (carnavalScore / 100) * 0.35;
+    let baseChance = 0.05 + (carnavalScore / 100) * 0.35;
+
+    // Feature 1: Revelacao Bonus (Staff Development)
+    if (school?.archetype === 'Revelacao') {
+        baseChance *= 1.3;
+    }
 
     // Gap bonus: staff far from their potential grow faster (hunger/drive)
     const gap = member.potential - member.reputation;

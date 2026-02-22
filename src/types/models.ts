@@ -192,6 +192,7 @@ export interface SambaEnredo {
   versatilidade: number;     // Can the intérprete/bateria adapt it live?
 
   isEncomendado: boolean;    // Commissioned samba vs competition entry
+  scoutHint: string;         // One-line community reaction hinting at hidden stats
 }
 
 export interface SambaSelectionProcess {
@@ -263,9 +264,36 @@ export interface PreparationState {
   alegoriaCarCount: number | null;     // null = not yet chosen
   isBankrupt: boolean;
   bankruptAtWeek: number | null;
+
+  // New Fields
+  staffCostMultiplier: number;   // Default 1.0. Potencia = 1.15, Guerreira = 0.9 (cheaper staff possible)
+  qualityCeilingBonus: number;   // Default 0. Potencia = +10. Added to all track quality calculations.
+  hasImproviseOption: boolean;   // Default false. Guerreira schools get a 3rd event option sometimes.
+  consequenceFlags: string[];    // List of string flags from event choices that seed follow-up events.
+  bateriaOptimalMin: number;     // default 75
+  bateriaOptimalMax: number;     // default 95
 }
 
 // --------------------------------
+
+export type SchoolArchetype =
+  | 'Potencia'      // Mangueira, Beija-Flor, Portela — the giants
+  | 'Familia'       // Império Serrano, Vila Isabel — community-rooted identity
+  | 'Guerreira'     // Viradouro, smaller schools fighting above their weight
+  | 'Comercial'     // Sponsor-heavy, media-friendly schools
+  | 'Revelacao';    // Access division climbers, hungry underdogs
+
+export type NeighborhoodType =
+  | 'SuburbioHistorico'    // Estácio, Mangueira roots — old samba heartland
+  | 'ZonaNortePeriferica'  // Madureira, Oswaldo Cruz area
+  | 'ZonaSulCentro'        // Tijuca, Centro, Flamengo-adjacent
+  | 'BaixadaFluminense'    // Nilópolis, Nova Iguaçu, Padre Miguel
+  | 'Interior';            // Niterói, São Gonçalo, further out
+
+export type FanbaisPersonality =
+  | 'Apaixonada'  // Wild swings — community explodes or implodes
+  | 'Exigente'    // Only quality earns morale; titles demanded
+  | 'Fiel';       // Slow to move, hard to break, staff love it here
 
 /**
  * School represents a Samba School in the game.
@@ -297,6 +325,12 @@ export interface School {
   researchFocusId?: string | null; // The ID of the candidate currently being researched.
   sambaEnredo?: SambaEnredo | null; // The chosen samba-enredo for the year.
   preparation: PreparationState | null;  // null during Market phase, initialized at week 9.
+
+  // New Fields
+  archetype: SchoolArchetype;
+  neighborhoodType: NeighborhoodType;
+  fanbaisPersonality: FanbaisPersonality;
+  uniqueBonus: string | null; // Identifier for school-specific legendary bonuses
 }
 
 /**

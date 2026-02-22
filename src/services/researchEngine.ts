@@ -327,7 +327,19 @@ export function generateEnredoPool(school: School, currentYear: number, aiEnredo
 
   const usedTitles = new Set<string>();
 
-  for (let i = 0; i < poolSize; i++) {
+  // Feature 2: Estácio Bonus (Berço do Samba)
+  if (school.uniqueBonus === 'estacio_bercoBerco') {
+    const trendMap = calculateTrendMap(aiEnredoCategories);
+    const estacioCandidate = generateSingleEnredo('AfroBrasileiro', school, trendMap, currentYear);
+    estacioCandidate.potentialScore = Math.max(estacioCandidate.potentialScore, 75);
+    // Ensure it's not a duplicate title (unlikely for first item but good practice)
+    usedTitles.add(estacioCandidate.title);
+    pool.push(estacioCandidate);
+  }
+
+  const loopCount = school.uniqueBonus === 'estacio_bercoBerco' ? poolSize - 1 : poolSize;
+
+  for (let i = 0; i < loopCount; i++) {
     const category = weightedRandomCategory(categoryWeights);
     let enredo = generateSingleEnredo(category, school, trendMap, currentYear);
 

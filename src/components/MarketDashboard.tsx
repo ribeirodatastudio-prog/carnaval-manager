@@ -78,7 +78,7 @@ export default function MarketDashboard() {
   const openOfferModal = (staff: StaffMember) => {
       setSelectedStaff(staff);
       setOfferMoneyToVolunteer(false);
-      const baseSalary = calculateAdjustedSalary(staff, playerSchool?.prestige || 100);
+      const baseSalary = playerSchool ? calculateAdjustedSalary(staff, playerSchool) : staff.salaryExpectation;
       setOfferSalary(baseSalary > 0 ? baseSalary : staff.salaryExpectation); // Default
       setOfferYears(1);
       setIsOfferModalOpen(true);
@@ -403,8 +403,7 @@ export default function MarketDashboard() {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pb-6">
                         {filteredStaff.map((staff) => {
-                            const prestige = playerSchool ? playerSchool.prestige : 100;
-                            const adjustedSalary = calculateAdjustedSalary(staff, prestige);
+                            const adjustedSalary = playerSchool ? calculateAdjustedSalary(staff, playerSchool) : staff.salaryExpectation;
                             const isRainha = staff.role === 'RainhaDeBateria';
                             const isRoleFilled = playerSchool?.staff.some(s => s.role === staff.role);
                             const potentialDesc = getPotentialDescriptor(staff.reputation, staff.potential);
