@@ -211,6 +211,7 @@ export interface TrackState {
   projectedCompletion: number | null; // Week number it will finish at current pace. null = not started.
   finishingRisk: number;     // 0–100. Risk of problems if completed within 2 weeks of parade.
   weeklyBurnRate: number;    // R$ consumed per week at current allocation.
+  carCountBonus: number;     // Quality ceiling addition from cars
 }
 
 export interface BateriaState {
@@ -257,6 +258,10 @@ export interface PreparationState {
   weeksUntilParade: number;            // Countdown. 36 at start, 0 at parade.
   totalBudgetSpent: number;            // Total R$ spent across all tracks this season.
   majorEventFiredThisSeason: boolean;  // Only one major per season.
+
+  alegoriaCarCount: number | null;     // null = not yet chosen
+  isBankrupt: boolean;
+  bankruptAtWeek: number | null;
 }
 
 // --------------------------------
@@ -312,4 +317,7 @@ export interface GameState {
   pendingSambaSelection: SambaSelectionProcess | null;
   chosenSambaEnredo: SambaEnredo | null;
   preparationSubPhase: 'BiWeekly' | 'Weekly' | null;  // null outside Preparation phase
+
+  playerFired: boolean;
+  firedFromSchoolId: string | null;
 }
