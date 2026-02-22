@@ -132,6 +132,7 @@ export interface Enredo {
 
   // Research Progress
   statsRevealed: number;            // 0=None, 1=Complexity, 2=Difficulty, 3=Potential, 4=Risk, 5=Bonus
+  researchProgress: number;         // 0.0–1.0+ fractional progress toward next stat reveal.
 }
 
 /**
@@ -318,6 +319,7 @@ export interface GameState {
   chosenSambaEnredo: SambaEnredo | null;
   preparationSubPhase: 'BiWeekly' | 'Weekly' | null;  // null outside Preparation phase
 
+  startPhaseChosen: boolean;
   playerFired: boolean;
   firedFromSchoolId: string | null;
 }

@@ -8,11 +8,118 @@ import Badge from '../components/Badge';
 import DemissaoScreen from '../components/DemissaoScreen';
 
 export default function Home() {
-  const { gameState, setPlayerSchool, schools } = useGameStore();
-  const { playerSchoolId } = gameState;
+  const { gameState, setPlayerSchool, schools, chooseMarketStart, simulateMarketAndJump } = useGameStore();
+  const { playerSchoolId, startPhaseChosen } = gameState;
 
   if (gameState.playerFired) {
     return <DemissaoScreen />;
+  }
+
+  // --- Start Phase Choice Screen ---
+  if (playerSchoolId && !startPhaseChosen) {
+    const playerSchool = schools.find(s => s.id === playerSchoolId);
+    if (!playerSchool) return null; // Safety
+
+    return (
+      <div
+        className="flex flex-col items-center justify-center min-h-screen text-[#F0E6D3] gap-8 p-8 font-sans relative overflow-x-hidden"
+        style={{
+          background: 'radial-gradient(ellipse at 50% 50%, #1a0a2e 0%, #080C18 70%, #0a1a0a 100%)',
+        }}
+      >
+        <ConfettiBackground />
+
+        {/* Header */}
+        <div className="text-center z-10 space-y-4">
+            <div className="flex items-center justify-center gap-4 mb-4">
+                {playerSchool.flag && (
+                    <div className="w-16 h-12 rounded overflow-hidden shadow-lg border border-white/10 bg-black/20">
+                        <img src={playerSchool.flag} alt="" className="w-full h-full object-cover" />
+                    </div>
+                )}
+                <h1 className="text-4xl font-black uppercase tracking-wide" style={{ color: playerSchool.colors[0] }}>
+                    {playerSchool.name}
+                </h1>
+            </div>
+            <div className="h-px w-32 bg-[#C9A84C] mx-auto opacity-50" />
+            <h2 className="text-2xl font-bold text-[#F0E6D3]">
+                Como você quer começar a temporada 2026?
+            </h2>
+        </div>
+
+        {/* Cards Container */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl z-10">
+
+            {/* Card 1: Mercado Completo */}
+            <button
+                onClick={() => chooseMarketStart()}
+                className="group relative overflow-hidden rounded-xl text-left transition-all duration-300 hover:-translate-y-2 flex flex-col h-full bg-[#0F1629] border border-[#1E2D50] hover:border-[#C9A84C]"
+                onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 40px -12px ${playerSchool.colors[0]}40`;
+                    (e.currentTarget as HTMLElement).style.borderColor = playerSchool.colors[0];
+                }}
+                onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = `none`;
+                    (e.currentTarget as HTMLElement).style.borderColor = '#1E2D50';
+                }}
+            >
+                <div className="p-8 flex flex-col h-full relative">
+                     {/* Background accent */}
+                     <div
+                        className="absolute right-0 top-0 w-48 h-48 opacity-5 rounded-full blur-3xl pointer-events-none transform translate-x-1/3 -translate-y-1/3"
+                        style={{ backgroundColor: playerSchool.colors[0] }}
+                    />
+
+                    <div className="uppercase tracking-widest text-xs font-bold text-[#8A9BB8] mb-2">Opção Padrão</div>
+                    <h3 className="text-2xl font-black text-[#F0E6D3] mb-4">Mercado Completo</h3>
+                    <p className="text-[#8A9BB8] text-sm leading-relaxed mb-8 flex-1">
+                        Semanas 1–8 — Negocie contratos, pesquise enredos e escolha seu samba manualmente. Controle total sobre a montagem do elenco.
+                    </p>
+
+                    <div className="flex items-center gap-2 text-[#C9A84C] font-bold uppercase tracking-wider text-sm group-hover:gap-4 transition-all">
+                        Jogar o Mercado <span>→</span>
+                    </div>
+                </div>
+            </button>
+
+             {/* Card 2: Simular Mercado */}
+             <button
+                onClick={() => simulateMarketAndJump()}
+                className="group relative overflow-hidden rounded-xl text-left transition-all duration-300 hover:-translate-y-2 flex flex-col h-full bg-[#0F1629] border border-[#1E2D50] hover:border-[#2ECC71]"
+                onMouseEnter={e => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 40px -12px #2ECC7140`;
+                }}
+                onMouseLeave={e => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = `none`;
+                }}
+            >
+                <div className="p-8 flex flex-col h-full relative">
+                     {/* Background accent */}
+                     <div
+                        className="absolute right-0 top-0 w-48 h-48 opacity-5 rounded-full blur-3xl pointer-events-none transform translate-x-1/3 -translate-y-1/3"
+                        style={{ backgroundColor: '#2ECC71' }}
+                    />
+
+                    <div className="uppercase tracking-widest text-xs font-bold text-[#2ECC71] mb-2">Modo Rápido</div>
+                    <h3 className="text-2xl font-black text-[#F0E6D3] mb-4">Pular para Preparação</h3>
+                    <p className="text-[#8A9BB8] text-sm leading-relaxed mb-6 flex-1">
+                        O mercado é simulado automaticamente. Você recebe um elenco e enredo selecionados pelo sistema e começa direto na Semana 9.
+                    </p>
+
+                    <div className="bg-[#1E2D50]/50 border border-[#C9A84C]/30 rounded p-3 mb-8 text-xs text-[#C9A84C] flex gap-2 items-start">
+                        <span>⚠️</span>
+                        <span>Ideal para testar a fase de preparação. Seu elenco será montado automaticamente com o melhor disponível no orçamento.</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[#2ECC71] font-bold uppercase tracking-wider text-sm group-hover:gap-4 transition-all">
+                        Simular Mercado <span>→</span>
+                    </div>
+                </div>
+            </button>
+
+        </div>
+      </div>
+    );
   }
 
   if (!playerSchoolId) {
