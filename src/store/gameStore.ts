@@ -1,5 +1,15 @@
 import { create } from 'zustand';
-import { GameState, School, StaffMember, TransferOffer, Enredo, EnredoCategory, SambaSelectionProcess, SambaEnredo } from '../types/models';
+import {
+  GameState,
+  School,
+  StaffMember,
+  TransferOffer,
+  Enredo,
+  EnredoCategory,
+  SambaSelectionProcess,
+  SambaEnredo,
+  ProductionTrack
+} from '../types/models';
 import { loadAllSchools } from '../data/schoolLoader';
 import { INITIAL_MARKET_STAFF } from '../data/staffSeed';
 import { calculateSalaryExpectation, ALL_ROLES } from '../utils/staffUtils';
@@ -17,6 +27,12 @@ import { generateSambaSelectionProcess } from '../services/sambaEnredoEngine';
 import { runSimulation, SimulationResult } from '../services/simulationService';
 import { resolveOffer, processAITransfers } from '../services/transferService';
 import { formatMoney } from '../utils/textUtils';
+import {
+  initializePreparationState,
+  tickPreparation,
+  maybeGenerateEvent,
+  resolveEventEffect
+} from '../services/preparationService';
 
 /**
  * Helper to initialize game data by merging real staff into schools and market.
@@ -169,6 +185,13 @@ interface GameStoreState {
   focusResearch: (enredoId: string) => void;
   lockInEnredo: (enredoId: string) => void;
   chooseSamba: (sambaId: string) => void;
+
+  // Preparation Actions
+  setTrackFocus: (track: ProductionTrack, focused: boolean) => void;
+  setTrackBudget: (track: ProductionTrack, weeklyBurnRate: number) => void;
+  setStaffRest: (staffId: string, resting: boolean) => void;
+  resolvePreparationEvent: (eventId: string, choice: 'A' | 'B') => void;
+  initiateBateriaGig: () => void;
 }
 
 /**
@@ -187,7 +210,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     hallOfFame: [],
     showEnredoDeadlineScreen: false,
     pendingSambaSelection: null,
-    chosenSambaEnredo: null
+    chosenSambaEnredo: null,
+    preparationSubPhase: null,
   },
   schools: initialSchools,
   availableStaff: initialStaff,
@@ -326,8 +350,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         newTransferNews = aiResult.news;
       }
 
+      // Check for Bi-Weekly Advance
+      // Bi-weekly: advance 2 weeks at once during early Preparation
+      // But preparation logic runs once representing 2 weeks
+      const weeksToAdvance = (currentPhase === 'Preparation' && currentWeek <= 27) ? 2 : 1;
+
       // 2. Advance Time
-      let nextWeek = currentWeek + 1;
+      let nextWeek = currentWeek + weeksToAdvance;
       let nextYear = currentYear;
 
       if (nextWeek > 52) {
@@ -340,7 +369,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       let showDeadline = false;
       let pendingSambaSelection = state.gameState.pendingSambaSelection;
 
-      if (state.gameState.playerSchoolId && currentWeek === 8 && nextWeek === 9) {
+      if (state.gameState.playerSchoolId && currentWeek === 8 && nextWeek >= 9) { // >=9 handles if we skip over 9, but normally we land on 9
           const pSchool = updatedSchools.find(s => s.id === state.gameState.playerSchoolId);
           if (pSchool) {
              if (!pSchool.enredo) {
@@ -367,6 +396,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         nextPhase = 'Parade';
       } else {
         nextPhase = 'Results/Offseason';
+      }
+
+      let nextSubPhase: GameState['preparationSubPhase'] = null;
+      if (nextPhase === 'Preparation') {
+        nextSubPhase = nextWeek <= 28 ? 'BiWeekly' : 'Weekly';
       }
 
       // -- NEW LOGIC START --
@@ -398,7 +432,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
             // 2. Market Deadline / Preparation Start (Week 8 -> 9)
             // Note: We handled the BLOCK logic above. Here we handle the transition effects if we ARE advancing.
-            if (!blockAdvancement && currentWeek === 8 && nextWeek === 9) {
+            if (!blockAdvancement && currentWeek === 8 && nextWeek >= 9) {
                  if (pSchool.enredo) {
                      let budgetAdd = 0;
                      if (pSchool.enredo.sponsorValue > 0) {
@@ -419,15 +453,15 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                      pSchool = {
                          ...pSchool,
                          budget: pSchool.budget + budgetAdd,
-                         fanbaseMorale: newMorale
+                         fanbaseMorale: newMorale,
+                         preparation: initializePreparationState(pSchool) // Initialize Preparation!
                      };
                  }
             }
 
-            // 3. Weekly Preparation Updates (Weeks 9-44) - Passive Morale Drift
-            if (nextPhase === 'Preparation' && pSchool.enredo) {
-                 // Appeal 50 is neutral. >50 gains, <50 loses.
-                 // Small drift: (Appeal - 50) / 20 per week.
+            // 3. Weekly Preparation Updates (Weeks 9-44)
+            if ((nextPhase === 'Preparation' || currentPhase === 'Preparation') && pSchool.enredo) {
+                 // Passive Morale Drift (Original logic + updated to handle loop)
                  const drift = (pSchool.enredo.appeal - 50) / 20;
                  const chance = Math.abs(drift);
                  const sign = Math.sign(drift);
@@ -440,6 +474,28 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                  if (change > 0) {
                      const newMorale = Math.max(0, Math.min(100, pSchool.fanbaseMorale + (change * sign)));
                      pSchool = { ...pSchool, fanbaseMorale: newMorale };
+                 }
+
+                 // Preparation Tick
+                 if (pSchool.preparation) {
+                    const tickResult = tickPreparation(pSchool, nextWeek, weeksToAdvance);
+                    pSchool = tickResult.updatedSchool;
+                    newTransferNews.push(...tickResult.newsItems);
+
+                    // Maybe generate event
+                    const prep = pSchool.preparation!;
+                    if (!prep.pendingEvent) {
+                      const newEvent = maybeGenerateEvent(prep, pSchool, nextWeek, weeksToAdvance);
+                      if (newEvent) {
+                        pSchool = {
+                          ...pSchool,
+                          preparation: { ...prep, pendingEvent: newEvent, events: [...prep.events, newEvent] }
+                        };
+                        if (newEvent.severity === 'Major') {
+                           pSchool.preparation!.majorEventFiredThisSeason = true;
+                        }
+                      }
+                    }
                  }
             }
 
@@ -501,6 +557,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           currentYear: nextYear,
           currentWeek: nextWeek,
           currentPhase: nextPhase,
+          preparationSubPhase: nextSubPhase,
           pendingOffers: [],
           resolvedOffers: newResolvedOffers,
           transferNews: newTransferNews,
@@ -781,4 +838,135 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const results = runSimulation(state.schools, state.gameState.currentYear, years);
     set({ simulationResults: results });
   },
+
+  // --- NEW PREPARATION ACTIONS ---
+
+  setTrackFocus: (track: ProductionTrack, focused: boolean) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation) return {};
+
+      const newTracks = { ...school.preparation.tracks };
+      newTracks[track] = { ...newTracks[track], staffFocused: focused };
+
+      const updatedSchool = {
+        ...school,
+        preparation: { ...school.preparation, tracks: newTracks }
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+      return { schools: updatedSchools };
+    }),
+
+  setTrackBudget: (track: ProductionTrack, weeklyBurnRate: number) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation) return {};
+
+      const newTracks = { ...school.preparation.tracks };
+      newTracks[track] = { ...newTracks[track], weeklyBurnRate };
+
+      const updatedSchool = {
+        ...school,
+        preparation: { ...school.preparation, tracks: newTracks }
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+      return { schools: updatedSchools };
+    }),
+
+  setStaffRest: (staffId: string, resting: boolean) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation) return {};
+
+      const newStress = school.preparation.staffStress.map(s =>
+        s.staffId === staffId ? { ...s, isResting: resting } : s
+      );
+
+      const updatedSchool = {
+        ...school,
+        preparation: { ...school.preparation, staffStress: newStress }
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+      return { schools: updatedSchools };
+    }),
+
+  resolvePreparationEvent: (eventId, choice) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation?.pendingEvent) return {};
+
+      const event = school.preparation.pendingEvent;
+      if (event.id !== eventId) return {}; // Safety check
+
+      const effectCode = choice === 'A' ? event.optionA.effect : event.optionB.effect;
+      const updates = resolveEventEffect(effectCode, school);
+
+      const resolvedEvent = { ...event, chosen: choice, resolved: true };
+
+      // Merge updates
+      // Be careful: updates might contain partial preparation, partial school (budget)
+      // We need to merge everything correctly.
+
+      const updatedPreparation = {
+         ...(updates.preparation ?? school.preparation),
+         pendingEvent: null,
+         events: school.preparation.events.map(e => e.id === eventId ? resolvedEvent : e),
+      };
+      // If major event just resolved, we should keep majorEventFiredThisSeason true if it was set
+      if (event.severity === 'Major') {
+          updatedPreparation.majorEventFiredThisSeason = true;
+      }
+      // Add the resolved event to history if not already there (it was in pending)
+      // `events` contains ALL events. `maybeGenerateEvent` adds to events list when creating pending.
+      // So we just update it.
+
+      const updatedSchool = {
+        ...school,
+        ...updates,
+        preparation: updatedPreparation
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+
+      return { schools: updatedSchools };
+    }),
+
+  initiateBateriaGig: () =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation) return {};
+
+      // Logic from requirements: "outsideGigActive: True if a gig is happening this week (player-initiated or event)"
+      // And in advanceBateria: "outsideGigActive = bateria.outsideGigActive; // carries from player-initiated gig"
+
+      const updatedSchool = {
+         ...school,
+         preparation: {
+             ...school.preparation,
+             bateria: { ...school.preparation.bateria, outsideGigActive: true }
+         }
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+      return { schools: updatedSchools };
+    }),
+
 }));

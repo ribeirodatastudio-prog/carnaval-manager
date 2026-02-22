@@ -15,6 +15,7 @@ import EnredoSelectionModal from './EnredoSelectionModal';
 import EnredoDeadlineScreen from './EnredoDeadlineScreen';
 import SambaEnredoModal from './SambaEnredoModal';
 import Badge from './Badge';
+import PreparationDashboard from './PreparationDashboard';
 
 // Helper for contrast
 function getContrastColor(hex: string | undefined): string {
@@ -180,6 +181,10 @@ export default function MarketDashboard() {
 
     return <Badge variant={variant} className="ml-2">{label}</Badge>;
   };
+
+  if (currentPhase === 'Preparation' && playerSchool) {
+    return <PreparationDashboard />;
+  }
 
   return (
     <div className="flex flex-col h-screen bg-[#080C18] text-[#F0E6D3] relative font-sans overflow-hidden">
