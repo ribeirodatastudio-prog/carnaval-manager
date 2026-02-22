@@ -272,8 +272,46 @@ export function generateSingleEnredo(
     trend,
     hiddenRisk,
     hiddenBonus,
-    statsRevealed: 0 // Start hidden
+    statsRevealed: 0, // Start hidden
+    researchProgress: 0
   };
+}
+
+/**
+ * Calculates how much research progress accumulates per week tick.
+ * Returns a number between ~0.1 and ~2.0 (fractions of one stat reveal per week).
+ *
+ * Base rate = 1 reveal per N weeks, where N varies by division.
+ * Staff modifier: Carnavalesco's criatividade skill speeds or slows research.
+ */
+export function calculateWeeklyResearchIncrement(school: School): number {
+  // Base weeks-per-reveal by division
+  const baseWeeksPerReveal: Record<Division, number> = {
+    'Grupo Especial':    1.0,
+    'Série Ouro':        1.5,
+    'Série Prata':       2.0,
+    'Série Bronze':      3.0,
+    'Grupo de Avaliação': 4.0,
+  };
+
+  let weeksPerReveal = baseWeeksPerReveal[school.currentDivision] ?? 4.0;
+
+  // Find Carnavalesco on staff
+  const carnavalesco = school.staff.find(s => s.role === 'Carnavalesco');
+
+  if (!carnavalesco) {
+    // No specialist: 50% slower
+    weeksPerReveal *= 1.5;
+  } else {
+    // Speed multiplier from criatividade: 0.5 (skill=0) to 1.5 (skill=200)
+    // At skill=100 → multiplier=1.0 (no change)
+    const speedMultiplier = 0.5 + (carnavalesco.skills.criatividade / 200);
+    // Higher multiplier = faster research = fewer weeks needed
+    weeksPerReveal = weeksPerReveal / speedMultiplier;
+  }
+
+  // Return the fraction of a reveal earned per week
+  return 1 / weeksPerReveal;
 }
 
 /**
