@@ -490,7 +490,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                     newTransferNews.push(...tickResult.newsItems);
 
                     // Bankruptcy Check
-                    if (pSchool.preparation.isBankrupt) {
+                    if (pSchool.preparation?.isBankrupt) {
                        playerFired = true;
                        firedFromSchoolId = pSchool.id;
                     }
