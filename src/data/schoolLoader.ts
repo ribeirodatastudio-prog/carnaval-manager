@@ -147,6 +147,7 @@ export function loadAllSchools(): School[] {
       anos_em_acesso: 0,
       history: history,
       enredo: null,
+      preparation: null,
     };
 
     // Identify roles covered by REAL staff

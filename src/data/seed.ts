@@ -39,6 +39,7 @@ export const INITIAL_SCHOOLS: School[] = [
         quintos: []
     },
     enredo: null,
+    preparation: null,
   },
   {
     id: 'school-2',
