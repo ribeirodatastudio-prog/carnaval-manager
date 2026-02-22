@@ -38,42 +38,41 @@ const DIVISIONS: Division[] = [
 function calculateParadeScore(school: School): number {
     let score = 0;
 
-    // 1. Base Score (Prestige & Resources)
-    // Prestige (0-200) accounts for school tradition, budget inertia, etc.
-    score += school.prestige * 0.5; // Max 100
+    // 1. Prestige: REDUCED from 0.5 to 0.2 (max 40 pts instead of 100)
+    score += school.prestige * 0.2;
 
-    // 2. Enredo Execution
+    // 2. Enredo Execution (unchanged logic, same max)
     const enredo = school.enredo;
-    if (!enredo) {
-        // Penalty for no enredo (shouldn't happen usually)
-        return score - 50;
-    }
+    if (!enredo) return score - 50;
 
     const carnavalesco = school.staff.find(s => s.role === 'Carnavalesco');
-    // Default skills if no carnavalesco (volunteer/amateur level)
     const criatividade = carnavalesco ? carnavalesco.skills.criatividade : 30;
-
-    // Enredo fidelidade (narrative coherence)
-    // execGap represents the gap between difficulty and skill
     const execGap = Math.max(0, enredo.difficulty - criatividade / 2);
     const enredoScore = enredo.potentialScore * (1 - execGap / 200);
-    score += enredoScore; // Max 100
+    score += enredoScore;
 
-    // Fantasia Modifier
-    // "Fantasia... difficulty penalizes; high school prestige helps"
+    // 3. Visual / Fantasia: REDUCED from prestige*0.3 to prestige*0.12 (max ~24 pts)
     const fantasiaModifier = 1 - (execGap * 0.003);
-    const visualScore = (school.prestige * 0.3) * fantasiaModifier;
-    score += visualScore; // Max ~60
+    const visualScore = (school.prestige * 0.12) * fantasiaModifier;
+    score += visualScore;
 
-    // Harmonia (internal consistency)
-    const harmoniaNoise = enredo.controversy > 70 ? (Math.random() - 0.5) * 30 : 0;
-    score += harmoniaNoise;
+    // 4. Harmonia: INCREASED noise range so upsets are possible
+    // All schools get some noise (not just high-controversy), but controversy amplifies it
+    const baseNoise = (Math.random() - 0.5) * 20;  // ±10 for everyone
+    const controversyNoise = enredo.controversy > 70 ? (Math.random() - 0.5) * 20 : 0;
+    score += baseNoise + controversyNoise;
 
-    // Animação (crowd energy)
+    // 5. Animação (unchanged)
     const animacaoBonus = (enredo.appeal / 100) * (school.fanbaseMorale / 100) * 20;
-    score += animacaoBonus; // Max 20
+    score += animacaoBonus;
 
-    // 3. Samba-Enredo Score (NEW)
+    // 6. Staff aggregate skill bonus (NEW — rewards investing in good staff)
+    // Sum the top 4 staff reputation scores, normalized
+    const staffReps = school.staff.map(s => s.reputation).sort((a, b) => b - a).slice(0, 4);
+    const avgTopRep = staffReps.length > 0 ? staffReps.reduce((a, b) => a + b, 0) / staffReps.length : 0;
+    score += (avgTopRep / 200) * 30; // Max 30 pts for a full squad of rep-200 staff
+
+    // 7. Samba-Enredo Score (existing, unchanged)
     let sambaScoreValue = 0;
     if (school.sambaEnredo) {
         const s = school.sambaEnredo;
@@ -95,18 +94,6 @@ function calculateParadeScore(school: School): number {
         sambaScoreValue = (60 + Math.random() * 20) * 0.4;
     }
     score += sambaScoreValue;
-
-    // Hidden Risks/Bonuses
-    const riskRoll = (enredo.hiddenRisk && Math.random() * 100 < enredo.hiddenRisk) ? -(Math.random() * 8 + 2) : 0;
-    const bonusRoll = (enredo.hiddenBonus && Math.random() * 100 < enredo.hiddenBonus) ? (Math.random() * 10 + 3) : 0;
-    score += riskRoll + bonusRoll;
-
-    // Trend Modifier
-    const trendModifier = enredo.trend === 'Rising' ? 1.05 : enredo.trend === 'Saturated' ? 0.95 : 1.0;
-    score *= trendModifier;
-
-    // Add some random noise to represent the day of the parade (weather, accidents, judging variance)
-    score += randomNormal(0, 2);
 
     return score;
 }
