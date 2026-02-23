@@ -1256,9 +1256,29 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
         if (!result) return {};
 
+        // Initialize preparation for the player school (normally done in week 8->9 advanceWeek)
+        const { updatedSchools, updatedAvailableStaff, playerSchoolIdx } = result;
+        let playerSchool = updatedSchools[playerSchoolIdx];
+
+        if (playerSchool.enredo) {
+            // Apply sponsor income (normally added at week 8->9 transition)
+            let budgetAdd = 0;
+            if (playerSchool.enredo.sponsorValue > 0) {
+                const income = (playerSchool.enredo.sponsorValue / 100) * playerSchool.budget * 0.4;
+                budgetAdd = income;
+            }
+
+            playerSchool = {
+                ...playerSchool,
+                budget: playerSchool.budget + budgetAdd,
+                preparation: initializePreparationState(playerSchool)
+            };
+            updatedSchools[playerSchoolIdx] = playerSchool;
+        }
+
         return {
-            schools: result.updatedSchools,
-            availableStaff: result.updatedAvailableStaff,
+            schools: updatedSchools,
+            availableStaff: updatedAvailableStaff,
             gameState: {
                 ...state.gameState,
                 currentWeek: 9,
@@ -1284,6 +1304,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
         const { updatedSchools, updatedAvailableStaff, playerSchoolIdx } = result;
         let playerSchool = updatedSchools[playerSchoolIdx];
+
+        if (playerSchool.enredo && !playerSchool.preparation) {
+            playerSchool = {
+                ...playerSchool,
+                preparation: initializePreparationState(playerSchool)
+            };
+        }
 
         // Simulate Perfect Preparation
         if (playerSchool.preparation) {

@@ -93,11 +93,13 @@ export default function MarketDashboard() {
   };
 
   const handleAdvanceWeek = () => {
-      // If at week 7 with no enredo, force the enredo selection modal
-      if (gameState.currentWeek === 7 && !playerSchool?.enredo) {
+      // If at week 8 with no enredo, force the enredo selection modal (last chance)
+      if (gameState.currentWeek === 8 && !playerSchool?.enredo) {
           setIsEnredoModalOpen(true);
-          setMessage('⚠️ Defina seu enredo antes de avançar para a última semana de mercado!');
+          setMessage('⚠️ É a última semana! Escolha seu enredo para iniciar a preparação.');
           setTimeout(() => setMessage(null), 4000);
+          // Still return to block advancement until they choose, effectively
+          // (Actual gameStore logic also blocks week 8->9 if no enredo)
           return;
       }
       advanceWeek();
@@ -267,17 +269,24 @@ export default function MarketDashboard() {
                  )}
                   {/* Next Week Button */}
                  {currentPhase === 'Market' && (
-                    <button
-                        onClick={handleAdvanceWeek}
-                        className="text-xs font-black uppercase tracking-widest px-5 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
-                        style={{
-                            background: 'linear-gradient(135deg, #E8C96A 0%, #C9A84C 100%)',
-                            color: '#080C18',
-                            boxShadow: '0 0 20px #C9A84C50',
-                        }}
-                    >
-                        Próxima Semana →
-                    </button>
+                    <div className="flex flex-col items-end">
+                        {gameState.currentWeek === 7 && !playerSchool?.enredo && (
+                            <div className="text-[10px] text-[#F1C40F] text-center font-bold animate-pulse mb-1">
+                                ⚠️ Próxima semana é a última — escolha seu enredo!
+                            </div>
+                        )}
+                        <button
+                            onClick={handleAdvanceWeek}
+                            className="text-xs font-black uppercase tracking-widest px-5 py-2 rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+                            style={{
+                                background: 'linear-gradient(135deg, #E8C96A 0%, #C9A84C 100%)',
+                                color: '#080C18',
+                                boxShadow: '0 0 20px #C9A84C50',
+                            }}
+                        >
+                            Próxima Semana →
+                        </button>
+                    </div>
                  )}
               </div>
             )}

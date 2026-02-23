@@ -57,11 +57,11 @@ export default function SambaEnredoModal() {
           <p className="text-sm text-[#8A9BB8] mt-2 font-medium">Escolha o hino que levará sua escola à vitória na Avenida.</p>
         </div>
 
-        <div className="p-6 overflow-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-[#080C18] flex-1 custom-scrollbar">
+        <div className="p-6 overflow-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-[#080C18] flex-1 min-h-0 custom-scrollbar">
           {pendingSambaSelection.candidates.map(samba => {
             return (
               <div key={samba.id}
-                className="bg-[#161E35] p-6 rounded-xl border border-[#1E2D50] flex flex-col relative overflow-hidden group hover:border-[#9B59B6] hover:shadow-2xl hover:shadow-[#9B59B620] transition-all duration-300"
+                className="bg-[#161E35] p-6 rounded-xl border border-[#1E2D50] flex flex-col relative group hover:border-[#9B59B6] hover:shadow-2xl hover:shadow-[#9B59B620] transition-all duration-300"
               >
                 {samba.isEncomendado && (
                     <div className="absolute top-0 right-0 bg-[#C9A84C] text-[#080C18] text-[9px] uppercase font-black px-3 py-1 rounded-bl-lg shadow-md">
@@ -118,7 +118,7 @@ export default function SambaEnredoModal() {
                     <span className="text-[10px] text-[#E74C3C] font-bold uppercase tracking-wide">⚠️ Demais atributos ocultos até a escolha.</span>
                 </div>
 
-                <div className="mt-auto">
+                <div className="pt-4 mt-auto shrink-0">
                     <button
                         onClick={() => chooseSamba(samba.id)}
                         className="w-full bg-[#2ECC71] hover:bg-[#27AE60] text-[#080C18] py-3.5 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-[#2ECC7120] transform group-hover:scale-105 transition-all"
@@ -143,7 +143,7 @@ export default function SambaEnredoModal() {
             const canAfford = (playerSchool?.budget ?? 0) >= custo;
 
             return (
-              <div className="bg-[#1A1225] p-6 rounded-xl border border-[#C9A84C40] flex flex-col relative overflow-hidden group hover:border-[#C9A84C] hover:shadow-2xl hover:shadow-[#C9A84C15] transition-all duration-300">
+              <div className="bg-[#1A1225] p-6 rounded-xl border border-[#C9A84C40] flex flex-col relative group hover:border-[#C9A84C] hover:shadow-2xl hover:shadow-[#C9A84C15] transition-all duration-300">
                 <div className="absolute top-0 right-0 bg-[#C9A84C] text-[#080C18] text-[9px] uppercase font-black px-3 py-1 rounded-bl-lg">
                   Premium
                 </div>
@@ -177,20 +177,22 @@ export default function SambaEnredoModal() {
                   {!canAfford && <div className="text-[10px] text-[#E74C3C] mt-1">Orçamento insuficiente</div>}
                 </div>
 
-                <button
-                  onClick={() => {
-                    if (!canAfford) return;
-                    chooseSamba('__comprado__'); // Special ID handled in gameStore
-                  }}
-                  disabled={!canAfford}
-                  className={`w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-widest transition-all ${
-                    canAfford
-                      ? 'bg-[#C9A84C] hover:bg-[#E8C96A] text-[#080C18] shadow-lg shadow-[#C9A84C20] group-hover:scale-105'
-                      : 'bg-[#1E2D50] text-[#4A5A7A] cursor-not-allowed'
-                  }`}
-                >
-                  {canAfford ? 'Comprar Samba' : 'Sem Orçamento'}
-                </button>
+                <div className="pt-4 mt-auto shrink-0">
+                  <button
+                    onClick={() => {
+                      if (!canAfford) return;
+                      chooseSamba('__comprado__'); // Special ID handled in gameStore
+                    }}
+                    disabled={!canAfford}
+                    className={`w-full py-3.5 rounded-xl font-black text-sm uppercase tracking-widest transition-all ${
+                      canAfford
+                        ? 'bg-[#C9A84C] hover:bg-[#E8C96A] text-[#080C18] shadow-lg shadow-[#C9A84C20] group-hover:scale-105'
+                        : 'bg-[#1E2D50] text-[#4A5A7A] cursor-not-allowed'
+                    }`}
+                  >
+                    {canAfford ? 'Comprar Samba' : 'Sem Orçamento'}
+                  </button>
+                </div>
               </div>
             );
           })()}

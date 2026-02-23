@@ -68,8 +68,18 @@ export default function EnredoSelectionModal({
                         <span className={`font-black font-mono ${enredo.controversy > 60 ? 'text-[#E74C3C]' : 'text-[#F0E6D3]'}`}>{enredo.controversy}</span>
                     </div>
                     <div className="flex justify-between items-center col-span-2 border-b border-[#1E2D50] pb-2 mb-1">
-                        <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Patrocínio</span>
-                        <span className="font-mono font-bold text-[#C9A84C]">{enredo.sponsorValue > 0 ? formatMoney((enredo.sponsorValue / 100) * schoolBudget * 0.4) : '-'}</span>
+                        <span
+                            className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px] cursor-help"
+                            title="Renda de patrocinadores atraídos por este enredo. Depositada no seu orçamento ao iniciar a preparação (Semana 9)."
+                        >
+                            💰 Renda de Patrocínio ⓘ
+                        </span>
+                        <span className={`font-mono font-bold ${enredo.sponsorValue > 0 ? 'text-[#2ECC71]' : 'text-[#4A5A7A]'}`}>
+                            {enredo.sponsorValue > 0
+                                ? `+${formatMoney((enredo.sponsorValue / 100) * schoolBudget * 0.4)}`
+                                : 'Nenhum'
+                            }
+                        </span>
                     </div>
 
                     {/* Hidden Stats */}
