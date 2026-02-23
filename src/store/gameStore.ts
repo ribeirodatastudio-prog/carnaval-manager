@@ -235,13 +235,11 @@ const performMarketSimulation = (
 
     // Pick Samba
     let chosenSambaEnredo = currentChosenSamba;
+    let pendingSambaForPlayer: SambaSelectionProcess | null = null;
     if (playerSchool.enredo && !chosenSambaEnredo) {
       const process = generateSambaSelectionProcess(playerSchool.enredo, playerSchool);
-      const bestSamba = process.candidates.reduce((prev, current) =>
-        (prev.melodia + prev.grito + prev.apeloComunidade) > (current.melodia + current.grito + current.apeloComunidade) ? prev : current
-      );
-      chosenSambaEnredo = bestSamba;
-      playerSchool = { ...playerSchool, sambaEnredo: bestSamba };
+      pendingSambaForPlayer = process;
+      // Do NOT auto-set sambaEnredo — modal will handle it
     }
 
     // Initialize Preparation
@@ -258,6 +256,7 @@ const performMarketSimulation = (
         updatedSchools,
         updatedAvailableStaff,
         chosenSambaEnredo,
+        pendingSambaSelection: pendingSambaForPlayer,
         playerSchoolIdx
     };
 };
@@ -372,6 +371,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       let newTransferNews: string[] = []; // Reset news each week
       let playerFired = false;
       let firedFromSchoolId = null;
+      let newPendingSambaSelection: SambaSelectionProcess | null = null;
 
       if (currentPhase === 'Market') {
         const pending = [...pendingOffers];
@@ -532,6 +532,11 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             // 2. Week 8 -> 9 Transition
             if (!blockAdvancement && currentWeek === 8 && nextWeek >= 9) {
                  if (pSchool.enredo) {
+                     // Generate samba candidates for player to choose
+                     if (!state.gameState.chosenSambaEnredo && !state.gameState.pendingSambaSelection) {
+                         newPendingSambaSelection = generateSambaSelectionProcess(pSchool.enredo, pSchool);
+                     }
+
                      let budgetAdd = 0;
                      if (pSchool.enredo.sponsorValue > 0) {
                          let income = (pSchool.enredo.sponsorValue / 100) * pSchool.budget * 0.4;
@@ -685,6 +690,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           hallOfFame,
           playerFired: state.gameState.playerFired || playerFired,
           firedFromSchoolId: state.gameState.firedFromSchoolId || firedFromSchoolId,
+          pendingSambaSelection: newPendingSambaSelection ?? state.gameState.pendingSambaSelection,
         },
       };
     }),
@@ -707,8 +713,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (!school) return 'School not found.';
     if (!staff) return 'Staff not found.';
 
-    if (offeredSalary <= 0) return 'Invalid salary';
-    if (school.budget < offeredSalary) return 'Insufficient budget.';
+    const isVolunteer = (staff.salaryExpectation ?? 0) === 0;
+
+    if (!isVolunteer) {
+        if (offeredSalary <= 0) return 'Invalid salary';
+        if (school.budget < offeredSalary) return 'Insufficient budget.';
+    } else {
+        if (offeredSalary > 0 && school.budget < offeredSalary) return 'Insufficient budget.';
+    }
 
     const conflict = pendingOffers.find(o => {
         if (o.fromSchoolId !== schoolId || o.status !== 'Pending' || o.weekMade !== currentWeek) return false;
@@ -1253,7 +1265,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
                 currentPhase: 'Preparation',
                 preparationSubPhase: 'BiWeekly',
                 startPhaseChosen: true,
-                pendingSambaSelection: null,
+                pendingSambaSelection: result.pendingSambaSelection ?? null,
                 chosenSambaEnredo: result.chosenSambaEnredo
             },
         };

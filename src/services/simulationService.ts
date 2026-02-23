@@ -309,6 +309,7 @@ export function runSimulation(initialSchools: School[], startYear: number, total
 
     // 3. Recalculate Prestige
     schools = recalculatePrestige(schools, year);
+    schools = schools.map(s => ({ ...s, prestige: Math.round(s.prestige) }));
 
     // 4. Log Evolution
     schools.forEach(s => {
@@ -453,6 +454,7 @@ export function finalizeSeason(
 
     // 5. Recalculate Prestige
     schools = recalculatePrestige(schools, year);
+    schools = schools.map(s => ({ ...s, prestige: Math.round(s.prestige) }));
 
     return { schools, history: historyLog };
 }

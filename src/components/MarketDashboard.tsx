@@ -732,14 +732,30 @@ export default function MarketDashboard() {
                       <>
                         <div className="flex justify-between items-center mb-3">
                           <span className="text-xs text-[#4A5A7A] font-mono">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 0.5))}</span>
-                          <span className="text-2xl font-black font-mono text-[#C9A84C]">{formatMoney(offerSalary)}</span>
+                          <div className="flex flex-col items-center">
+                              <span className="text-2xl font-black font-mono text-[#C9A84C]">{formatMoney(offerSalary)}</span>
+                              <input
+                                  type="number"
+                                  className="text-[10px] text-center bg-transparent border-b border-[#2A3F6B] text-[#8A9BB8] font-mono w-24 focus:outline-none focus:border-[#C9A84C]"
+                                  value={offerSalary}
+                                  min={Math.floor(selectedStaff.salaryExpectation * 0.5)}
+                                  max={Math.floor(selectedStaff.salaryExpectation * 2.5)}
+                                  onChange={(e) => {
+                                      const val = Number(e.target.value);
+                                      const min = Math.floor(selectedStaff.salaryExpectation * 0.5);
+                                      const max = Math.floor(selectedStaff.salaryExpectation * 2.5);
+                                      setOfferSalary(Math.max(min, Math.min(max, val)));
+                                  }}
+                                  placeholder="valor exato"
+                              />
+                          </div>
                           <span className="text-xs text-[#4A5A7A] font-mono">{formatMoney(Math.floor(selectedStaff.salaryExpectation * 2.5))}</span>
                         </div>
                         <input
                           type="range"
                           min={Math.floor(selectedStaff.salaryExpectation * 0.5)}
                           max={Math.floor(selectedStaff.salaryExpectation * 2.5)}
-                          step={1000}
+                          step={Math.max(50, Math.floor((Math.floor(selectedStaff.salaryExpectation * 2.5) - Math.floor(selectedStaff.salaryExpectation * 0.5)) / 100))}
                           value={offerSalary}
                           onChange={(e) => setOfferSalary(Number(e.target.value))}
                           className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
@@ -976,9 +992,6 @@ export default function MarketDashboard() {
 
       {/* Enredo Deadline Screen (Blocks Advancement) */}
       {gameState.showEnredoDeadlineScreen && <EnredoDeadlineScreen />}
-
-      {/* Samba Enredo Selection Modal (Blocks Advancement) */}
-      {gameState.pendingSambaSelection && !gameState.chosenSambaEnredo && gameState.currentWeek >= 9 && <SambaEnredoModal />}
 
     </div>
   );

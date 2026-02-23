@@ -68,52 +68,59 @@ export default function DesfileScreen() {
 
     // --- Incident Modal ---
     if (paradeIncidentPending) {
-        const narrative = incidentNarratives[paradeIncidentPending.type][0]; // Assuming 1 variant for now or pick random stored?
-        // Wait, desfileService stored specific narrative text in `narrativeText` field.
-        // But for choices, we need the generic template or specific text.
-        // desfileService only stored `narrativeText` for the description.
-        // We need the intervention texts.
-        // I should have stored them or I can look them up by type.
-        // desfileService used index 0 always. I will assume index 0 here too.
+        // Auto-resolve: the school's preparation determines the outcome
+        const playerSchool = schools.find(s => s.id === gameState.playerSchoolId);
+        const avgPrepQuality = playerSchool?.preparation
+            ? Object.values(playerSchool.preparation.tracks).reduce((sum, t) => sum + t.quality, 0) / 4
+            : 40;
+
+        const handledWell = avgPrepQuality >= 65;
+        const narrative = incidentNarratives[paradeIncidentPending.type][0];
 
         return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md p-6 animate-fade-in">
-                <div className="max-w-xl w-full border-2 border-[#E74C3C] bg-[#1A0505] rounded-xl p-8 relative shadow-[0_0_50px_rgba(231,76,60,0.3)]">
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#E74C3C] text-[#1A0505] px-4 py-1 font-black uppercase tracking-widest text-xs rounded">
-                        🚨 Incidente na Avenida
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 animate-fade-in">
+                <div className={`max-w-lg w-full border-2 rounded-xl p-8 relative shadow-2xl ${
+                    handledWell
+                        ? 'border-[#F1C40F] bg-[#1A1500]'
+                        : 'border-[#E74C3C] bg-[#1A0505]'
+                }`}>
+                    <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 font-black uppercase tracking-widest text-xs rounded ${
+                        handledWell ? 'bg-[#F1C40F] text-[#1A1500]' : 'bg-[#E74C3C] text-white'
+                    }`}>
+                        {handledWell ? '⚡ Incidente Contornado' : '😬 Incidente na Avenida'}
                     </div>
 
-                    <h2 className="text-3xl font-black text-[#F0E6D3] mb-6 mt-4 text-center">
-                        {paradeIncidentPending.type.replace(/([A-Z])/g, ' $1').toUpperCase()}
+                    <h2 className="text-xl font-black text-[#F0E6D3] mb-4 mt-4 text-center uppercase tracking-wide">
+                        {paradeIncidentPending.type === 'FlagDropped' ? 'Pavilhão Caído' :
+                         paradeIncidentPending.type === 'FloatBreakdown' ? 'Carro Quebrado' :
+                         paradeIncidentPending.type === 'BateriaFalter' ? 'Bateria Vacilou' :
+                         paradeIncidentPending.type === 'WingGap' ? 'Buraco na Ala' :
+                         paradeIncidentPending.type === 'InterpreteCrack' ? 'Intérprete Falhou' :
+                         paradeIncidentPending.type.replace(/([A-Z])/g, ' $1')}
                     </h2>
 
-                    <p className="text-[#F0E6D3] text-lg leading-relaxed mb-8 text-center font-serif italic border-l-2 border-[#E74C3C] pl-4 ml-4">
+                    <p className="text-[#F0E6D3] text-base leading-relaxed mb-6 text-center font-serif italic border-l-2 pl-4 ml-4"
+                       style={{ borderColor: handledWell ? '#F1C40F' : '#E74C3C' }}>
                         "{paradeIncidentPending.narrativeText}"
                     </p>
 
-                    <div className="space-y-4">
-                         {/* Option A: Intervene */}
-                        <button
-                            onClick={() => resolveDesfileIncident('intervene')}
-                            className="w-full p-4 bg-[#E74C3C]/10 border border-[#E74C3C] rounded-lg text-left hover:bg-[#E74C3C]/20 transition-colors group"
-                        >
-                            <div className="text-[#E74C3C] font-black uppercase text-xs mb-1 group-hover:text-[#F0E6D3]">Intervir (Mitigar Penalidade)</div>
-                            <div className="text-[#F0E6D3] text-sm">
-                                {narrative.intervene.replace(/{staffName}/g, 'A equipe')}
-                            </div>
-                        </button>
-
-                         {/* Option B: Accept */}
-                         <button
-                            onClick={() => resolveDesfileIncident('accept')}
-                            className="w-full p-4 bg-transparent border border-[#4A5A7A] rounded-lg text-left hover:border-[#8A9BB8] transition-colors group"
-                        >
-                            <div className="text-[#4A5A7A] font-black uppercase text-xs mb-1 group-hover:text-[#8A9BB8]">Aceitar e Seguir</div>
-                            <div className="text-[#8A9BB8] text-sm">
-                                {narrative.accept.replace(/{staffName}/g, 'A equipe')}
-                            </div>
-                        </button>
+                    <div className={`p-4 rounded-lg border text-sm ${
+                        handledWell
+                            ? 'bg-[#F1C40F]/10 border-[#F1C40F]/40 text-[#F1C40F]'
+                            : 'bg-[#E74C3C]/10 border-[#E74C3C]/40 text-[#F0E6D3]'
+                    }`}>
+                        {handledWell
+                            ? narrative.intervene.replace(/{staffName}/g, playerSchool?.staff[0]?.name ?? 'A equipe')
+                            : narrative.accept.replace(/{staffName}/g, playerSchool?.staff[0]?.name ?? 'A equipe')
+                        }
                     </div>
+
+                    <button
+                        onClick={() => resolveDesfileIncident(handledWell ? 'intervene' : 'accept')}
+                        className="w-full mt-6 py-3 font-black uppercase tracking-widest text-sm rounded-lg bg-[#F0E6D3] text-[#080C18] hover:bg-white transition-colors"
+                    >
+                        Continuar o Desfile →
+                    </button>
                 </div>
             </div>
         );

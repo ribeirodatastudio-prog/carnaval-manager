@@ -52,6 +52,34 @@ const FANTASIA_APPROACH_CHOICE_EVENT: StageEvent = {
   resolved: false,
 };
 
+const MSPB_COREOGRAFIA_EVENT: StageEvent = {
+  id: 'mspb-coreografia-choice',
+  week: 16,
+  stage: 'MSPB',
+  title: '💃 Escolha da Coreografia do Casal',
+  description: 'O Mestre-Sala e a Porta-Bandeira precisam definir a abordagem coreográfica para o desfile. Cada caminho tem riscos e recompensas diferentes.',
+  options: [
+    {
+      label: '🔥 Coreografia Ousada',
+      effect: 'MSPB_OUSADA',
+      // Show only if quimica >= 40 — risky without chemistry
+      conditions: [{ type: 'quimiaAbove', numericValue: 39 }],
+    },
+    {
+      label: '✨ Coreografia Clássica',
+      effect: 'MSPB_CLASSICA',
+      // Always visible — the safe choice
+    },
+    {
+      label: '🤝 Deixar o Casal Decidir',
+      effect: 'MSPB_NEGOCIAR',
+      // Always visible — outcome depends on quimica
+    },
+  ],
+  chosenOptionIndex: null,
+  resolved: false,
+};
+
 const COMISSAO_APPROACH_EVENT: StageEvent = {
   id: 'comissao-approach',
   week: 15,
@@ -409,7 +437,7 @@ export function tickPreparation(
   const newBudget = Math.max(0, school.budget - totalCost + bateriaResult.incomeGenerated);
 
   // Bankruptcy Detection
-  if (newBudget <= 0 && !prep.isBankrupt && (36 - prep.weeksUntilParade) >= 4) {
+  if (newBudget <= 0 && !prep.isBankrupt && (36 - prep.weeksUntilParade) >= 8) {
       prep.isBankrupt = true;
       prep.bankruptAtWeek = currentWeek;
       news.push("⚠️ A ESCOLA FALIU! Os recursos acabaram.");
@@ -468,6 +496,15 @@ export function tickPreparation(
   // Comissao Choice Week 15
   if (currentWeek >= 15 && !prep.comissaoDeFrente.isApproachLocked && !prep.pendingStageEvent) {
     prep.pendingStageEvent = { ...COMISSAO_APPROACH_EVENT };
+  }
+  // Fire MSPB coreografia choice at week 16 if they have a couple and haven't chosen yet
+  if (
+    currentWeek >= 16
+    && prep.mspb !== null
+    && prep.mspb.coreografiaApproach === null
+    && !prep.pendingStageEvent
+  ) {
+    prep.pendingStageEvent = { ...MSPB_COREOGRAFIA_EVENT, week: currentWeek };
   }
 
   // Staff Stress Threshold Checks
@@ -1498,6 +1535,13 @@ export function resolveEventEffect(
       updates.preparation.tracks.Bateria = { ...school.preparation!.tracks.Bateria };
       updates.preparation.bateria = { ...school.preparation!.bateria };
       updates.preparation.staffStress = [...school.preparation!.staffStress];
+      updates.preparation.fantasia = { ...school.preparation!.fantasia };
+      updates.preparation.comissaoDeFrente = { ...school.preparation!.comissaoDeFrente };
+      updates.preparation.harmoniaState = { ...school.preparation!.harmoniaState };
+      updates.preparation.alegoriaStages = school.preparation!.alegoriaStages.map(s => ({ ...s }));
+      if (school.preparation!.mspb) {
+          updates.preparation.mspb = { ...school.preparation!.mspb };
+      }
   }
 
   // Split by _AND_ first to handle multiple effects
@@ -1526,6 +1570,34 @@ export function resolveEventEffect(
     if (part === 'COMISSAO_EXPERIMENTAL') {
        updates.preparation.comissaoDeFrente.approach = 'Experimental';
        updates.preparation.comissaoDeFrente.isApproachLocked = true;
+    }
+
+    if (part === 'MSPB_OUSADA') {
+        if (updates.preparation.mspb) {
+            updates.preparation.mspb.coreografiaApproach = 'Ousada';
+            // Ousada: chemistry must be >= 40 or this backfires
+            const quimica = updates.preparation.mspb.quimica;
+            if (quimica < 40) {
+                updates.preparation.mspb.mestreStress = Math.min(100, updates.preparation.mspb.mestreStress + 20);
+                updates.preparation.mspb.pbStress = Math.min(100, updates.preparation.mspb.pbStress + 15);
+            }
+        }
+    }
+    if (part === 'MSPB_CLASSICA') {
+        if (updates.preparation.mspb) {
+            updates.preparation.mspb.coreografiaApproach = 'Classica';
+            // Stable, slight quimica boost from mutual comfort
+            updates.preparation.mspb.quimica = Math.min(100, updates.preparation.mspb.quimica + 5);
+        }
+    }
+    if (part === 'MSPB_NEGOCIAR') {
+        if (updates.preparation.mspb) {
+            // Outcome depends on quimica — high chemistry = they land on Ousada, low = Classica
+            const quimica = updates.preparation.mspb.quimica;
+            updates.preparation.mspb.coreografiaApproach = quimica >= 60 ? 'Ousada' : 'Classica';
+            // Always a chemistry boost — the act of deciding together helps
+            updates.preparation.mspb.quimica = Math.min(100, quimica + 10);
+        }
     }
 
     if (part.includes('FANTASIAS_QUALITY_DOWN')) {
