@@ -42,7 +42,7 @@ export default function SambaEnredoModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 animate-fade-in backdrop-blur-md">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 p-4 animate-fade-in backdrop-blur-md">
       <div className="bg-[#0F1629] rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col border border-[#9B59B6] overflow-hidden">
         <div className="p-6 border-b border-[#9B59B640] bg-[#9B59B615] rounded-t-xl text-center">
           <h2 className="text-3xl font-black text-[#F0E6D3] uppercase tracking-wide mb-2">🎵 Escolha do Samba-Enredo — {playerSchool?.name}</h2>

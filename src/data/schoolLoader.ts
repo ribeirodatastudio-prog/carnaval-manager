@@ -76,9 +76,13 @@ function calculateDivisionBudget(division: Division, prestige: number): number {
 
   // Apply multipliers for lower divisions (Feature 2d)
   if (division === 'Série Ouro') {
-    budget = Math.max(1_500_000, budget * 3);
+    budget = Math.max(500_000, budget);
   } else if (division === 'Série Prata') {
-    budget = Math.max(400_000, budget * 3);
+    budget = Math.max(120_000, budget);
+  } else if (division === 'Série Bronze') {
+    budget = Math.max(60_000, budget);
+  } else if (division === 'Grupo de Avaliação') {
+    budget = Math.max(15_000, budget);
   }
 
   return budget;
@@ -191,7 +195,7 @@ export function loadAllSchools(): School[] {
       fanbaseMorale: calculatedMorale,
       staff: [],
       isPlayerControlled: false,
-      prestige: data.prestige,
+      prestige: Math.round(data.prestige ?? 1),
       currentDivision: division,
       proLevel: getProLevelForDivision(division),
       score_bruto: data.score_bruto,

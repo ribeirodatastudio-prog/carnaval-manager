@@ -10,6 +10,7 @@ import ApuracaoScreen from '../components/ApuracaoScreen';
 import ConfettiBackground from '../components/ConfettiBackground';
 import Badge from '../components/Badge';
 import DemissaoScreen from '../components/DemissaoScreen';
+import SambaEnredoModal from '../components/SambaEnredoModal';
 
 const UNIQUE_BONUS_LABELS: Record<string, string> = {
   mangueira_magnetismo: '⭐ Magnetismo de Mangueira',
@@ -342,7 +343,7 @@ export default function Home() {
                                         <div className="mt-auto pt-4 border-t border-[#1E2D50] flex justify-between items-center z-10">
                                             <div>
                                                 <div className="text-[10px] text-[#4A5A7A] uppercase tracking-widest font-bold mb-0.5">Prestígio</div>
-                                                <div className="text-xl font-black text-[#C9A84C] font-mono leading-none">{school.prestige}</div>
+                                                <div className="text-xl font-black text-[#C9A84C] font-mono leading-none">{Math.round(school.prestige)}</div>
                                             </div>
                                             <div className="text-right">
                                                 <div className="text-[10px] text-[#4A5A7A] uppercase tracking-widest font-bold mb-0.5">Orçamento</div>
@@ -368,5 +369,12 @@ export default function Home() {
     );
   }
 
-  return <MarketDashboard />;
+  return (
+    <>
+        <MarketDashboard />
+        {gameState.pendingSambaSelection && !gameState.chosenSambaEnredo && (
+            <SambaEnredoModal />
+        )}
+    </>
+  );
 }

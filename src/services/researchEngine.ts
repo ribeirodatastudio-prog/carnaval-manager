@@ -287,11 +287,11 @@ export function generateSingleEnredo(
 export function calculateWeeklyResearchIncrement(school: School): number {
   // Base weeks-per-reveal by division
   const baseWeeksPerReveal: Record<Division, number> = {
-    'Grupo Especial':    1.0,
-    'Série Ouro':        1.5,
-    'Série Prata':       2.0,
-    'Série Bronze':      3.0,
-    'Grupo de Avaliação': 4.0,
+    'Grupo Especial':    0.55,
+    'Série Ouro':        0.80,
+    'Série Prata':       1.10,
+    'Série Bronze':      1.60,
+    'Grupo de Avaliação': 2.20,
   };
 
   let weeksPerReveal = baseWeeksPerReveal[school.currentDivision] ?? 4.0;

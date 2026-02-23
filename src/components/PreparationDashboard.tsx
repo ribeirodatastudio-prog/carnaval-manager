@@ -201,7 +201,7 @@ export default function PreparationDashboard() {
       <main className="flex-1 overflow-y-auto p-6 flex flex-col gap-8 custom-scrollbar">
 
         {/* 1. ALEGORIA PIPELINE (Replaces simple bar) */}
-        <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg relative overflow-hidden">
+        <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg relative">
             <div className="flex justify-between items-center mb-6 relative z-10">
                 <h3 className="text-xl font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-3">
                     🏰 Alegorias e Adereços
@@ -220,7 +220,7 @@ export default function PreparationDashboard() {
             {/* Pipeline Visualization */}
             <div className="flex justify-between items-start relative mb-6">
                 {/* Connector Line */}
-                <div className="absolute top-6 left-0 right-0 h-1 bg-[#1E2D50] -z-0" />
+                <div className="absolute top-6 left-0 right-0 h-1 bg-[#1E2D50] z-0" />
 
                 {prep.alegoriaStages?.map((stage, idx) => {
                     const isActive = stage.isUnlocked && !stage.isComplete;
@@ -256,7 +256,7 @@ export default function PreparationDashboard() {
 
             {/* Active Stage Details & Controls */}
             {(() => {
-                const activeStage = prep.alegoriaStages.find(s => s.isUnlocked && !s.isComplete);
+                const activeStage = prep.alegoriaStages?.find(s => s.isUnlocked && !s.isComplete);
                 if (!activeStage) return <div className="text-center text-[#2ECC71] font-bold uppercase py-4 bg-[#080C18] rounded border border-[#2ECC71]/30">Todas as etapas concluídas! Prontos para o desfile.</div>;
 
                 const track = prep.tracks.Alegorias;
@@ -434,8 +434,16 @@ export default function PreparationDashboard() {
                                 <div className="text-sm font-bold text-[#C9A84C]">{prep.mspb.ensaioGeralResult}</div>
                             </div>
                         )}
-                        {!prep.mspb.coreografiaApproach && (
-                            <div className="text-[10px] text-[#E67E22] italic text-center">Coreografia pendente...</div>
+                        {prep.mspb.coreografiaApproach === null && gameState.currentWeek < 16 && (
+                            <div className="text-xs text-[#8A9BB8] italic text-center">Coreografia a definir na semana 16</div>
+                        )}
+                        {prep.mspb.coreografiaApproach === null && gameState.currentWeek >= 16 && (
+                            <div className="text-xs text-[#F1C40F] italic text-center">Aguardando decisão...</div>
+                        )}
+                        {prep.mspb.coreografiaApproach !== null && (
+                            <div className="text-xs font-bold uppercase tracking-wider text-center" style={{ color: prep.mspb.coreografiaApproach === 'Ousada' ? '#E74C3C' : '#2ECC71' }}>
+                                Coreografia: {prep.mspb.coreografiaApproach}
+                            </div>
                         )}
                     </div>
                 ) : (
@@ -582,7 +590,9 @@ export default function PreparationDashboard() {
             <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg lg:col-span-2 flex flex-col">
                 <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide mb-6 flex justify-between items-center">
                     <span>🧘 Gestão de Estresse</span>
-                    <span className="text-[10px] bg-[#161E35] text-[#8A9BB8] px-2 py-1 rounded font-normal">Descanso recupera energia</span>
+                    <span className="text-[10px] bg-[#161E35] text-[#8A9BB8] px-2 py-1 rounded font-normal">
+                        🔴 Anel = Estresse &nbsp;|&nbsp; 🔵 Barra = Energia &nbsp;|&nbsp; ⚡ Descanso recupera energia
+                    </span>
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[300px] custom-scrollbar pr-2">
@@ -602,21 +612,32 @@ export default function PreparationDashboard() {
                             }`}>
                                 <div className="flex items-center gap-4 flex-1">
                                     {/* Stress Ring */}
-                                    <div className="relative w-12 h-12 flex items-center justify-center">
-                                        <svg className="w-full h-full transform -rotate-90">
-                                            <circle cx="24" cy="24" r="20" stroke="#1E2D50" strokeWidth="4" fill="none" />
-                                            <circle cx="24" cy="24" r="20" stroke={ringColor} strokeWidth="4" fill="none"
-                                                strokeDasharray={125.6} strokeDashoffset={125.6 - (125.6 * ss.stressLevel) / 100}
-                                            />
-                                        </svg>
-                                        <span className="absolute text-[10px] font-bold" style={{ color: ringColor }}>{Math.floor(ss.stressLevel)}</span>
+                                    <div className="flex flex-col items-center gap-0.5">
+                                        <div className="relative w-12 h-12 flex items-center justify-center">
+                                            <svg className="w-full h-full transform -rotate-90">
+                                                <circle cx="24" cy="24" r="20" stroke="#1E2D50" strokeWidth="4" fill="none" />
+                                                <circle cx="24" cy="24" r="20" stroke={ringColor} strokeWidth="4" fill="none"
+                                                    strokeDasharray={125.6} strokeDashoffset={125.6 - (125.6 * ss.stressLevel) / 100}
+                                                />
+                                            </svg>
+                                            <span className="absolute text-[10px] font-bold" style={{ color: ringColor }}>{Math.floor(ss.stressLevel)}</span>
+                                        </div>
+                                        <span className="text-[8px] uppercase font-bold text-[#8A9BB8] tracking-wider">Estresse</span>
                                     </div>
 
                                     <div className="flex-1 min-w-0">
                                         <div className="font-bold text-[#F0E6D3] truncate">{staff.name}</div>
-                                        <div className="text-[9px] text-[#8A9BB8] uppercase tracking-wider font-bold mb-1">{formatRole(staff.role).split(' ')[0]}</div>
-                                        <div className="w-full h-1 bg-[#080C18] rounded-full overflow-hidden">
-                                            <div className="h-full bg-[#3498DB]" style={{ width: `${ss.energy}%` }} />
+                                        <div className="text-[9px] text-[#8A9BB8] uppercase tracking-wider font-bold mb-2">{formatRole(staff.role).split(' ')[0]}</div>
+                                        {/* Energy bar with label */}
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                            <span className="text-[8px] text-[#3498DB] uppercase font-bold tracking-wider">Energia</span>
+                                            <span className="text-[8px] font-mono text-[#3498DB]">{Math.floor(ss.energy)}%</span>
+                                        </div>
+                                        <div className="w-full h-1.5 bg-[#080C18] rounded-full overflow-hidden">
+                                            <div className="h-full rounded-full transition-all" style={{
+                                                width: `${ss.energy}%`,
+                                                background: ss.energy < 25 ? '#E74C3C' : ss.energy < 50 ? '#F1C40F' : '#3498DB'
+                                            }} />
                                         </div>
                                     </div>
                                 </div>
