@@ -7,7 +7,8 @@ import {
   IncidentType,
   Quesito,
   ProductionTrack,
-  StaffMember
+  StaffMember,
+  Division
 } from '../types/models';
 import { segmentNarratives, incidentNarratives } from '../data/desfileNarratives';
 
@@ -297,6 +298,30 @@ function generateIncidents(school: School): ParadeIncident[] {
     return incidents.slice(0, 3).sort((a, b) => a.segmentIndex - b.segmentIndex);
 }
 
+// Division weight modifiers for quesito quality computation
+const DIVISION_QUESITO_WEIGHTS: Record<Division, Partial<Record<Quesito, number>>> = {
+  'Grupo Especial': {
+    AlegoriasAderecos: 1.3, Fantasia: 1.0, Bateria: 1.2,
+    MestreSalaPortaBandeira: 0.9, Evolucao: 0.9,
+  },
+  'Série Ouro': {
+    AlegoriasAderecos: 1.0, Fantasia: 1.1, Bateria: 1.2,
+    MestreSalaPortaBandeira: 1.1, Evolucao: 1.1,
+  },
+  'Série Prata': {
+    AlegoriasAderecos: 0.8, Fantasia: 1.2, Bateria: 1.0,
+    MestreSalaPortaBandeira: 1.3, Evolucao: 1.2,
+  },
+  'Série Bronze': {
+    AlegoriasAderecos: 0.6, Fantasia: 1.3, Bateria: 0.9,
+    MestreSalaPortaBandeira: 1.4, Evolucao: 1.3,
+  },
+  'Grupo de Avaliação': {
+    AlegoriasAderecos: 0.5, Fantasia: 1.2, Bateria: 0.8,
+    MestreSalaPortaBandeira: 1.5, Evolucao: 1.4,
+  },
+};
+
 export function calculateQuitoQualityIndexes(school: School, incidents: ParadeIncident[]): Record<Quesito, number> {
     const indexes: Record<Quesito, number> = {
         Bateria: 50,
@@ -345,16 +370,24 @@ export function calculateQuitoQualityIndexes(school: School, incidents: ParadeIn
         indexes.SambaEnredo = sambaStats * 0.5 + interprete * 0.3 + (batBase * 0.2);
 
         // 3. Harmonia
+        // Driven by Harmonia State (average of sub-meters)
         // Logistica helps ensure components are there. Quality helps them sing.
-        const harmoniaTrack = p.tracks.Harmonia.quality;
+        const harmoniaTrack = p.tracks.Harmonia.quality; // Now fed by HarmoniaState
         const diretorHarm = getSkill('DiretorDeHarmonia', 'logistica');
-        indexes.Harmonia = harmoniaTrack * 0.5 + diretorHarm * 0.3 + (p.tracks.Harmonia.progress >= 100 ? 10 : -10);
+        indexes.Harmonia = harmoniaTrack * 0.6 + diretorHarm * 0.2 + (p.tracks.Harmonia.progress >= 100 ? 10 : -10);
 
         // 4. Evolucao
-        // Hard to simulate perfectly without spatial logic, so we use averages
+        // Driven by Passistas form + average progress + crowd
         const avgTrackProgress = Object.values(p.tracks).reduce((s, t) => s + t.progress, 0) / 4;
         const crowd = school.fanbaseMorale; // Morale helps evolution (energy)
-        indexes.Evolucao = avgTrackProgress * 0.6 + crowd * 0.2 + 20; // Base 20
+        let evolucaoBase = avgTrackProgress * 0.5 + crowd * 0.2 + 20;
+
+        if (school.preparation.passistas) {
+          const passistasBonus = (school.preparation.passistas.form / 100) * 15;
+          evolucaoBase = Math.min(100, evolucaoBase + passistasBonus);
+        }
+
+        indexes.Evolucao = evolucaoBase;
 
         // 5. Enredo
         let enredoPot = school.enredo ? school.enredo.potentialScore : 70;
@@ -365,29 +398,36 @@ export function calculateQuitoQualityIndexes(school: School, incidents: ParadeIn
         indexes.Enredo = enredoPot * 0.6 + carnavalesco * 0.4 - (diffPenalty * 0.2);
 
         // 6. Alegorias
+        // Driven by Alegorias Pipeline Output
         const alegTrack = p.tracks.Alegorias.quality;
         const barracao = getSkill('MestreDeBarracao', 'gestaoDeRecursos');
-        // Finishing risk penalty
+        // Finishing risk penalty (still applies from track state, which reflects pipeline risk or stage incompletion)
         const riskPenalty = p.tracks.Alegorias.finishingRisk > 50 ? (p.tracks.Alegorias.finishingRisk - 50) * 0.5 : 0;
-        indexes.AlegoriasAderecos = alegTrack * 0.6 + barracao * 0.4 - riskPenalty;
+        indexes.AlegoriasAderecos = alegTrack * 0.7 + barracao * 0.3 - riskPenalty;
 
         // 7. Fantasia
-        const fantTrack = p.tracks.Fantasias.quality;
+        // Driven by Fantasia State
+        const fantTrack = p.tracks.Fantasias.quality; // synced from designQuality
         // Carnavalesco creativity matters here too
         indexes.Fantasia = fantTrack * 0.6 + carnavalesco * 0.4;
         if (p.tracks.Fantasias.progress < 100) indexes.Fantasia -= 15;
 
         // 8. Comissao de Frente
         const coreografo = (getSkill('Coreografo', 'criatividade') + getSkill('Coreografo', 'expressaoCorporal')) / 2;
-        const comissaoTrack = p.tracks.Harmonia.quality; // Uses Harmonia budget usually
-        indexes.ComissaoDeFrente = comissaoTrack * 0.4 + coreografo * 0.6;
+        const comissaoQuality = p.comissaoDeFrente.quality > 0 ? p.comissaoDeFrente.quality : p.tracks.Harmonia.quality;
+        indexes.ComissaoDeFrente = comissaoQuality * 0.5 + coreografo * 0.5;
 
         // 9. MSPB
         const ms = (getSkill('MestreSala', 'plastica') + getSkill('MestreSala', 'expressaoCorporal')) / 2;
         const pb = (getSkill('PortaBandeira', 'plastica') + getSkill('PortaBandeira', 'expressaoCorporal')) / 2;
-        // Synergy? We don't have explicit synergy field on staff yet, using random or average
-        const synergy = 80;
-        indexes.MestreSalaPortaBandeira = (ms + pb + synergy) / 3;
+        let mspbBase = (ms + pb) / 2;
+
+        if (school.preparation.mspb) {
+          const mspbBonus = (school.preparation.mspb.preparacao / 100) * 20;
+          mspbBase += mspbBonus;
+        }
+
+        indexes.MestreSalaPortaBandeira = mspbBase;
 
     } else {
         // AI Synthetic Logic
@@ -406,15 +446,17 @@ export function calculateQuitoQualityIndexes(school: School, incidents: ParadeIn
         if (inc.quitoImpact) {
             Object.entries(inc.quitoImpact).forEach(([q, mod]) => {
                 if (mod && indexes[q as Quesito]) {
-                    // Check if player intervened to mitigate?
-                    // The prompt says "quitoImpact: modifier...".
-                    // `resolveDesfileIncident` should probably adjust this value based on choice.
-                    // But here we just apply what's in the incident object.
-                    // The incident object in `incidents` array passed here should already have the FINAL impact values.
                     indexes[q as Quesito] += mod;
                 }
             });
         }
+    });
+
+    // Apply Division Weights
+    const weights = DIVISION_QUESITO_WEIGHTS[school.currentDivision] ?? {};
+    Object.keys(indexes).forEach(q => {
+      const quesito = q as Quesito;
+      indexes[quesito] = Math.min(100, indexes[quesito] * (weights[quesito] ?? 1.0));
     });
 
     // Clamp all to 0-100

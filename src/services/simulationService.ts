@@ -327,8 +327,9 @@ export function runSimulation(initialSchools: School[], startYear: number, total
  */
 export function finalizeSeason(
   currentSchools: School[],
-  specialGroupResults: SchoolApuracaoResult[],
-  year: number
+  playerDivisionResults: SchoolApuracaoResult[],
+  year: number,
+  playerDivision: Division
 ): { schools: School[], history: YearlyResult[] } {
     let schools: School[] = JSON.parse(JSON.stringify(currentSchools));
     const historyLog: YearlyResult[] = [];
@@ -349,19 +350,21 @@ export function finalizeSeason(
 
     const rankedByDivision: Record<Division, School[]> = { ...schoolsByDivision };
 
-    // 1. Grupo Especial (From Apuracao Results)
-    // specialGroupResults is already sorted by rank
-    const specialGroupRanked = specialGroupResults.map(r => {
-        return schoolsByDivision['Grupo Especial'].find(s => s.id === r.schoolId);
+    // 1. Player Division (From Apuracao Results)
+    // playerDivisionResults is already sorted by rank
+    const playerDivisionRanked = playerDivisionResults.map(r => {
+        return schoolsByDivision[playerDivision].find(s => s.id === r.schoolId);
     }).filter((s): s is School => !!s);
 
     // Ensure we caught everyone (in case of ID mismatch, fallback to existing list)
-    if (specialGroupRanked.length === schoolsByDivision['Grupo Especial'].length) {
-        rankedByDivision['Grupo Especial'] = specialGroupRanked;
+    if (playerDivisionRanked.length === schoolsByDivision[playerDivision].length) {
+        rankedByDivision[playerDivision] = playerDivisionRanked;
     }
 
     // 2. Other Divisions (Simulated)
-    const otherDivisions: Division[] = ['Série Ouro', 'Série Prata', 'Série Bronze', 'Grupo de Avaliação'];
+    const otherDivisions: Division[] = (
+      ['Grupo Especial', 'Série Ouro', 'Série Prata', 'Série Bronze', 'Grupo de Avaliação'] as Division[]
+    ).filter(d => d !== playerDivision);
 
     for (const div of otherDivisions) {
       const divisionSchools = schoolsByDivision[div];

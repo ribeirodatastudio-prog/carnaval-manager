@@ -297,6 +297,12 @@ interface GameStoreState {
   completeDesfile: () => void;
   startApuracao: () => void;
   finalizeApuracao: () => void;
+
+  // New Actions
+  setHarmoniaFocus: (focus: 'Samba' | 'Marcha' | 'Vocal' | 'Equilibrado') => void;
+  setPassistasRehearsal: (intensity: 'Leve' | 'Completo' | 'Aberto' | 'Descanso') => void;
+  setComissaoApproach: (approach: 'Tradicional' | 'Tematica' | 'Impacto' | 'Experimental') => void;
+  resolveStageEvent: (eventId: string, optionIndex: number) => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -701,12 +707,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     if (!school) return 'School not found.';
     if (!staff) return 'Staff not found.';
 
-    // Feature 1: Staff Cost Multiplier Check
-    const costMult = getStaffCostMultiplier(school);
-    const adjustedExpectation = calculateAdjustedSalary(staff, school);
-
-    if (offeredSalary < adjustedExpectation) return `Offer too low. Minimum expected: ${formatMoney(adjustedExpectation)}`;
-
     if (offeredSalary <= 0) return 'Invalid salary';
     if (school.budget < offeredSalary) return 'Insufficient budget.';
 
@@ -740,8 +740,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             pendingOffers: [...state.gameState.pendingOffers, offer]
         }
     }));
-
-    return 'Offer submitted successfully.';
   },
 
   acceptCounter: (offerId: string) => {
@@ -1033,7 +1031,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       // Apply Morale Personality to the CHANGE
       if (updatedMoraleRaw !== undefined && updatedMoraleRaw !== currentMorale) {
           const delta = updatedMoraleRaw - currentMorale;
-          const adjustedDelta = applyMoralePersonality(delta, school); // Track quality check missed here, but ok
+          const adjustedDelta = applyMoralePersonality(delta, school);
           updates.fanbaseMorale = Math.max(0, Math.min(100, currentMorale + adjustedDelta));
       }
 
@@ -1050,6 +1048,117 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         ...school,
         ...updates,
         preparation: updatedPreparation
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+
+      return { schools: updatedSchools };
+    }),
+
+  // --- NEW ACTIONS ---
+
+  setHarmoniaFocus: (focus) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation) return {};
+
+      const updatedSchool = {
+        ...school,
+        preparation: {
+          ...school.preparation,
+          harmoniaState: {
+            ...school.preparation.harmoniaState,
+            diretorFocus: focus
+          }
+        }
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+      return { schools: updatedSchools };
+    }),
+
+  setPassistasRehearsal: (intensity) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation || !school.preparation.passistas) return {};
+
+      const updatedSchool = {
+        ...school,
+        preparation: {
+          ...school.preparation,
+          passistas: {
+            ...school.preparation.passistas,
+            rehearsalIntensity: intensity
+          }
+        }
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+      return { schools: updatedSchools };
+    }),
+
+  setComissaoApproach: (approach) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation) return {};
+
+      const updatedSchool = {
+        ...school,
+        preparation: {
+          ...school.preparation,
+          comissaoDeFrente: {
+            ...school.preparation.comissaoDeFrente,
+            approach
+          }
+        }
+      };
+
+      const updatedSchools = [...state.schools];
+      updatedSchools[pSchoolIdx] = updatedSchool;
+      return { schools: updatedSchools };
+    }),
+
+  resolveStageEvent: (eventId, optionIndex) =>
+    set((state) => {
+      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
+      if (pSchoolIdx === -1) return {};
+      const school = state.schools[pSchoolIdx];
+      if (!school.preparation) return {};
+
+      const prep = school.preparation;
+      const event = prep.stageEvents.find(e => e.id === eventId) ?? prep.pendingStageEvent;
+      if (!event || event.id !== eventId) return {};
+
+      const option = event.options[optionIndex];
+      if (!option) return {};
+
+      // Mark resolved
+      const resolvedEvent = { ...event, chosenOptionIndex: optionIndex, resolved: true };
+
+      // Apply effect
+      const updates = resolveEventEffect(option.effect, school, event.title);
+
+      const updatedPrep = {
+        ...prep,
+        ...updates.preparation, // Merge preparation updates from effect (e.g. tracks, budget)
+        pendingStageEvent: null,
+        stageEvents: [...prep.stageEvents, resolvedEvent],
+      };
+
+      // Merge top-level updates (e.g. budget, morale)
+      const updatedSchool = {
+        ...school,
+        ...updates,
+        preparation: updatedPrep
       };
 
       const updatedSchools = [...state.schools];
@@ -1300,7 +1409,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   startApuracao: () =>
     set((state) => {
-        const results = runFullApuracao(state.schools, state.gameState.desfileResult);
+        const playerSchool = state.schools.find(s => s.id === state.gameState.playerSchoolId);
+        const playerDivision = playerSchool?.currentDivision ?? 'Grupo Especial';
+        const results = runFullApuracao(state.schools, state.gameState.desfileResult, playerDivision);
         return {
             gameState: {
                 ...state.gameState,
@@ -1311,10 +1422,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   finalizeApuracao: () =>
     set((state) => {
+      const playerSchool = state.schools.find(s => s.id === state.gameState.playerSchoolId);
+      const playerDivision = playerSchool?.currentDivision ?? 'Grupo Especial';
       const { schools } = finalizeSeason(
           state.schools,
           state.gameState.apuracaoResults || [],
-          state.gameState.currentYear
+          state.gameState.currentYear,
+          playerDivision
       );
 
       return {

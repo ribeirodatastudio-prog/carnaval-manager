@@ -236,6 +236,111 @@ export interface StaffStress {
   isResting: boolean;        // True if the player assigned a rest week.
 }
 
+// --- ALEGORIA STAGES ---
+export type AlegoriaStageId = 'Projeto' | 'Construcao' | 'Acabamento' | 'Transporte';
+
+export interface AlegoriaStage {
+  id: AlegoriaStageId;
+  label: string;             // Display name in Portuguese
+  isUnlocked: boolean;       // true when previous stage is complete
+  isComplete: boolean;
+  progress: number;          // 0–100, advances with budget spend + time
+  quality: number;           // 0–100, the quality output of this stage
+  budgetSpentThisStage: number;
+  weekStarted: number | null;
+  weekCompleted: number | null;
+}
+
+// --- PASSISTAS STATE ---
+export interface PassistasState {
+  form: number;              // 0–100, peaks and decays like bateria
+  energy: number;            // 0–100
+  peakWeek: number | null;
+  rehearsalIntensity: 'Leve' | 'Completo' | 'Aberto' | 'Descanso';
+  starPassistas: StarPassista[];
+}
+
+export interface StarPassista {
+  id: string;
+  name: string;
+  expressaoCorporal: number;  // 1–200, her individual skill
+  resistenciaFisica: number;  // 1–200, how much training she can handle
+  confianca: number;          // 1–200, confidence under pressure
+  stressLevel: number;        // 0–100 cumulative
+  isAvailable: boolean;       // false if on loan/injury
+}
+
+// --- MSPB STATE ---
+export interface MSPBState {
+  quimica: number;           // 0–100, chemistry between the couple
+  preparacao: number;        // 0–100, combined readiness score
+  coreografiaApproach: 'Ousada' | 'Classica' | null;  // chosen in Stage 1
+  rehearsalsCompleted: number;
+  ensaioGeralResult: 'Encantou' | 'Solido' | 'Tropeçou' | null;
+  mestreStress: number;      // 0–100 cumulative, separate from StaffStress
+  pbStress: number;          // 0–100 cumulative
+  pbResistenciaFisica: number; // copy from StaffMember at init
+}
+
+// --- COMISSAO DE FRENTE STATE ---
+export interface ComissaoDeFrenteState {
+  approach: 'Tradicional' | 'Tematica' | 'Impacto' | 'Experimental' | null;
+  quality: number;           // 0–100, final quality output
+  rehearsalWeeksSpent: number;
+  isApproachLocked: boolean; // true after week 15 decision
+}
+
+// --- HARMONIA SUB-METERS ---
+export interface HarmoniaState {
+  sambaFixado: number;       // 0–100
+  marchaSincronizada: number; // 0–100
+  densidadeVocal: number;    // 0–100
+  diretorFocus: 'Samba' | 'Marcha' | 'Vocal' | 'Equilibrado';
+  conflictWithMestre: boolean; // true if the bateria/harmonia conflict event fired
+}
+
+// --- FANTASIA STAGE ---
+export type FantasiaApproach = 'AltaCostura' | 'Popular' | 'Intermediaria';
+
+export interface FantasiaState {
+  approach: FantasiaApproach | null;
+  designQuality: number;     // 0–100, from Criacao stage
+  participationRate: number; // 0.0–1.0, % of members who can afford/received fantasia
+  deliveryRisk: number;      // 0–100, rises if production is behind schedule
+  budgetSpent: number;
+}
+
+// --- STAGE-AWARE EVENTS ---
+export interface EventOption {
+  label: string;
+  effect: string;
+  // Visibility conditions — ALL must be true for this option to appear in UI
+  // If conditions array is empty or undefined, always show
+  conditions?: EventOptionCondition[];
+}
+
+export interface EventOptionCondition {
+  type: 'neighborhoodType' | 'archetype' | 'stressBelow' | 'stressAbove' | 'skillAbove' | 'budgetAbove' | 'uniqueBonus' | 'quimiaAbove' | 'divisionIs' | 'divisionIsNot';
+  // For neighborhoodType, archetype, uniqueBonus, divisionIs, divisionIsNot: use stringValue
+  stringValue?: string;
+  // For numeric checks (stressBelow, stressAbove, skillAbove, budgetAbove, quimiaAbove): use numericValue
+  numericValue?: number;
+  // For skillAbove: which staff role and which skill
+  staffRole?: string;
+  skillKey?: string;
+}
+
+export interface StageEvent {
+  id: string;
+  week: number;
+  stage: AlegoriaStageId | 'Passistas' | 'MSPB' | 'Harmonia' | 'Fantasia' | 'ComissaoDeFrente';
+  title: string;
+  description: string;
+  options: EventOption[];   // 2–4 options, each with conditions for visibility
+  chosenOptionIndex: number | null;
+  resolved: boolean;
+}
+
 export type EventSeverity = 'Minor' | 'Major';
 export type EventDomain = 'Production' | 'Staff' | 'Community' | 'External' | 'Bateria';
 
@@ -274,6 +379,16 @@ export interface PreparationState {
   consequenceFlags: string[];    // List of string flags from event choices that seed follow-up events.
   bateriaOptimalMin: number;     // default 75
   bateriaOptimalMax: number;     // default 95
+
+  // EXTENDED PRODUCTION STATE
+  alegoriaStages: AlegoriaStage[];
+  passistas: PassistasState | null;       // null in Grupo de Avaliação
+  mspb: MSPBState | null;                 // null if school has no MestreSala+PortaBandeira pair
+  comissaoDeFrente: ComissaoDeFrenteState;
+  harmoniaState: HarmoniaState;           // renamed from harmonia to avoid conflict with track
+  fantasia: FantasiaState;
+  stageEvents: StageEvent[];              // events specific to stages, separate from PreparationEvent[]
+  pendingStageEvent: StageEvent | null;
 }
 
 // --------------------------------
