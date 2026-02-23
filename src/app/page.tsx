@@ -29,9 +29,12 @@ const ARCHETYPE_COLORS: Record<SchoolArchetype, string> = {
   Revelacao: '#9B59B6', // purple
 };
 
+import { useState } from 'react';
+
 export default function Home() {
   const { gameState, setPlayerSchool, schools, chooseMarketStart, simulateMarketAndJump, simulateFullSeasonAndJump } = useGameStore();
   const { playerSchoolId, startPhaseChosen } = gameState;
+  const [isSimulating, setIsSimulating] = useState(false);
 
   if (gameState.playerFired) {
     return <DemissaoScreen />;
@@ -133,7 +136,14 @@ export default function Home() {
 
              {/* Card 2: Simular Mercado */}
              <button
-                onClick={() => simulateMarketAndJump()}
+                onClick={async () => {
+                    setIsSimulating(true);
+                    setTimeout(() => {
+                        simulateMarketAndJump();
+                        setIsSimulating(false);
+                    }, 50);
+                }}
+                disabled={isSimulating}
                 className="group relative overflow-hidden rounded-xl text-left transition-all duration-300 hover:-translate-y-2 flex flex-col h-full bg-[#0F1629] border border-[#1E2D50] hover:border-[#2ECC71]"
                 onMouseEnter={e => {
                     (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 40px -12px #2ECC7140`;
@@ -160,9 +170,15 @@ export default function Home() {
                         <span>Ideal para testar a fase de preparação. Seu elenco será montado automaticamente com o melhor disponível no orçamento.</span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-[#2ECC71] font-bold uppercase tracking-wider text-sm group-hover:gap-4 transition-all">
-                        Simular Mercado <span>→</span>
-                    </div>
+                    {isSimulating ? (
+                        <div className="flex items-center gap-2 text-[#2ECC71] font-bold uppercase tracking-wider text-sm">
+                            <span className="animate-spin">⟳</span> Simulando mercado...
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-2 text-[#2ECC71] font-bold uppercase tracking-wider text-sm group-hover:gap-4 transition-all">
+                            Simular Mercado <span>→</span>
+                        </div>
+                    )}
                 </div>
             </button>
 
