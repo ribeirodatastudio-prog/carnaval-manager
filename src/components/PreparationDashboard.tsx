@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useGameStore } from '../store/gameStore';
-import { ProductionTrack, StaffMember, PreparationEvent } from '../types/models';
+import { ProductionTrack, AlegoriaStageId, StageEvent, PreparationEvent } from '../types/models';
 import { formatMoney, formatRole } from '../utils/textUtils';
-import Badge from './Badge';
+import { evaluateConditions } from '../utils/eventUtils';
 
-// Helper for contrast (same as MarketDashboard)
+// Helper for contrast
 function getContrastColor(hex: string | undefined): string {
     if (!hex) return '#FFFFFF';
     hex = hex.replace('#', '');
@@ -28,16 +27,18 @@ export default function PreparationDashboard() {
     setTrackBudget,
     setStaffRest,
     resolvePreparationEvent,
+    resolveStageEvent,
     initiateBateriaGig,
-    setAlegoriaCarCount
+    setAlegoriaCarCount,
+    setHarmoniaFocus,
+    setPassistasRehearsal,
+    setComissaoApproach
   } = useGameStore();
 
   const { playerSchoolId, preparationSubPhase } = gameState;
   const playerSchool = schools.find(s => s.id === playerSchoolId);
   const prep = playerSchool?.preparation;
 
-  const [activeTab, setActiveTab] = useState<'Overview' | 'Staff'>('Overview');
-  // Local state for the car selection modal
   const [selectedCarCount, setSelectedCarCount] = useState<number | null>(null);
 
   if (!playerSchool || !prep) return <div className="p-10 text-white">Carregando Preparação...</div>;
@@ -51,16 +52,19 @@ export default function PreparationDashboard() {
   const isUrgent = weeksLeft <= 8;
   const isCritical = weeksLeft <= 3;
 
-  // Calculate Advance Button Text
+  // Advance Logic
   let advanceText = prep.isBiWeekly ? 'Avançar 2 Semanas' : 'Avançar 1 Semana';
   if (weeksLeft <= 1) advanceText = 'IR PARA O DESFILE';
 
-  // Event Modal Logic
+  // Event Logic
   const pendingEvent = prep.pendingEvent;
+  const pendingStageEvent = prep.pendingStageEvent;
+  const anyEvent = pendingEvent || pendingStageEvent;
 
-  // --- Feature 1: Alegoria Car Count Modal ---
+  // Car Modal Logic
   const showCarModal = prep.alegoriaCarCount === null && gameState.currentWeek >= 9;
 
+  // Limits & Guidelines
   const carLimits = {
     'Grupo Especial': { min: 5, max: 8 },
     'Série Ouro': { min: 3, max: 6 },
@@ -69,9 +73,6 @@ export default function PreparationDashboard() {
     'Grupo de Avaliação': { min: 1, max: 3 },
   }[playerSchool.currentDivision] || { min: 1, max: 3 };
 
-  const recommendedCars = carLimits.min + 1;
-
-  // --- Feature 2c: Division-aware slider max ---
   const sliderMax: Record<string, number> = {
       'Grupo Especial': 200000,
       'Série Ouro': 30000,
@@ -81,7 +82,6 @@ export default function PreparationDashboard() {
   };
   const maxBurn = sliderMax[playerSchool.currentDivision] || 600;
 
-  // --- Feature 2b: Guidelines ---
   const guidelines: Record<string, Record<ProductionTrack, number>> = {
       'Grupo Especial': { Alegorias: 45000, Fantasias: 25000, Bateria: 15000, Harmonia: 15000 },
       'Série Ouro':     { Alegorias: 8000,  Fantasias: 4000,  Bateria: 2500,  Harmonia: 2500 },
@@ -91,7 +91,7 @@ export default function PreparationDashboard() {
   };
   const divisionGuidelines = guidelines[playerSchool.currentDivision] || guidelines['Grupo de Avaliação'];
 
-  // --- Feature 2a: Budget Panel Stats ---
+  // Budget Display
   const weeklyTotalBurn = Object.values(prep.tracks).reduce(
     (sum, t) => sum + (t.progress >= 100 ? 0 : t.weeklyBurnRate),
     0
@@ -102,54 +102,21 @@ export default function PreparationDashboard() {
   const runwayColor = runwayWeeks < 6 ? '#E74C3C' : runwayWeeks < 12 ? '#F1C40F' : '#2ECC71';
   const isRunwayCritical = runwayWeeks < 6;
 
-  // Feature 5b: Situational Assessment
+  // Situational Text
   function getSituationalAssessment(prep: any, weeksLeft: number): string {
     const issues: string[] = [];
-    const goods: string[] = [];
+    if (prep.bateria.form < 40 && weeksLeft < 10) issues.push('Bateria fria');
+    if (prep.bateria.form > 95) issues.push('Bateria passou do ponto');
+    if (prep.tracks.Alegorias.finishingRisk > 50) issues.push('Alegorias arriscadas');
+    if (prep.tracks.Fantasias.finishingRisk > 50) issues.push('Fantasias atrasadas');
+    if (prep.isBankrupt) issues.push('Falência!');
 
-    Object.entries(prep.tracks).forEach(([name, track]: [string, any]) => {
-      if (track.progress >= 100) {
-        goods.push(name + ' concluída');
-      } else if (track.finishingRisk > 50) {
-        issues.push(name + ' em risco de atraso');
-      } else if (track.progress < 30 && weeksLeft < 15) {
-        issues.push(name + ' muito atrasada');
-      }
-    });
-
-    if (prep.bateria.form < 40 && weeksLeft < 10) issues.push('Bateria não aqueceu');
-    if (prep.bateria.form > 95) issues.push('Bateria passou do pico');
-    if (prep.bateria.energy < 25) issues.push('Bateria esgotada');
-
-    if (issues.length === 0 && goods.length >= 3) return '✅ Preparação em dia. Continue assim.';
-    if (issues.length === 0) return '📋 Situação controlada. Acompanhe os prazos.';
-    if (issues.length >= 3) return '🚨 ' + issues.slice(0, 2).join('. ') + '. Atenção urgente.';
-    return '⚠️ ' + issues.join('. ') + '.';
+    if (issues.length === 0) return '✅ Preparação em dia.';
+    return '⚠️ ' + issues.join(', ');
   }
-
-  // Feature 5c: Rival Ghost Bars
-  const rivalSchool = schools
-    .filter(s => s.id !== playerSchoolId && s.currentDivision === playerSchool.currentDivision)
-    .sort((a, b) => b.prestige - a.prestige)[0];
-
-  const weeksElapsed = 36 - prep.weeksUntilParade;
-  const rivalProgressBase = Math.min(100, (weeksElapsed / 22) * 100);
-  const rivalPrestigeFactor = rivalSchool ? (rivalSchool.prestige / 200) : 0.7;
-
-  const getRivalProgress = (trackRatio: number) =>
-    Math.min(100, rivalProgressBase * (0.8 + rivalPrestigeFactor * 0.4) * trackRatio + (Math.random() * 5 - 2.5));
-
-  const rivalProgress: Record<string, number> = {
-    Alegorias: getRivalProgress(1.0),
-    Fantasias: getRivalProgress(0.95),
-    Bateria:   getRivalProgress(0.9),
-    Harmonia:  getRivalProgress(0.85),
-  };
-
-  // Advance Block Check
-  const canAdvance = !showCarModal && !pendingEvent;
   const situationalText = getSituationalAssessment(prep, weeksLeft);
-  const situationalIsBad = situationalText.includes('⚠️') || situationalText.includes('🚨');
+
+  const canAdvance = !showCarModal && !anyEvent;
 
   return (
     <div className="flex flex-col h-screen bg-[#080C18] text-[#F0E6D3] relative font-sans overflow-hidden">
@@ -162,10 +129,8 @@ export default function PreparationDashboard() {
           borderBottom: `2px solid ${playerSchool.colors[0] || '#C9A84C'}60`,
         }}
       >
-         {/* Background flag watermark */}
          {playerSchool.flag && (
-            <div
-            className="absolute right-0 top-0 bottom-0 w-96 opacity-10 pointer-events-none"
+            <div className="absolute right-0 top-0 bottom-0 w-96 opacity-10 pointer-events-none"
             style={{
                 backgroundImage: `url(${playerSchool.flag})`,
                 backgroundSize: 'cover',
@@ -203,67 +168,29 @@ export default function PreparationDashboard() {
                  weeksLeft === 0 ? '🎭 É HOJE!' :
                  `${weeksLeft} semanas até a Sapucaí`}
             </div>
-            {isUrgent && (
-                 <div className="text-[10px] text-[#E74C3C] mt-1 font-bold bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm">
-                  {Object.values(prep.tracks)
-                    .filter(t => t.progress < 100)
-                    .map(t => `${t.track} ${Math.floor(t.progress)}%`)
-                    .join(' · ')}
-                </div>
-            )}
-            {/* Feature 5b: Situational Text */}
-            <div className="text-xs text-center mt-1 font-bold" style={{ color: situationalIsBad ? '#E74C3C' : '#2ECC71' }}>
-              {situationalText}
-            </div>
+            <div className="text-xs text-center mt-1 font-bold opacity-80">{situationalText}</div>
         </div>
 
         <div className="flex items-center gap-4 relative z-10">
-             {/* Feature 2a: Budget Panel */}
              <div className="flex flex-col items-end gap-1">
-                 <div
-                    className="px-5 py-2 rounded-xl text-right min-w-[160px] backdrop-blur-md"
-                    style={{
-                        background: 'rgba(0,0,0,0.4)',
-                        border: '1px solid rgba(201, 168, 76, 0.3)',
-                    }}
-                >
+                 <div className="px-5 py-2 rounded-xl text-right min-w-[160px] backdrop-blur-md"
+                    style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(201, 168, 76, 0.3)' }}>
                     <div className="text-[10px] uppercase tracking-widest text-[#C9A84C] opacity-80 font-bold">Orçamento</div>
-                    <div
-                        className="text-xl font-black font-mono"
-                        style={{ color: playerSchool.budget < 500000 ? '#E74C3C' : '#C9A84C' }}
-                    >
+                    <div className="text-xl font-black font-mono" style={{ color: playerSchool.budget < 500000 ? '#E74C3C' : '#C9A84C' }}>
                         {formatMoney(playerSchool.budget)}
                     </div>
                  </div>
-
-                 {/* Budget Details Panel */}
                  <div className="bg-black/40 backdrop-blur-md rounded px-3 py-1.5 text-xs font-mono border border-white/10 flex gap-4">
-                     <div>
-                        <span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Gasto Sem:</span>
-                        <span className="text-[#E74C3C]">{formatMoney(weeklySpendDisplay)}</span>
-                     </div>
-                      <div>
-                        <span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Total:</span>
-                        <span className="text-[#F0E6D3]">{formatMoney(prep.totalBudgetSpent)}</span>
-                     </div>
-                      <div className={isRunwayCritical ? 'animate-pulse' : ''}>
-                        <span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Reserva:</span>
-                        <span style={{ color: runwayColor }}>{runwayWeeks} sem</span>
-                     </div>
+                     <div><span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Gasto:</span><span className="text-[#E74C3C]">{formatMoney(weeklySpendDisplay)}</span></div>
+                     <div className={isRunwayCritical ? 'animate-pulse' : ''}><span className="text-[#8A9BB8] text-[9px] uppercase mr-1">Reserva:</span><span style={{ color: runwayColor }}>{runwayWeeks} sem</span></div>
                  </div>
             </div>
 
-            <button
-                onClick={() => canAdvance && advanceWeek()}
-                disabled={!canAdvance}
-                className={`text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg transition-all duration-200 transform shadow-lg shadow-[#C9A84C20] ${
-                    canAdvance
-                    ? 'hover:scale-105 active:scale-95 text-[#080C18]'
-                    : 'opacity-50 cursor-not-allowed bg-[#161E35] text-[#8A9BB8]'
+            <button onClick={() => canAdvance && advanceWeek()} disabled={!canAdvance}
+                className={`text-xs font-black uppercase tracking-widest px-6 py-3 rounded-lg transition-all duration-200 transform shadow-lg ${
+                    canAdvance ? 'hover:scale-105 active:scale-95 text-[#080C18]' : 'opacity-50 cursor-not-allowed bg-[#161E35] text-[#8A9BB8]'
                 }`}
-                style={canAdvance ? {
-                    background: 'linear-gradient(135deg, #E8C96A 0%, #C9A84C 100%)',
-                } : {}}
+                style={canAdvance ? { background: 'linear-gradient(135deg, #E8C96A 0%, #C9A84C 100%)' } : {}}
             >
                 {advanceText} →
             </button>
@@ -273,179 +200,317 @@ export default function PreparationDashboard() {
       {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto p-6 flex flex-col gap-8 custom-scrollbar">
 
-        {/* TRACKS GRID */}
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {(['Alegorias', 'Fantasias', 'Harmonia'] as ProductionTrack[]).map(key => {
-                const track = prep.tracks[key];
-                const staffName = {
-                    Alegorias: playerSchool.staff.find(s => s.role === 'MestreDeBarracao')?.name ?? 'Vago',
-                    Fantasias: playerSchool.staff.find(s => s.role === 'DiretorDeCarnaval')?.name ?? 'Vago',
-                    Bateria: playerSchool.staff.find(s => s.role === 'MestreDeBateria')?.name ?? 'Vago',
-                    Harmonia: playerSchool.staff.find(s => s.role === 'DiretorDeHarmonia')?.name ?? 'Vago',
-                }[key];
+        {/* 1. ALEGORIA PIPELINE (Replaces simple bar) */}
+        <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg relative overflow-hidden">
+            <div className="flex justify-between items-center mb-6 relative z-10">
+                <h3 className="text-xl font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-3">
+                    🏰 Alegorias e Adereços
+                    <span className="text-xs bg-[#161E35] text-[#8A9BB8] px-2 py-1 rounded font-normal border border-[#1E2D50]">
+                        {prep.alegoriaCarCount ? `${prep.alegoriaCarCount} Carros` : 'Planejamento'}
+                    </span>
+                </h3>
+                <div className="flex gap-4 text-right">
+                    <div>
+                        <div className="text-[10px] text-[#8A9BB8] uppercase font-bold">Qualidade</div>
+                        <div className="text-2xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.tracks.Alegorias.quality)}</div>
+                    </div>
+                </div>
+            </div>
 
-                const isDone = track.progress >= 100;
-                const isRisk = track.finishingRisk > 0 && !isDone;
+            {/* Pipeline Visualization */}
+            <div className="flex justify-between items-start relative mb-6">
+                {/* Connector Line */}
+                <div className="absolute top-6 left-0 right-0 h-1 bg-[#1E2D50] -z-0" />
 
-                // Feature 2b: Guideline Logic
-                const guideline = divisionGuidelines[key];
+                {prep.alegoriaStages?.map((stage, idx) => {
+                    const isActive = stage.isUnlocked && !stage.isComplete;
+                    const isDone = stage.isComplete;
+                    const isLocked = !stage.isUnlocked;
+
+                    return (
+                        <div key={stage.id} className={`relative flex flex-col items-center flex-1 ${isLocked ? 'opacity-30' : ''}`}>
+                            {/* Node */}
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 z-10 transition-all duration-300 ${
+                                isDone ? 'bg-[#2ECC71] border-[#2ECC71] text-[#080C18]' :
+                                isActive ? 'bg-[#C9A84C] border-[#F1C40F] text-[#080C18] scale-110 shadow-[0_0_15px_rgba(241,196,15,0.5)]' :
+                                'bg-[#080C18] border-[#1E2D50] text-[#4A5A7A]'
+                            }`}>
+                                {isDone ? '✓' : idx + 1}
+                            </div>
+
+                            <div className="mt-3 text-center">
+                                <div className={`text-xs font-bold uppercase tracking-wider mb-1 ${isActive ? 'text-[#F1C40F]' : 'text-[#8A9BB8]'}`}>
+                                    {stage.label}
+                                </div>
+                                {isActive && (
+                                    <div className="text-xs font-mono text-[#C9A84C]">{Math.floor(stage.progress)}%</div>
+                                )}
+                                {isDone && (
+                                    <div className="text-[10px] font-mono text-[#2ECC71]">Concluído (Sem. {stage.weekCompleted})</div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Active Stage Details & Controls */}
+            {(() => {
+                const activeStage = prep.alegoriaStages.find(s => s.isUnlocked && !s.isComplete);
+                if (!activeStage) return <div className="text-center text-[#2ECC71] font-bold uppercase py-4 bg-[#080C18] rounded border border-[#2ECC71]/30">Todas as etapas concluídas! Prontos para o desfile.</div>;
+
+                const track = prep.tracks.Alegorias;
+                const guideline = divisionGuidelines.Alegorias;
                 const ratio = track.weeklyBurnRate / guideline;
-                let thumbColor = '#C9A84C'; // Gold (<= 120%)
-                if (ratio > 2.0) thumbColor = '#E74C3C'; // Red (> 200%)
-                else if (ratio > 1.2) thumbColor = '#E67E22'; // Orange (120-200%)
+                let thumbColor = '#C9A84C';
+                if (ratio > 1.5) thumbColor = '#E67E22';
+                if (ratio > 2.0) thumbColor = '#E74C3C';
 
                 return (
-                    <div key={key} className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 flex flex-col gap-4 relative overflow-hidden group hover:border-[#2A3F6B] transition-colors shadow-lg">
-                        {isDone && <div className="absolute inset-0 bg-[#2ECC71]/10 pointer-events-none" />}
-                        {isRisk && <div className="absolute inset-0 bg-[#E74C3C]/10 pointer-events-none animate-pulse" />}
-
-                        <div className="flex justify-between items-start relative z-10">
-                            <div>
-                                <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide">{key}</h3>
-                                <div className="text-xs text-[#8A9BB8] font-bold">{staffName}</div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-2xl font-black font-mono" style={{ color: isDone ? '#2ECC71' : isRisk ? '#E74C3C' : '#C9A84C' }}>
-                                    {Math.floor(track.progress)}%
+                    <div className="bg-[#080C18] rounded-lg p-4 border border-[#1E2D50] flex gap-6 items-center">
+                        <div className="flex-1">
+                            <div className="text-xs text-[#8A9BB8] uppercase font-bold mb-2">Progresso Atual: <span className="text-[#F0E6D3]">{activeStage.label}</span></div>
+                            <div className="h-3 bg-[#161E35] rounded-full overflow-hidden border border-[#1E2D50]">
+                                <div className="h-full bg-[#C9A84C] transition-all duration-500 relative" style={{ width: `${activeStage.progress}%` }}>
+                                    <div className="absolute inset-0 bg-white/20 animate-pulse" />
                                 </div>
                             </div>
                         </div>
-
-                        {/* Progress Bar */}
-                        <div className="h-2 bg-[#161E35] rounded-full overflow-hidden border border-[#1E2D50]">
-                            <div
-                                className="h-full transition-all duration-700 ease-out rounded-full relative"
-                                style={{
-                                    width: `${track.progress}%`,
-                                    background: isDone ? '#2ECC71' : isRisk ? '#E74C3C' : '#C9A84C'
-                                }}
-                            >
-                                {track.staffFocused && !isDone && (
-                                    <div className="absolute inset-0 bg-white/30 animate-pulse" />
-                                )}
+                        <div className="w-1/3">
+                            <div className="flex justify-between items-end mb-1">
+                                <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Investimento Semanal</span>
+                                <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(track.weeklyBurnRate)}</span>
+                            </div>
+                            <input
+                                type="range"
+                                min={1000}
+                                max={maxBurn}
+                                step={100}
+                                value={track.weeklyBurnRate}
+                                onChange={(e) => setTrackBudget('Alegorias', Number(e.target.value))}
+                                className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
+                                style={{ accentColor: thumbColor }}
+                            />
+                            <div className="text-[9px] text-[#4A5A7A] mt-1 text-center font-mono">
+                                Base: {formatMoney(guideline)}
                             </div>
                         </div>
-
-                        {/* Feature 5c: Rival Ghost Bar */}
-                        {rivalSchool && (
-                          <div className="mt-1">
-                            <div className="text-[9px] text-[#4A5A7A] flex justify-between mb-0.5">
-                              <span>Rival: {rivalSchool.name.split(' ').slice(0, 2).join(' ')}</span>
-                              <span className="font-mono">{Math.floor(rivalProgress[key])}%</span>
-                            </div>
-                            <div className="h-1 bg-[#161E35] rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full opacity-50"
-                                style={{
-                                  width: `${rivalProgress[key]}%`,
-                                  background: '#E74C3C'
-                                }}
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Stats Row */}
-                        <div className="grid grid-cols-2 gap-4 text-xs font-bold font-mono">
-                            <div className="bg-[#080C18] p-2 rounded border border-[#1E2D50]">
-                                <span className="text-[#4A5A7A] block text-[9px] uppercase tracking-wider mb-1">Qualidade</span>
-                                <span className="text-[#F0E6D3] text-lg">{Math.floor(track.quality)}</span>
-                            </div>
-                            <div className="bg-[#080C18] p-2 rounded border border-[#1E2D50]">
-                                <span className="text-[#4A5A7A] block text-[9px] uppercase tracking-wider mb-1">Previsão</span>
-                                {track.projectedEarly !== null && track.projectedLate !== null ? (
-                                  <div>
-                                    {track.projectedEarly === track.projectedLate ? (
-                                      // Tight range (elite staff): show single week
-                                      <span className={track.finishingRisk > 50 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'} style={{ fontSize: '13px' }}>
-                                        Sem. {track.projectedEarly}
-                                      </span>
-                                    ) : (
-                                      // Wide range: show spread
-                                      <div>
-                                        <span className={track.finishingRisk > 50 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'} style={{ fontSize: '11px' }}>
-                                          Sem. {track.projectedEarly}–{track.projectedLate}
-                                        </span>
-                                        {/* Show range width as an indicator of planning quality */}
-                                        <div className="text-[8px] text-[#4A5A7A] mt-0.5">
-                                          ±{Math.round((track.projectedLate - track.projectedEarly) / 2)} sem de incerteza
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-[#4A5A7A]">---</span>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Controls */}
-                        {!isDone && (
-                            <div className="mt-auto pt-4 border-t border-[#1E2D50] flex flex-col gap-3">
-                                {/* Budget Slider */}
-                                <div>
-                                    <div className="flex justify-between items-end mb-1">
-                                        <span className="text-[10px] uppercase tracking-wider text-[#8A9BB8] font-bold">Orçamento Semanal</span>
-                                        <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(track.weeklyBurnRate)}</span>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min={1000} // Minimal burn
-                                        max={maxBurn} // Feature 2c: Division aware max
-                                        step={100}
-                                        value={track.weeklyBurnRate}
-                                        onChange={(e) => setTrackBudget(key, Number(e.target.value))}
-                                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
-                                        style={{
-                                            accentColor: thumbColor // Dynamic color
-                                        }}
-                                    />
-                                    {/* Guideline Label */}
-                                    <div className="text-[9px] text-[#4A5A7A] mt-1 text-center font-mono">
-                                        Recomendado: {formatMoney(guideline)}
-                                    </div>
-                                </div>
-                                {/* Focus Toggle */}
-                                <label className="flex items-center justify-between cursor-pointer p-2 rounded bg-[#161E35] border border-[#1E2D50] hover:border-[#2A3F6B] transition-colors">
-                                    <span className="text-[10px] uppercase tracking-wider font-bold text-[#F0E6D3]">Focar Esforços</span>
-                                    <div className={`w-8 h-4 rounded-full p-0.5 transition-colors ${track.staffFocused ? 'bg-[#C9A84C]' : 'bg-[#080C18]'}`}>
-                                        <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${track.staffFocused ? 'translate-x-4' : 'translate-x-0'}`} />
-                                    </div>
-                                    <input
-                                        type="checkbox"
-                                        className="hidden"
-                                        checked={track.staffFocused}
-                                        onChange={(e) => setTrackFocus(key, e.target.checked)}
-                                    />
-                                </label>
-                            </div>
-                        )}
-                        {isDone && (
-                            <div className="mt-auto pt-4 border-t border-[#1E2D50] text-center">
-                                <span className="text-xs uppercase tracking-widest font-black text-[#2ECC71]">Concluído</span>
-                                <div className="text-[10px] text-[#2ECC71] font-mono mt-1 text-center">
-                                  ✓ Sem gastos desta etapa
-                                </div>
-                            </div>
-                        )}
                     </div>
                 );
-            })}
+            })()}
         </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* 2. HARMONIA & FANTASIA ROW */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* HARMONIA PANEL */}
+            <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide">🎤 Harmonia</h3>
+                    <div className="text-2xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.tracks.Harmonia.quality)}</div>
+                </div>
 
+                <div className="grid grid-cols-3 gap-2 mb-6">
+                    <div className="bg-[#080C18] p-2 rounded text-center border border-[#1E2D50]">
+                        <div className="text-[9px] text-[#8A9BB8] uppercase font-bold mb-1">Canto</div>
+                        <div className="h-1 bg-[#161E35] rounded-full overflow-hidden mb-1">
+                            <div className="h-full bg-[#3498DB]" style={{ width: `${prep.harmoniaState.sambaFixado}%` }} />
+                        </div>
+                    </div>
+                    <div className="bg-[#080C18] p-2 rounded text-center border border-[#1E2D50]">
+                        <div className="text-[9px] text-[#8A9BB8] uppercase font-bold mb-1">Marcha</div>
+                        <div className="h-1 bg-[#161E35] rounded-full overflow-hidden mb-1">
+                            <div className="h-full bg-[#E67E22]" style={{ width: `${prep.harmoniaState.marchaSincronizada}%` }} />
+                        </div>
+                    </div>
+                    <div className="bg-[#080C18] p-2 rounded text-center border border-[#1E2D50]">
+                        <div className="text-[9px] text-[#8A9BB8] uppercase font-bold mb-1">Voz</div>
+                        <div className="h-1 bg-[#161E35] rounded-full overflow-hidden mb-1">
+                            <div className="h-full bg-[#2ECC71]" style={{ width: `${prep.harmoniaState.densidadeVocal}%` }} />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-4">
+                    <span className="text-[10px] uppercase text-[#8A9BB8] font-bold block mb-2">Foco do Diretor</span>
+                    <div className="grid grid-cols-2 gap-2">
+                        {(['Samba', 'Marcha', 'Vocal', 'Equilibrado'] as const).map(focus => (
+                            <button
+                                key={focus}
+                                onClick={() => setHarmoniaFocus(focus)}
+                                className={`px-3 py-2 rounded text-xs font-bold uppercase transition-all ${
+                                    prep.harmoniaState.diretorFocus === focus
+                                    ? 'bg-[#C9A84C] text-[#080C18]'
+                                    : 'bg-[#161E35] text-[#8A9BB8] hover:bg-[#1E2D50]'
+                                }`}
+                            >
+                                {focus}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="pt-4 border-t border-[#1E2D50]">
+                     <div className="flex justify-between items-end mb-1">
+                        <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Investimento</span>
+                        <span className="text-[10px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Harmonia.weeklyBurnRate)}</span>
+                    </div>
+                    <input
+                        type="range" min={1000} max={maxBurn} step={100}
+                        value={prep.tracks.Harmonia.weeklyBurnRate}
+                        onChange={(e) => setTrackBudget('Harmonia', Number(e.target.value))}
+                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
+                    />
+                </div>
+            </section>
+
+            {/* FANTASIA PANEL */}
+            <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide">✂️ Fantasias</h3>
+                    <div className="text-right">
+                        <div className="text-[10px] text-[#8A9BB8] uppercase font-bold">Qualidade</div>
+                        <div className="text-2xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.fantasia.designQuality)}</div>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between bg-[#080C18] p-3 rounded-lg border border-[#1E2D50] mb-6">
+                    <div>
+                        <div className="text-[9px] text-[#8A9BB8] uppercase font-bold">Abordagem</div>
+                        <div className="text-sm font-bold text-[#F0E6D3]">{prep.fantasia.approach || 'A Definir'}</div>
+                    </div>
+                    <div>
+                        <div className="text-[9px] text-[#8A9BB8] uppercase font-bold text-right">Risco Entrega</div>
+                        <div className={`text-sm font-mono font-black text-right ${prep.fantasia.deliveryRisk > 50 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'}`}>
+                            {Math.floor(prep.fantasia.deliveryRisk)}%
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mb-4">
+                    <div className="flex justify-between mb-1">
+                        <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Taxa de Participação (Alas)</span>
+                        <span className="text-[10px] font-mono text-[#F0E6D3]">{Math.floor(prep.fantasia.participationRate * 100)}%</span>
+                    </div>
+                    <div className="h-1.5 bg-[#161E35] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#9B59B6]" style={{ width: `${prep.fantasia.participationRate * 100}%` }} />
+                    </div>
+                </div>
+
+                <div className="pt-4 border-t border-[#1E2D50]">
+                     <div className="flex justify-between items-end mb-1">
+                        <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Investimento</span>
+                        <span className="text-[10px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Fantasias.weeklyBurnRate)}</span>
+                    </div>
+                    <input
+                        type="range" min={1000} max={maxBurn} step={100}
+                        value={prep.tracks.Fantasias.weeklyBurnRate}
+                        onChange={(e) => setTrackBudget('Fantasias', Number(e.target.value))}
+                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
+                    />
+                </div>
+            </section>
+        </div>
+
+        {/* 3. PEOPLE ROW: MSPB, COMISSAO, PASSISTAS */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* MSPB */}
+            <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg relative">
+                <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide mb-4">👑 Mestre-Sala e PB</h3>
+                {prep.mspb ? (
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <div className="text-[9px] text-[#8A9BB8] uppercase font-bold">Química</div>
+                                <div className="text-xl font-mono text-[#E91E63] font-black">{Math.floor(prep.mspb.quimica)}%</div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-[9px] text-[#8A9BB8] uppercase font-bold">Preparação</div>
+                                <div className="text-xl font-mono text-[#F0E6D3] font-black">{Math.floor(prep.mspb.preparacao)}</div>
+                            </div>
+                        </div>
+                        {prep.mspb.ensaioGeralResult && (
+                            <div className="bg-[#080C18] p-2 rounded text-center border border-[#1E2D50]">
+                                <div className="text-[9px] text-[#8A9BB8] uppercase font-bold">Ensaio Geral</div>
+                                <div className="text-sm font-bold text-[#C9A84C]">{prep.mspb.ensaioGeralResult}</div>
+                            </div>
+                        )}
+                        {!prep.mspb.coreografiaApproach && (
+                            <div className="text-[10px] text-[#E67E22] italic text-center">Coreografia pendente...</div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="text-[#E74C3C] text-xs font-bold text-center py-8">Casal não contratado!</div>
+                )}
+            </section>
+
+            {/* COMISSAO */}
+            <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
+                <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide mb-4">🎭 Comissão de Frente</h3>
+                <div className="flex flex-col gap-4">
+                    <div className="bg-[#080C18] p-3 rounded border border-[#1E2D50]">
+                        <div className="text-[9px] text-[#8A9BB8] uppercase font-bold mb-1">Conceito</div>
+                        <div className="text-sm font-bold text-[#3498DB]">{prep.comissaoDeFrente.approach || 'A Definir'}</div>
+                    </div>
+                    <div>
+                        <div className="flex justify-between mb-1">
+                            <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Qualidade</span>
+                            <span className="text-[10px] font-mono text-[#F0E6D3]">{Math.floor(prep.comissaoDeFrente.quality)}</span>
+                        </div>
+                        <div className="h-1.5 bg-[#161E35] rounded-full overflow-hidden">
+                            <div className="h-full bg-[#3498DB]" style={{ width: `${prep.comissaoDeFrente.quality}%` }} />
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* PASSISTAS */}
+            <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
+                <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide mb-4">💃 Passistas</h3>
+                {prep.passistas ? (
+                    <div className="flex flex-col gap-4">
+                        <div className="flex justify-between">
+                            <div className="text-center">
+                                <div className="text-[9px] text-[#8A9BB8] uppercase font-bold">Forma</div>
+                                <div className="text-lg font-mono text-[#E67E22] font-black">{Math.floor(prep.passistas.form)}</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-[9px] text-[#8A9BB8] uppercase font-bold">Energia</div>
+                                <div className="text-lg font-mono text-[#3498DB] font-black">{Math.floor(prep.passistas.energy)}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <span className="text-[9px] uppercase text-[#8A9BB8] font-bold block mb-1">Intensidade</span>
+                            <select
+                                value={prep.passistas.rehearsalIntensity}
+                                onChange={(e) => setPassistasRehearsal(e.target.value as any)}
+                                className="w-full bg-[#080C18] border border-[#1E2D50] text-xs p-2 rounded text-[#F0E6D3] uppercase font-bold outline-none focus:border-[#C9A84C]"
+                            >
+                                <option value="Descanso">Descanso</option>
+                                <option value="Leve">Leve</option>
+                                <option value="Aberto">Aberto</option>
+                                <option value="Completo">Completo</option>
+                            </select>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="text-[#8A9BB8] text-xs text-center py-8">N/A para Grupo de Avaliação</div>
+                )}
+            </section>
+        </div>
+
+        {/* 4. BATERIA & STRESS (Existing UI updated) */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* BATERIA PANEL */}
             <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-2">
                         🥁 Bateria
                         {prep.bateria.outsideGigActive && (
-                            <span className="text-[9px] bg-[#E67E22] text-[#080C18] px-2 py-0.5 rounded font-bold animate-pulse">SHOW EXTERNO ATIVO</span>
+                            <span className="text-[9px] bg-[#E67E22] text-[#080C18] px-2 py-0.5 rounded font-bold animate-pulse">SHOW</span>
                         )}
                     </h3>
                     <div className="text-right">
-                         <div className="text-[10px] text-[#4A5A7A] uppercase tracking-wider font-bold">Renda de Shows</div>
+                         <div className="text-[10px] text-[#4A5A7A] uppercase tracking-wider font-bold">Renda</div>
                          <div className="text-sm font-mono text-[#2ECC71]">{formatMoney(prep.bateria.gigIncome)}</div>
                     </div>
                 </div>
@@ -458,21 +523,17 @@ export default function PreparationDashboard() {
                             <span className="text-xs font-mono font-bold text-[#F0E6D3]">{Math.floor(prep.bateria.form)}/100</span>
                         </div>
                         <div className="h-3 bg-[#161E35] rounded-full overflow-hidden border border-[#1E2D50] relative">
-                             {/* Optimal Zone Marker (75-95%) */}
-                             <div className="absolute top-0 bottom-0 bg-[#2ECC71]/20 border-l border-r border-[#2ECC71]/30" style={{ left: '75%', right: '5%' }} />
+                             {/* Optimal Zone Marker */}
+                             <div className="absolute top-0 bottom-0 bg-[#2ECC71]/20 border-l border-r border-[#2ECC71]/30"
+                                  style={{ left: `${prep.bateriaOptimalMin}%`, right: `${100 - prep.bateriaOptimalMax}%` }} />
 
                             <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
                                     width: `${prep.bateria.form}%`,
-                                    background: prep.bateria.form > 95 ? '#E74C3C' : prep.bateria.form >= 75 ? '#2ECC71' : '#C9A84C'
+                                    background: prep.bateria.form > prep.bateriaOptimalMax ? '#E74C3C' : prep.bateria.form >= prep.bateriaOptimalMin ? '#2ECC71' : '#C9A84C'
                                 }}
                             />
-                        </div>
-                        <div className="flex justify-between text-[9px] text-[#4A5A7A] mt-1 font-mono uppercase">
-                            <span>Crua</span>
-                            <span>Ideal (75-95)</span>
-                            <span>Passada</span>
                         </div>
                     </div>
 
@@ -483,78 +544,23 @@ export default function PreparationDashboard() {
                             <span className="text-xs font-mono font-bold text-[#F0E6D3]">{Math.floor(prep.bateria.energy)}%</span>
                         </div>
                         <div className="h-1.5 bg-[#161E35] rounded-full overflow-hidden">
-                            <div
-                                className="h-full rounded-full transition-all duration-500"
-                                style={{
-                                    width: `${prep.bateria.energy}%`,
-                                    background: prep.bateria.energy < 30 ? '#E74C3C' : '#3498DB'
-                                }}
-                            />
+                            <div className="h-full rounded-full transition-all duration-500"
+                                style={{ width: `${prep.bateria.energy}%`, background: prep.bateria.energy < 30 ? '#E74C3C' : '#3498DB' }} />
                         </div>
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-3 text-center">
-                        <div className="bg-[#080C18] p-3 rounded-lg border border-[#1E2D50]">
-                            <div className="text-[10px] text-[#4A5A7A] uppercase tracking-wider font-bold mb-1">Presença</div>
-                            <div className="text-lg font-mono font-black text-[#F0E6D3]">{prep.bateria.availabilityThisWeek}%</div>
+                    {/* Bateria Budget Slider */}
+                    <div>
+                        <div className="flex justify-between items-end mb-1">
+                            <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Investimento</span>
+                            <span className="text-[10px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Bateria.weeklyBurnRate)}</span>
                         </div>
-                        <div className="bg-[#080C18] p-3 rounded-lg border border-[#1E2D50]">
-                            <div className="text-[10px] text-[#4A5A7A] uppercase tracking-wider font-bold mb-1">Ensaios</div>
-                            <div className="text-lg font-mono font-black text-[#F0E6D3]">
-                                {prep.bateria.rehearsalsHeld} <span className="text-[10px] text-[#E74C3C]">(-{prep.bateria.rehearsalsMissed})</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Bateria Budget Slider — moved from track grid */}
-                    {(() => {
-                      const bateriaTrack = prep.tracks.Bateria;
-                      const guide = ({ 'Grupo Especial': 15000, 'Série Ouro': 2500, 'Série Prata': 800, 'Série Bronze': 250, 'Grupo de Avaliação': 65 } as Record<string, number>)[playerSchool.currentDivision] || 65;
-                      const ratio = bateriaTrack.weeklyBurnRate / guide;
-                      const thumbColor = ratio > 2.0 ? '#E74C3C' : ratio > 1.2 ? '#E67E22' : '#C9A84C';
-                      const sliderMaxVal = ({ 'Grupo Especial': 200000, 'Série Ouro': 30000, 'Série Prata': 8000, 'Série Bronze': 2500, 'Grupo de Avaliação': 600 } as Record<string, number>)[playerSchool.currentDivision] || 600;
-                      return (
-                        <div className="flex flex-col gap-2">
-                          <div className="flex justify-between items-end">
-                            <span className="text-[10px] uppercase tracking-wider text-[#8A9BB8] font-bold">Orçamento Semanal</span>
-                            <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(bateriaTrack.weeklyBurnRate)}</span>
-                          </div>
-                          <input
-                            type="range"
-                            min={1000}
-                            max={sliderMaxVal}
-                            step={100}
-                            value={bateriaTrack.weeklyBurnRate}
+                        <input
+                            type="range" min={1000} max={maxBurn} step={100}
+                            value={prep.tracks.Bateria.weeklyBurnRate}
                             onChange={(e) => setTrackBudget('Bateria', Number(e.target.value))}
-                            className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
-                            style={{ accentColor: thumbColor }}
-                          />
-                          <div className="text-[9px] text-[#4A5A7A] text-center font-mono">
-                            Recomendado: {formatMoney(guide)}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Budget effect on bateria — show impact of spend */}
-                    <div className="bg-[#080C18] border border-[#1E2D50] rounded-lg p-3 text-xs">
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[#4A5A7A] uppercase tracking-wider font-bold text-[9px]">Investimento Semanal</span>
-                        <span className="font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Bateria.weeklyBurnRate)}</span>
-                      </div>
-                      {(() => {
-                        const guidelines: Record<string, number> = { 'Grupo Especial': 15000, 'Série Ouro': 2500, 'Série Prata': 800, 'Série Bronze': 250, 'Grupo de Avaliação': 65 };
-                        const guide = guidelines[playerSchool.currentDivision] || 65;
-                        const ratio = prep.tracks.Bateria.weeklyBurnRate / guide;
-                        const effect = ratio <= 0 ? 'Ensaios mínimos' : ratio < 0.5 ? 'Condições precárias' : ratio < 1.0 ? 'Abaixo do ideal' : ratio < 1.5 ? 'Boas condições' : 'Estrutura premium';
-                        const effectColor = ratio < 0.5 ? '#E74C3C' : ratio < 1.0 ? '#F1C40F' : ratio < 1.5 ? '#2ECC71' : '#C9A84C';
-                        return (
-                          <div className="text-[10px] font-bold" style={{ color: effectColor }}>
-                            {effect} — forma cresce {ratio < 1 ? 'mais devagar' : 'mais rápido'}, energia {ratio < 1 ? 'depleta mais rápido' : 'dura mais'}
-                          </div>
-                        );
-                      })()}
+                            className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
+                        />
                     </div>
 
                     {/* Gig Button */}
@@ -569,9 +575,6 @@ export default function PreparationDashboard() {
                     >
                         {prep.bateria.outsideGigActive ? 'Show Agendado' : 'Agendar Show Extra'}
                     </button>
-                    {playerSchool.currentDivision === 'Grupo Especial' && (
-                        <p className="text-[9px] text-center text-[#4A5A7A] italic">Escolas do Especial raramente buscam shows menores.</p>
-                    )}
                 </div>
             </section>
 
@@ -579,7 +582,7 @@ export default function PreparationDashboard() {
             <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg lg:col-span-2 flex flex-col">
                 <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide mb-6 flex justify-between items-center">
                     <span>🧘 Gestão de Estresse</span>
-                    <span className="text-[10px] bg-[#161E35] text-[#8A9BB8] px-2 py-1 rounded font-normal">Descanso recupera energia e reduz estresse</span>
+                    <span className="text-[10px] bg-[#161E35] text-[#8A9BB8] px-2 py-1 rounded font-normal">Descanso recupera energia</span>
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[300px] custom-scrollbar pr-2">
@@ -587,39 +590,32 @@ export default function PreparationDashboard() {
                         const staff = playerSchool.staff.find(s => s.id === ss.staffId);
                         if (!staff) return null;
 
-                        // Stress Visuals
-                        let stressColor = '#2ECC71';
-                        if (ss.stressLevel > 30) stressColor = '#F1C40F';
-                        if (ss.stressLevel > 60) stressColor = '#E67E22';
-                        if (ss.stressLevel > 80) stressColor = '#E74C3C';
+                        // Stress Visuals (Rings)
+                        let ringColor = '#2ECC71';
+                        if (ss.stressLevel > 50) ringColor = '#F1C40F';
+                        if (ss.stressLevel > 70) ringColor = '#E67E22';
+                        if (ss.stressLevel > 85) ringColor = '#E74C3C';
 
                         return (
                             <div key={ss.staffId} className={`p-4 rounded-lg border flex justify-between items-center transition-colors ${
                                 ss.isResting ? 'bg-[#080C18] border-[#2A3F6B] opacity-70' : 'bg-[#161E35] border-[#1E2D50]'
                             }`}>
-                                <div className="flex-1 min-w-0 mr-4">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <div className="font-bold text-[#F0E6D3] truncate">{staff.name}</div>
-                                        <div className="text-[9px] text-[#8A9BB8] uppercase tracking-wider font-bold ml-2">{formatRole(staff.role).split(' ')[0]}</div>
+                                <div className="flex items-center gap-4 flex-1">
+                                    {/* Stress Ring */}
+                                    <div className="relative w-12 h-12 flex items-center justify-center">
+                                        <svg className="w-full h-full transform -rotate-90">
+                                            <circle cx="24" cy="24" r="20" stroke="#1E2D50" strokeWidth="4" fill="none" />
+                                            <circle cx="24" cy="24" r="20" stroke={ringColor} strokeWidth="4" fill="none"
+                                                strokeDasharray={125.6} strokeDashoffset={125.6 - (125.6 * ss.stressLevel) / 100}
+                                            />
+                                        </svg>
+                                        <span className="absolute text-[10px] font-bold" style={{ color: ringColor }}>{Math.floor(ss.stressLevel)}</span>
                                     </div>
 
-                                    {/* Stress Dot Bar */}
-                                    <div className="flex items-center gap-1 mb-2">
-                                        <span className="text-[9px] text-[#4A5A7A] font-bold uppercase w-12">Estresse</span>
-                                        <div className="flex-1 flex gap-0.5 h-1.5">
-                                            {[...Array(10)].map((_, i) => (
-                                                <div key={i} className={`flex-1 rounded-sm ${
-                                                    (ss.stressLevel / 10) > i ? '' : 'bg-[#080C18]'
-                                                }`}
-                                                style={{ background: (ss.stressLevel / 10) > i ? stressColor : undefined }}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                     {/* Energy Bar */}
-                                     <div className="flex items-center gap-1">
-                                        <span className="text-[9px] text-[#4A5A7A] font-bold uppercase w-12">Energia</span>
-                                        <div className="flex-1 h-1.5 bg-[#080C18] rounded-full overflow-hidden">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-bold text-[#F0E6D3] truncate">{staff.name}</div>
+                                        <div className="text-[9px] text-[#8A9BB8] uppercase tracking-wider font-bold mb-1">{formatRole(staff.role).split(' ')[0]}</div>
+                                        <div className="w-full h-1 bg-[#080C18] rounded-full overflow-hidden">
                                             <div className="h-full bg-[#3498DB]" style={{ width: `${ss.energy}%` }} />
                                         </div>
                                     </div>
@@ -627,7 +623,7 @@ export default function PreparationDashboard() {
 
                                 <button
                                     onClick={() => setStaffRest(ss.staffId, !ss.isResting)}
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ${
+                                    className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all ml-4 ${
                                         ss.isResting
                                         ? 'bg-[#2A3F6B] border-[#60C0FF] text-[#60C0FF]'
                                         : 'bg-[#080C18] border-[#1E2D50] text-[#4A5A7A] hover:border-[#8A9BB8] hover:text-[#8A9BB8]'
@@ -645,45 +641,71 @@ export default function PreparationDashboard() {
 
       </main>
 
-      {/* EVENT MODAL */}
-      {pendingEvent && (
+      {/* EVENT MODAL (Handles both PrepEvents and StageEvents) */}
+      {anyEvent && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
             <div className={`rounded-xl p-8 max-w-lg w-full border-2 shadow-2xl transform transition-all ${
-              pendingEvent.severity === 'Major'
+              (anyEvent as PreparationEvent).severity === 'Major'
                 ? 'border-[#E74C3C] bg-[#1A0505]'
                 : 'border-[#2A3F6B] bg-[#0F1629]'
             }`}>
-              {pendingEvent.severity === 'Major' && (
+              {(anyEvent as PreparationEvent).severity === 'Major' && (
                 <div className="text-[#E74C3C] text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span className="text-xl">⚠️</span> Evento Maior
                 </div>
               )}
-              <h2 className="text-2xl font-black text-[#F0E6D3] mb-4 leading-tight">{pendingEvent.title}</h2>
+              <h2 className="text-2xl font-black text-[#F0E6D3] mb-4 leading-tight">{anyEvent.title}</h2>
               <p className="text-[#8A9BB8] text-sm leading-relaxed mb-8 border-l-2 border-[#1E2D50] pl-4">
-                  {pendingEvent.description}
+                  {anyEvent.description}
               </p>
 
               <div className="flex flex-col gap-3">
-                <button onClick={() => resolvePreparationEvent(pendingEvent.id, 'A')}
-                  className="w-full p-5 rounded-xl bg-[#1E2D50] hover:bg-[#2A3F6B] border border-[#2A3F6B] text-left transition-all group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-[#C9A84C]/5 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300" />
-                  <div className="relative z-10">
-                      <div className="font-black text-[#F0E6D3] mb-1 text-lg">{pendingEvent.optionA.label}</div>
-                      <div className="text-xs text-[#4A5A7A] font-mono group-hover:text-[#8A9BB8] transition-colors">
-                          {pendingEvent.optionA.effect.replace(/_/g, ' ').toLowerCase()}
-                      </div>
-                  </div>
-                </button>
-                <button onClick={() => resolvePreparationEvent(pendingEvent.id, 'B')}
-                  className="w-full p-5 rounded-xl bg-[#1E2D50] hover:bg-[#2A3F6B] border border-[#2A3F6B] text-left transition-all group relative overflow-hidden">
-                   <div className="absolute inset-0 bg-[#C9A84C]/5 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300" />
-                   <div className="relative z-10">
-                      <div className="font-black text-[#F0E6D3] mb-1 text-lg">{pendingEvent.optionB.label}</div>
-                      <div className="text-xs text-[#4A5A7A] font-mono group-hover:text-[#8A9BB8] transition-colors">
-                          {pendingEvent.optionB.effect.replace(/_/g, ' ').toLowerCase()}
-                      </div>
-                   </div>
-                </button>
+                {/* STAGE EVENT RENDERING (Dynamic Options) */}
+                {(anyEvent as StageEvent).options ? (
+                    (anyEvent as StageEvent).options
+                        .filter(opt => evaluateConditions(opt.conditions, playerSchool))
+                        .map((opt, idx) => {
+                            // Map original index because filter changes it?
+                            // Wait, resolveStageEvent needs the index in the ORIGINAL options array or filtered?
+                            // Store logic: `const option = event.options[optionIndex];`
+                            // So we must pass the index from the ORIGINAL array.
+                            const originalIdx = (anyEvent as StageEvent).options.indexOf(opt);
+                            return (
+                                <button key={idx} onClick={() => resolveStageEvent(anyEvent.id, originalIdx)}
+                                    className="w-full p-5 rounded-xl bg-[#1E2D50] hover:bg-[#2A3F6B] border border-[#2A3F6B] text-left transition-all group relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="font-black text-[#F0E6D3] mb-1 text-lg">{opt.label}</div>
+                                        {/* Hide effect detail for immersion, or show? PrepEvent showed it. */}
+                                        <div className="text-xs text-[#4A5A7A] font-mono group-hover:text-[#8A9BB8] transition-colors">
+                                            {opt.effect.replace(/_/g, ' ').toLowerCase()}
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })
+                ) : (
+                    /* STANDARD PREPARATION EVENT RENDERING (A/B) */
+                    <>
+                        <button onClick={() => resolvePreparationEvent(anyEvent.id, 'A')}
+                        className="w-full p-5 rounded-xl bg-[#1E2D50] hover:bg-[#2A3F6B] border border-[#2A3F6B] text-left transition-all group relative overflow-hidden">
+                        <div className="relative z-10">
+                            <div className="font-black text-[#F0E6D3] mb-1 text-lg">{(anyEvent as PreparationEvent).optionA.label}</div>
+                            <div className="text-xs text-[#4A5A7A] font-mono group-hover:text-[#8A9BB8] transition-colors">
+                                {(anyEvent as PreparationEvent).optionA.effect.replace(/_/g, ' ').toLowerCase()}
+                            </div>
+                        </div>
+                        </button>
+                        <button onClick={() => resolvePreparationEvent(anyEvent.id, 'B')}
+                        className="w-full p-5 rounded-xl bg-[#1E2D50] hover:bg-[#2A3F6B] border border-[#2A3F6B] text-left transition-all group relative overflow-hidden">
+                        <div className="relative z-10">
+                            <div className="font-black text-[#F0E6D3] mb-1 text-lg">{(anyEvent as PreparationEvent).optionB.label}</div>
+                            <div className="text-xs text-[#4A5A7A] font-mono group-hover:text-[#8A9BB8] transition-colors">
+                                {(anyEvent as PreparationEvent).optionB.effect.replace(/_/g, ' ').toLowerCase()}
+                            </div>
+                        </div>
+                        </button>
+                    </>
+                )}
               </div>
             </div>
           </div>
@@ -706,36 +728,24 @@ export default function PreparationDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                      {Array.from({ length: carLimits.max - carLimits.min + 1 }, (_, i) => carLimits.min + i).map(count => {
                          const isSelected = selectedCarCount === count;
-                         const isRecommended = count === recommendedCars;
+                         const isRecommended = count === (carLimits.min + 1);
                          const burnIncrease = Math.round((1 + Math.max(0, count - carLimits.min) * 0.15) * 100 - 100);
 
                          return (
-                             <button
-                                key={count}
-                                onClick={() => setSelectedCarCount(count)}
+                             <button key={count} onClick={() => setSelectedCarCount(count)}
                                 className={`p-6 rounded-xl border-2 transition-all relative ${
-                                    isSelected
-                                    ? 'border-[#C9A84C] bg-[#161E35] scale-105 shadow-xl shadow-[#C9A84C20]'
-                                    : 'border-[#1E2D50] bg-[#0F1629] hover:border-[#4A5A7A] opacity-70 hover:opacity-100'
-                                }`}
-                             >
+                                    isSelected ? 'border-[#C9A84C] bg-[#161E35] scale-105 shadow-xl' : 'border-[#1E2D50] bg-[#0F1629] hover:border-[#4A5A7A] opacity-70 hover:opacity-100'
+                                }`}>
                                  {isRecommended && (
-                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#080C18] text-[9px] font-black uppercase px-2 py-0.5 rounded">
-                                         Recomendado
-                                     </div>
+                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#080C18] text-[9px] font-black uppercase px-2 py-0.5 rounded">Recomendado</div>
                                  )}
                                  <div className="text-4xl font-black mb-2 text-[#F0E6D3]">{count}</div>
                                  <div className="text-xs uppercase tracking-widest font-bold text-[#8A9BB8] mb-4">Carros</div>
-
                                  {count > carLimits.min && (
-                                     <div className="text-xs text-[#E74C3C] font-mono bg-black/30 p-1 rounded">
-                                         +{burnIncrease}% Custo
-                                     </div>
+                                     <div className="text-xs text-[#E74C3C] font-mono bg-black/30 p-1 rounded">+{burnIncrease}% Custo</div>
                                  )}
                                  {count === carLimits.min && (
-                                     <div className="text-xs text-[#2ECC71] font-mono bg-black/30 p-1 rounded">
-                                         Custo Base
-                                     </div>
+                                     <div className="text-xs text-[#2ECC71] font-mono bg-black/30 p-1 rounded">Custo Base</div>
                                  )}
                              </button>
                          )
@@ -743,22 +753,10 @@ export default function PreparationDashboard() {
                   </div>
 
                   <div className="flex justify-center gap-4">
-                     {/* Warning Deadline */}
-                     {gameState.currentWeek >= 11 && (
-                         <div className="absolute bottom-4 left-4 text-[#E74C3C] text-xs font-bold animate-pulse">
-                             ⚠️ Decisão Atrasada!
-                         </div>
-                     )}
-
-                     <button
-                        onClick={() => selectedCarCount && setAlegoriaCarCount(selectedCarCount)}
-                        disabled={!selectedCarCount}
+                     <button onClick={() => selectedCarCount && setAlegoriaCarCount(selectedCarCount)} disabled={!selectedCarCount}
                         className={`px-10 py-4 rounded-xl font-black uppercase tracking-widest text-lg transition-all ${
-                            selectedCarCount
-                            ? 'bg-[#C9A84C] text-[#080C18] hover:scale-105 shadow-lg shadow-[#C9A84C40]'
-                            : 'bg-[#161E35] text-[#4A5A7A] cursor-not-allowed'
-                        }`}
-                     >
+                            selectedCarCount ? 'bg-[#C9A84C] text-[#080C18] hover:scale-105' : 'bg-[#161E35] text-[#4A5A7A] cursor-not-allowed'
+                        }`}>
                          Confirmar Planejamento
                      </button>
                   </div>

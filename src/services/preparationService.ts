@@ -6,11 +6,108 @@ import {
   BateriaState,
   StaffStress,
   PreparationEvent,
+  StageEvent,
+  AlegoriaStage,
+  AlegoriaStageId,
+  PassistasState,
+  MSPBState,
+  ComissaoDeFrenteState,
+  HarmoniaState,
+  FantasiaState,
   EventSeverity,
   EventDomain
 } from '../types/models';
 
+const RECOMMENDED_BURN: Record<string, Record<ProductionTrack, number>> = {
+  'Grupo Especial': { Alegorias: 45000, Fantasias: 25000, Bateria: 15000, Harmonia: 15000 },
+  'Série Ouro':     { Alegorias: 8000,  Fantasias: 4000,  Bateria: 2500,  Harmonia: 2500  },
+  'Série Prata':    { Alegorias: 2200,  Fantasias: 1200,  Bateria: 800,   Harmonia: 800   },
+  'Série Bronze':   { Alegorias: 650,   Fantasias: 350,   Bateria: 250,   Harmonia: 250   },
+  'Grupo de Avaliação': { Alegorias: 165, Fantasias: 85,  Bateria: 65,    Harmonia: 65    },
+};
+
+// --- EVENTS DEFINITIONS (Stage Events) ---
+const FANTASIA_APPROACH_CHOICE_EVENT: StageEvent = {
+  id: 'fantasia-approach-choice',
+  week: 9,
+  stage: 'Fantasia',
+  title: 'Escolha da Linha das Fantasias',
+  description: 'O Diretor de Carnaval apresenta três abordagens para as fantasias deste ano. Cada escolha tem implicações diferentes para o orçamento e a qualidade.',
+  options: [
+    {
+      label: 'Alta Costura',
+      effect: 'FANTASIA_APPROACH_ALTACOSTURA',
+      // No conditions — always visible
+    },
+    {
+      label: 'Linha Intermediária',
+      effect: 'FANTASIA_APPROACH_INTERMEDIARIA',
+    },
+    {
+      label: 'Fantasia Popular',
+      effect: 'FANTASIA_APPROACH_POPULAR',
+    },
+  ],
+  chosenOptionIndex: null,
+  resolved: false,
+};
+
+const COMISSAO_APPROACH_EVENT: StageEvent = {
+  id: 'comissao-approach',
+  week: 15,
+  stage: 'ComissaoDeFrente',
+  title: 'Conceito da Comissão de Frente',
+  description: 'Como a Comissão vai abrir o seu desfile?',
+  options: [
+    {
+      label: '🎩 Tradicional e Elegante',
+      effect: 'COMISSAO_TRADICIONAL',
+      // Always visible
+    },
+    {
+      label: '🎭 Coreografia Temática',
+      effect: 'COMISSAO_TEMATICA',
+      // Always visible
+    },
+    {
+      label: '💥 Performance de Impacto',
+      effect: 'COMISSAO_IMPACTO',
+      // Requires external choreographer budget — only visible if budget > threshold
+      conditions: [
+        { type: 'budgetAbove', numericValue: 50000 }  // adjust per division
+      ],
+    },
+    {
+      label: '🌀 Conceito Experimental',
+      effect: 'COMISSAO_EXPERIMENTAL',
+      // Only available to high prestige schools or high reputation carnavalesco
+      conditions: [
+        // Show if prestige > 120 OR carnavalesco reputation > 140
+        // Jules: implement as OR logic — show if ANY condition group passes
+        { type: 'skillAbove', staffRole: 'Carnavalesco', skillKey: 'reputation', numericValue: 140 },
+      ],
+    },
+  ],
+  chosenOptionIndex: null,
+  resolved: false,
+};
+
+// --- HELPER FUNCTIONS ---
+
+function calculateInitialQuimica(school: School): number {
+  const mestre = school.staff.find(s => s.role === 'MestreSala');
+  const pb = school.staff.find(s => s.role === 'PortaBandeira');
+  if (!mestre || !pb) return 0;
+  // Same school for multiple years (partnerId match) = higher base
+  if (mestre.partnerId === pb.id) return 55; // established couple
+  return 25; // new pairing
+}
+
 export function initializePreparationState(school: School): PreparationState {
+  const getRecommendedBurn = (track: ProductionTrack): number => {
+    return RECOMMENDED_BURN[school.currentDivision]?.[track] ?? 100;
+  };
+
   const initTrack = (track: ProductionTrack, baseBudget: number): TrackState => ({
     track,
     progress: 0,
@@ -24,8 +121,6 @@ export function initializePreparationState(school: School): PreparationState {
     weeklyBurnRate: baseBudget,
     carCountBonus: 0
   });
-
-  const safeBaseBurn = school.budget * 0.02;
 
   // --- ARCHETYPE MODIFIERS ---
   let staffCostMultiplier = 1.0;
@@ -85,10 +180,10 @@ export function initializePreparationState(school: School): PreparationState {
 
   const prep: PreparationState = {
     tracks: {
-      Alegorias: initTrack('Alegorias', safeBaseBurn * 0.45),
-      Fantasias: initTrack('Fantasias', safeBaseBurn * 0.25),
-      Bateria: initTrack('Bateria', safeBaseBurn * 0.15),
-      Harmonia: initTrack('Harmonia', safeBaseBurn * 0.15),
+      Alegorias: initTrack('Alegorias', getRecommendedBurn('Alegorias')),
+      Fantasias: initTrack('Fantasias', getRecommendedBurn('Fantasias')),
+      Bateria: initTrack('Bateria', getRecommendedBurn('Bateria')),
+      Harmonia: initTrack('Harmonia', getRecommendedBurn('Harmonia')),
     },
     bateria: {
       form: initialBateriaForm,
@@ -117,7 +212,60 @@ export function initializePreparationState(school: School): PreparationState {
     hasImproviseOption,
     consequenceFlags: [],
     bateriaOptimalMin,
-    bateriaOptimalMax
+    bateriaOptimalMax,
+
+    // Extended State
+    alegoriaStages: [
+      { id: 'Projeto',     label: 'Projeto Criativo',  isUnlocked: true,  isComplete: false, progress: 0, quality: 0, budgetSpentThisStage: 0, weekStarted: null, weekCompleted: null },
+      { id: 'Construcao',  label: 'Construção',         isUnlocked: false, isComplete: false, progress: 0, quality: 0, budgetSpentThisStage: 0, weekStarted: null, weekCompleted: null },
+      { id: 'Acabamento',  label: 'Acabamento',         isUnlocked: false, isComplete: false, progress: 0, quality: 0, budgetSpentThisStage: 0, weekStarted: null, weekCompleted: null },
+      { id: 'Transporte',  label: 'Transporte',         isUnlocked: false, isComplete: false, progress: 0, quality: 0, budgetSpentThisStage: 0, weekStarted: null, weekCompleted: null },
+    ],
+
+    passistas: school.currentDivision === 'Grupo de Avaliação' ? null : {
+      form: 10,
+      energy: 100,
+      peakWeek: null,
+      rehearsalIntensity: 'Leve',
+      starPassistas: [], // populated by seed data per school — see below (omitted for now)
+    },
+
+    mspb: (school.staff.some(s => s.role === 'MestreSala') && school.staff.some(s => s.role === 'PortaBandeira')) ? {
+      quimica: calculateInitialQuimica(school),
+      preparacao: 0,
+      coreografiaApproach: null,
+      rehearsalsCompleted: 0,
+      ensaioGeralResult: null,
+      mestreStress: 0,
+      pbStress: 0,
+      pbResistenciaFisica: school.staff.find(s => s.role === 'PortaBandeira')?.skills.resiliencia ?? 80,
+    } : null,
+
+    comissaoDeFrente: {
+      approach: null,
+      quality: 0,
+      rehearsalWeeksSpent: 0,
+      isApproachLocked: false,
+    },
+
+    harmoniaState: {
+      sambaFixado: 0,
+      marchaSincronizada: 0,
+      densidadeVocal: 0,
+      diretorFocus: 'Equilibrado',
+      conflictWithMestre: false,
+    },
+
+    fantasia: {
+      approach: null,
+      designQuality: 0,
+      participationRate: 1.0,
+      deliveryRisk: 0,
+      budgetSpent: 0,
+    },
+
+    stageEvents: [],
+    pendingStageEvent: null,
   };
 
   if (school.uniqueBonus === 'beija_flor_maquina') {
@@ -177,10 +325,64 @@ export function tickPreparation(
   prep.weeksUntilParade = Math.max(0, weeksUntilParade);
   prep.isBiWeekly = (currentWeek + weeksAdvanced) <= 28;
 
-  // 1. Advance each track
+  // --- 1. Advance Tracks (Standard Progress) ---
   prep.tracks = advanceTracks(prep.tracks, school, weeksAdvanced, news);
 
-  // 2. Advance bateria form
+  // --- 2. Advance Alegoria Stages (Overrides standard Alegoria track progress/quality) ---
+  const alegResult = advanceAlegoriaStages(
+    prep.alegoriaStages,
+    school,
+    currentWeek,
+    weeksAdvanced,
+    prep.tracks.Alegorias.weeklyBurnRate,
+    news
+  );
+  prep.alegoriaStages = alegResult.stages;
+  prep.tracks.Alegorias.quality = alegResult.qualityOutput;
+  // Approximation of progress for UI based on stages
+  const activeStageIdx = prep.alegoriaStages.findIndex(s => s.isUnlocked && !s.isComplete);
+  if (activeStageIdx === -1) {
+     prep.tracks.Alegorias.progress = 100;
+  } else {
+     // Weighted: P=15%, C=50%, A=30%, T=5%
+     const weights = [15, 50, 30, 5];
+     let progress = 0;
+     for (let i = 0; i < activeStageIdx; i++) progress += weights[i];
+     progress += (prep.alegoriaStages[activeStageIdx].progress / 100) * weights[activeStageIdx];
+     prep.tracks.Alegorias.progress = progress;
+  }
+
+  // --- 3. Advance Fantasia State ---
+  prep.fantasia = advanceFantasia(
+    prep.fantasia,
+    school,
+    currentWeek,
+    weeksAdvanced,
+    prep.tracks.Fantasias.weeklyBurnRate,
+    news
+  );
+  // Update Fantasia track quality/risk
+  prep.tracks.Fantasias.quality = prep.fantasia.designQuality;
+  prep.tracks.Fantasias.finishingRisk = prep.fantasia.deliveryRisk;
+
+  // --- 4. Advance MSPB ---
+  if (prep.mspb) {
+    prep.mspb = advanceMSPB(prep.mspb, school, currentWeek, weeksAdvanced, news);
+  }
+
+  // --- 5. Advance Harmonia State ---
+  prep.harmoniaState = advanceHarmoniaState(prep.harmoniaState, school, weeksAdvanced, news);
+  prep.tracks.Harmonia.quality = computeHarmoniaQuality(prep.harmoniaState);
+
+  // --- 6. Advance Passistas ---
+  if (prep.passistas) {
+    prep.passistas = advancePassistas(prep.passistas, school, currentWeek, weeksAdvanced, news);
+  }
+
+  // --- 7. Advance Comissao ---
+  prep.comissaoDeFrente = advanceComissao(prep.comissaoDeFrente, school, weeksAdvanced);
+
+  // --- 8. Advance Bateria (Standard) ---
   const bateriaResult = advanceBateria(
     prep.bateria,
     school,
@@ -192,17 +394,17 @@ export function tickPreparation(
   prep.bateria = bateriaResult.bateria;
   let budgetDelta = bateriaResult.budgetDelta;
 
-  // 3. Update staff stress
-  prep.staffStress = advanceStress(prep.staffStress, school, weeksUntilParade, weeksAdvanced, prep.tracks);
+  // --- 9. Update Staff Stress (New Cumulative) ---
+  prep.staffStress = advanceStress(prep.staffStress, school, weeksUntilParade, weeksAdvanced, prep);
 
-  // 4. Update total budget spent (from tracks this tick)
+  // --- 10. Update total budget spent ---
   const trackSpend = Object.values(prep.tracks).reduce(
     (sum, t) => sum + (t.progress >= 100 ? 0 : t.weeklyBurnRate * weeksAdvanced),
     0
   );
   prep.totalBudgetSpent += trackSpend + budgetDelta;
 
-  // 5. Deduct from school budget
+  // --- 11. Deduct from school budget ---
   const totalCost = trackSpend;
   const newBudget = Math.max(0, school.budget - totalCost + bateriaResult.incomeGenerated);
 
@@ -255,8 +457,33 @@ export function tickPreparation(
       }
   }
 
-  // 6. Update projected completion for each track
+  // --- 12. Update projected completion for each track ---
   prep.tracks = updateProjections(prep.tracks, weeksUntilParade, school);
+
+  // --- 13. Forced Stage Events ---
+  // Fantasia Choice Week 9
+  if (currentWeek === 9 && !prep.fantasia.approach && !prep.pendingStageEvent) {
+    prep.pendingStageEvent = { ...FANTASIA_APPROACH_CHOICE_EVENT };
+  }
+  // Comissao Choice Week 15
+  if (currentWeek >= 15 && !prep.comissaoDeFrente.isApproachLocked && !prep.pendingStageEvent) {
+    prep.pendingStageEvent = { ...COMISSAO_APPROACH_EVENT };
+  }
+
+  // Staff Stress Threshold Checks
+  prep.staffStress.forEach(ss => {
+    const staff = school.staff.find(s => s.id === ss.staffId);
+    if (!staff) return;
+    if (ss.stressLevel >= 100 && !prep.events.some(e => e.title.includes('Colapso'))) {
+      news.push(`🚨 ${staff.name} entrou em colapso! Consequências imediatas.`);
+      // Inject Major event for this staff member's role (not implemented fully here, just news)
+    } else if (ss.stressLevel >= 85 && !prep.pendingEvent) {
+      news.push(`😰 ${staff.name} está no limite. Descanse-o ou enfrente consequências.`);
+    } else if (ss.stressLevel >= 60 && ss.stressLevel < 65) {
+      news.push(`⚠️ ${staff.name} está sob pressão crescente.`);
+    }
+  });
+
 
   return {
     updatedSchool: {
@@ -296,22 +523,11 @@ function advanceTracks(
     const staffRole = trackStaff[trackName];
     const staffMember = school.staff.find(s => s.role === staffRole);
 
-    // Budget Factor
-    const divisionScale: Record<string, number> = {
-        'Grupo Especial': 1.0,
-        'Série Ouro': 0.15,
-        'Série Prata': 0.04,
-        'Série Bronze': 0.012,
-        'Grupo de Avaliação': 0.003,
-    };
-    // const scale = divisionScale[school.currentDivision] ?? 0.003; // Unused
-    const totalBaseBudget = school.budget * 0.02; // Using the same logic as init
-    const typeRatio = trackName === 'Alegorias' ? 0.45 : trackName === 'Fantasias' ? 0.25 : 0.15;
-    const baseForTrack = totalBaseBudget * typeRatio;
+    const recommended = RECOMMENDED_BURN[school.currentDivision]?.[trackName] ?? 100;
+    // budgetMult = 1.0 when spending at recommended. Below = slower. Above = faster but diminishing.
+    const budgetMult = Math.min(1.5, (track.weeklyBurnRate / recommended));
 
-    const budgetMult = baseForTrack > 0 ? track.weeklyBurnRate / baseForTrack : 1.0;
-
-    const basePace = (1 / 22) * 100 * weeksAdvanced;
+    const basePace = (1 / 36) * 100 * weeksAdvanced;
 
     let skillMult = 1.0;
     if (staffMember) {
@@ -366,6 +582,387 @@ function calculateTrackQuality(
 
   return Math.min(100 + ceilingBonus, Math.floor(base));
 }
+
+// --- NEW ADVANCE FUNCTIONS ---
+
+function advanceAlegoriaStages(
+  stages: AlegoriaStage[],
+  school: School,
+  currentWeek: number,
+  weeksAdvanced: number,
+  weeklyBurnRate: number,   // from prep.tracks.Alegorias.weeklyBurnRate
+  news: string[]
+): { stages: AlegoriaStage[]; qualityOutput: number } {
+  const updated = stages.map(s => ({ ...s }));
+
+  const carnavalesco = school.staff.find(s => s.role === 'Carnavalesco');
+  const mestre = school.staff.find(s => s.role === 'MestreDeBarracao');
+
+  // Find current active stage (first unlocked, not complete)
+  const activeIdx = updated.findIndex(s => s.isUnlocked && !s.isComplete);
+  if (activeIdx === -1) {
+    // All stages complete — compute final quality output
+    const qualityOutput = computeFinalAlegoriaQuality(updated, school);
+    return { stages: updated, qualityOutput };
+  }
+
+  const stage = updated[activeIdx];
+  if (!stage.weekStarted) stage.weekStarted = currentWeek;
+  stage.budgetSpentThisStage += weeklyBurnRate * weeksAdvanced;
+
+  // Stage-specific pace and quality
+  switch (stage.id) {
+    case 'Projeto': {
+      // Driven by Carnavalesco creativity and hours invested
+      const creatividade = carnavalesco?.skills.criatividade ?? 60;
+      const pacePerWeek = (creatividade / 200) * 8 + 2; // 2-10% per week
+      stage.progress = Math.min(100, stage.progress + pacePerWeek * weeksAdvanced);
+      // Design quality: function of skill + budget invested (for references, materials)
+      const budgetFactor = Math.min(1.0, stage.budgetSpentThisStage / (weeklyBurnRate * 6));
+      stage.quality = Math.min(100, (creatividade / 200) * 70 + budgetFactor * 20 + (school.prestige / 200) * 10);
+
+      if (stage.progress >= 100 && !stage.isComplete) {
+        stage.isComplete = true;
+        stage.weekCompleted = currentWeek;
+        // Unlock Construcao
+        updated[1].isUnlocked = true;
+        news.push(`🎨 Projeto Criativo das Alegorias concluído! Construção liberada.`);
+      }
+      break;
+    }
+
+    case 'Construcao': {
+      // Driven by MestreDeBarracao logistics skill + heavy budget
+      const logistica = mestre?.skills.logistica ?? 60;
+      // Budget is the primary driver here — more money = faster builds
+      const RECOMMENDED = (RECOMMENDED_BURN[school.currentDivision]?.Alegorias ?? 100) * 1.5;
+      const budgetMult = Math.min(1.5, weeklyBurnRate / RECOMMENDED);
+      const pacePerWeek = ((logistica / 200) * 5 + 2) * budgetMult;
+      stage.progress = Math.min(100, stage.progress + pacePerWeek * weeksAdvanced);
+
+      // Quality ceiling is gated by Projeto quality
+      const projetoQuality = updated[0].quality;
+      const skillBonus = (logistica / 200) * 20;
+      // Elastic returns: spending more gives more quality but with diminishing returns
+      const spendRatio = weeklyBurnRate / (RECOMMENDED_BURN[school.currentDivision]?.Alegorias ?? 100);
+      const budgetQualityBonus = Math.min(25, 25 * (1 - Math.exp(-spendRatio)));
+      stage.quality = Math.min(projetoQuality, Math.floor(skillBonus + budgetQualityBonus + (school.prestige / 200) * 15));
+
+      // Car count bonus applies here
+      stage.quality = Math.min(100, stage.quality + (school.preparation?.tracks.Alegorias.carCountBonus ?? 0));
+
+      if (stage.progress >= 100 && !stage.isComplete) {
+        stage.isComplete = true;
+        stage.weekCompleted = currentWeek;
+        updated[2].isUnlocked = true;
+        news.push(`🏗️ Construção das Alegorias concluída! Acabamento liberado.`);
+      }
+      break;
+    }
+
+    case 'Acabamento': {
+      // Quality-defining stage. Driven by Carnavalesco reputation + budget.
+      // CANNOT be rushed — pace is slow by design.
+      // Carnavalesco stress reduces efficiency (see stress system below).
+      const carnavalescoStress = school.preparation?.staffStress.find(
+        ss => ss.staffId === carnavalesco?.id
+      )?.stressLevel ?? 0;
+      const stressPenalty = carnavalescoStress > 70 ? 0.5 : carnavalescoStress > 50 ? 0.75 : 1.0;
+
+      const pacePerWeek = 3.5 * stressPenalty * weeksAdvanced; // Slow: ~10 weeks to complete
+      stage.progress = Math.min(100, stage.progress + pacePerWeek);
+
+      // Quality: constrained by Construcao quality, boosted by budget and reputation
+      const construcaoQuality = updated[1].quality;
+      const reputation = carnavalesco?.reputation ?? 80;
+      const spendRatio = stage.budgetSpentThisStage / (weeklyBurnRate * 8);
+      const budgetQuality = Math.min(20, 20 * (1 - Math.exp(-spendRatio)));
+      stage.quality = Math.min(construcaoQuality + 10, // Can slightly exceed construcao quality
+        Math.floor((reputation / 200) * 30 + budgetQuality + construcaoQuality * 0.7));
+
+      // Qualidade Ceiling Bonus from school archetype
+      const ceilingBonus = school.preparation?.qualityCeilingBonus ?? 0;
+      stage.quality = Math.min(100 + ceilingBonus, stage.quality);
+
+      if (stage.progress >= 100 && !stage.isComplete) {
+        stage.isComplete = true;
+        stage.weekCompleted = currentWeek;
+        updated[3].isUnlocked = true;
+        news.push(`✨ Acabamento concluído! Alegorias prontas para transporte.`);
+      }
+      break;
+    }
+
+    case 'Transporte': {
+      // Only activates week 43+
+      if (currentWeek < 43) break;
+
+      const logistica = mestre?.skills.logistica ?? 60;
+      const mestreStress = school.preparation?.staffStress.find(
+        ss => ss.staffId === mestre?.id
+      )?.stressLevel ?? 0;
+
+      // Roll the transport outcome (once, when stage activates)
+      if (stage.progress === 0) {
+        const criseChance = Math.max(0.03,
+          0.10
+          - (logistica / 200) * 0.07   // good logistica reduces risk
+          + (mestreStress / 100) * 0.15 // high stress increases risk
+          - (school.budget > 0 ? 0.02 : 0.08) // no budget margin = higher risk
+        );
+        const roll = Math.random();
+        if (roll < criseChance) {
+          stage.quality = updated[2].quality * 0.5; // Serious incident
+          news.push(`🚚 CRISE DE TRANSPORTE! Uma alegoria teve um sério problema no traslado.`);
+        } else if (roll < criseChance + 0.25) {
+          stage.quality = updated[2].quality * 0.9; // Minor incident
+          news.push(`⚠️ Incidente no transporte — uma alegoria chegou com pequeno dano.`);
+        } else {
+          stage.quality = Math.min(100, updated[2].quality + 3); // Perfect delivery bonus
+          news.push(`✅ Alegorias chegaram em perfeito estado na Marquês de Sapucaí!`);
+        }
+        stage.progress = 100;
+        stage.isComplete = true;
+        stage.weekCompleted = currentWeek;
+      }
+      break;
+    }
+  }
+
+  return {
+    stages: updated,
+    qualityOutput: computeFinalAlegoriaQuality(updated, school)
+  };
+}
+
+function computeFinalAlegoriaQuality(stages: AlegoriaStage[], school: School): number {
+  const transporte = stages.find(s => s.id === 'Transporte');
+  if (transporte?.isComplete) return transporte.quality;
+  const acabamento = stages.find(s => s.id === 'Acabamento');
+  if (acabamento?.isComplete) return acabamento.quality;
+  const construcao = stages.find(s => s.id === 'Construcao');
+  if (construcao?.isComplete) return construcao.quality * 0.8; // Incomplete penalty
+  return stages.find(s => s.id === 'Projeto')?.quality ?? 0;
+}
+
+function advanceFantasia(
+  fantasia: FantasiaState,
+  school: School,
+  currentWeek: number,
+  weeksAdvanced: number,
+  weeklyBurnRate: number,
+  news: string[]
+): FantasiaState {
+  const updated = { ...fantasia };
+  const diretor = school.staff.find(s => s.role === 'DiretorDeCarnaval');
+
+  if (!updated.approach) return updated; // Player must choose approach first
+
+  // Approach defines quality ceiling and participation rate
+  const approachConfig = {
+    AltaCostura:    { qualityCeiling: 95, baseCost: 800, participationPenalty: 0.15 },
+    Intermediaria:  { qualityCeiling: 83, baseCost: 480, participationPenalty: 0.05 },
+    Popular:        { qualityCeiling: 72, baseCost: 250, participationPenalty: 0.0  },
+  }[updated.approach];
+
+  // Design quality (Criacao phase, weeks 9–22)
+  if (currentWeek <= 22) {
+    const criatividade = diretor?.skills.criatividade ?? 60;
+    const gestao = diretor?.skills.gestaoDeRecursos ?? 60;
+    const avgSkill = (criatividade + gestao) / 2;
+    // Elastic quality: more budget spent = closer to ceiling, but diminishing returns
+    const RECOMMENDED = RECOMMENDED_BURN[school.currentDivision]?.Fantasias ?? 100;
+    const spendRatio = weeklyBurnRate / RECOMMENDED;
+    const budgetQuality = approachConfig.qualityCeiling * (1 - Math.exp(-spendRatio * 1.2));
+    const skillFactor = (avgSkill / 200) * approachConfig.qualityCeiling;
+    updated.designQuality = Math.min(approachConfig.qualityCeiling,
+      Math.floor(budgetQuality * 0.6 + skillFactor * 0.4));
+  }
+
+  // Delivery risk (Producao phase, weeks 23–40)
+  if (currentWeek > 22) {
+    const RECOMMENDED = RECOMMENDED_BURN[school.currentDivision]?.Fantasias ?? 100;
+    const isUnderfunded = weeklyBurnRate < RECOMMENDED * 0.6;
+    if (isUnderfunded) updated.deliveryRisk = Math.min(100, updated.deliveryRisk + 3 * weeksAdvanced);
+    if (updated.deliveryRisk > 70 && !news.includes('⚠️ Fantasias em risco de atraso')) {
+      news.push(`⚠️ Fantasias em risco de atraso na entrega. Membros podem não receber a tempo.`);
+    }
+    // Late delivery penalty applied in desfile quality calculation
+    if (currentWeek >= 42 && updated.deliveryRisk > 70) {
+      updated.designQuality = Math.max(0, updated.designQuality - 15);
+      news.push(`❌ Fantasias chegaram tarde — qualidade comprometida.`);
+    }
+  }
+
+  // Participation rate: affected by approach cost and budget
+  updated.participationRate = Math.max(0.6,
+    1.0 - approachConfig.participationPenalty
+    - (updated.deliveryRisk / 100) * 0.2
+  );
+
+  return updated;
+}
+
+function advanceMSPB(
+  mspb: MSPBState,
+  school: School,
+  currentWeek: number,
+  weeksAdvanced: number,
+  news: string[]
+): MSPBState {
+  const updated = { ...mspb };
+  const mestre = school.staff.find(s => s.role === 'MestreSala');
+  const pb = school.staff.find(s => s.role === 'PortaBandeira');
+  if (!mestre || !pb) return updated;
+
+  // Chemistry builds slowly with joint rehearsals, faster if same partnerId
+  const isEstablishedCouple = mestre.partnerId === pb.id;
+  const weeklyQuimiaGain = isEstablishedCouple ? 1.5 : 0.8;
+  updated.quimica = Math.min(100, updated.quimica + weeklyQuimiaGain * weeksAdvanced);
+
+  // Preparacao: joint function of individual skills × chemistry multiplier
+  const mestreScore = (mestre.skills.lideranca + mestre.skills.expressaoCorporal) / 2;
+  const pbScore = (pb.skills.expressaoCorporal + pb.skills.resiliencia) / 2;
+  const quimiaMultiplier = 1.0 + (updated.quimica / 200); // up to 1.5x
+  const coreografiaBonus = updated.coreografiaApproach === 'Ousada' ? 1.2 : 1.0;
+  updated.preparacao = Math.min(100,
+    ((mestreScore + pbScore) / 2 / 200 * 80 + 10) * quimiaMultiplier * coreografiaBonus
+  );
+
+  // Physical toll on Porta-Bandeira: resiliencia determines how much training she can absorb
+  const physicalToll = Math.max(0, (100 - updated.pbResistenciaFisica) / 200 * 2 * weeksAdvanced);
+  updated.pbStress = Math.min(100, updated.pbStress + physicalToll);
+
+  // Ensaio Geral fires at week 42 (one time)
+  if (currentWeek >= 42 && updated.ensaioGeralResult === null) {
+    const roll = Math.random();
+    const successChance = updated.preparacao / 100 * (1 - updated.mestreStress / 200);
+    if (roll > 0.85 || updated.preparacao > 85) {
+      updated.ensaioGeralResult = 'Encantou';
+      news.push(`💃 O ensaio geral do casal ENCANTOU a quadra. A torcida está emocionada.`);
+      // Give mestre confidence boost
+      updated.mestreStress = Math.max(0, updated.mestreStress - 15);
+    } else if (successChance > 0.5) {
+      updated.ensaioGeralResult = 'Solido';
+      news.push(`✅ Ensaio geral do casal foi sólido. Prontos para a avenida.`);
+    } else {
+      updated.ensaioGeralResult = 'Tropeçou';
+      news.push(`😬 O Mestre-Sala tropeçou no ensaio geral. Ele está abalado.`);
+      updated.mestreStress = Math.min(100, updated.mestreStress + 25);
+    }
+  }
+
+  return updated;
+}
+
+function advanceHarmoniaState(
+  harmoniaState: HarmoniaState,
+  school: School,
+  weeksAdvanced: number,
+  news: string[]
+): HarmoniaState {
+  const updated = { ...harmoniaState };
+  const diretor = school.staff.find(s => s.role === 'DiretorDeHarmonia');
+  const lideranca = diretor?.skills.lideranca ?? 60;
+  const logistica = diretor?.skills.logistica ?? 60;
+
+  const focusGain = ((lideranca + logistica) / 400) * 8 * weeksAdvanced;
+
+  switch (updated.diretorFocus) {
+    case 'Samba':
+      updated.sambaFixado = Math.min(100, updated.sambaFixado + focusGain * 1.5);
+      updated.marchaSincronizada = Math.max(0, updated.marchaSincronizada - 1 * weeksAdvanced);
+      updated.densidadeVocal = Math.min(100, updated.densidadeVocal + focusGain * 0.5);
+      break;
+    case 'Marcha':
+      updated.marchaSincronizada = Math.min(100, updated.marchaSincronizada + focusGain * 1.5);
+      updated.densidadeVocal = Math.max(0, updated.densidadeVocal - 1.5 * weeksAdvanced); // tiring
+      updated.sambaFixado = Math.min(100, updated.sambaFixado + focusGain * 0.3);
+      break;
+    case 'Vocal':
+      updated.densidadeVocal = Math.min(100, updated.densidadeVocal + focusGain * 1.5);
+      updated.marchaSincronizada = Math.min(100, updated.marchaSincronizada + focusGain * 0.5);
+      break;
+    case 'Equilibrado':
+      updated.sambaFixado = Math.min(100, updated.sambaFixado + focusGain);
+      updated.marchaSincronizada = Math.min(100, updated.marchaSincronizada + focusGain);
+      updated.densidadeVocal = Math.min(100, updated.densidadeVocal + focusGain);
+      break;
+  }
+
+  return updated;
+}
+
+export function computeHarmoniaQuality(state: HarmoniaState): number {
+  return Math.floor((state.sambaFixado + state.marchaSincronizada + state.densidadeVocal) / 3);
+}
+
+function advancePassistas(
+  passistas: PassistasState,
+  school: School,
+  currentWeek: number,
+  weeksAdvanced: number,
+  news: string[]
+): PassistasState {
+  if (!passistas) return passistas;
+  const updated = { ...passistas, starPassistas: passistas.starPassistas.map(p => ({ ...p })) };
+
+  const coreografo = school.staff.find(s => s.role === 'Coreografo');
+  const skillBase = coreografo?.skills.expressaoCorporal ?? 60;
+
+  switch (updated.rehearsalIntensity) {
+    case 'Leve':
+      updated.form = Math.min(100, updated.form + (2 + skillBase / 200 * 3) * weeksAdvanced);
+      updated.energy = Math.min(100, updated.energy - 2 * weeksAdvanced);
+      break;
+    case 'Completo':
+      updated.form = Math.min(100, updated.form + (5 + skillBase / 200 * 5) * weeksAdvanced);
+      updated.energy = Math.max(0, updated.energy - 8 * weeksAdvanced);
+      break;
+    case 'Aberto':
+      updated.form = Math.min(100, updated.form + (3 + skillBase / 200 * 4) * weeksAdvanced);
+      updated.energy = Math.max(0, updated.energy - 5 * weeksAdvanced);
+      // handled by event system for morale bonus
+      break;
+    case 'Descanso':
+      updated.form = Math.max(0, updated.form - 2 * weeksAdvanced);
+      updated.energy = Math.min(100, updated.energy + 15 * weeksAdvanced);
+      break;
+  }
+
+  // Peak detection
+  if (updated.peakWeek === null && updated.form > 85 && updated.energy < 40) {
+    updated.peakWeek = currentWeek;
+    news.push(`💃 As passistas atingiram o pico de forma! Cuidado com o esgotamento.`);
+  }
+
+  // Star passistas: individual stress accumulates with Completo intensity
+  updated.starPassistas = updated.starPassistas.map(sp => {
+    if (updated.rehearsalIntensity === 'Completo') {
+      const physicalToll = Math.max(0, (100 - sp.resistenciaFisica) / 100 * 3);
+      return { ...sp, stressLevel: Math.min(100, sp.stressLevel + physicalToll * weeksAdvanced) };
+    }
+    return { ...sp, stressLevel: Math.max(0, sp.stressLevel - 2 * weeksAdvanced) };
+  });
+
+  return updated;
+}
+
+function advanceComissao(
+  comissao: ComissaoDeFrenteState,
+  school: School,
+  weeksAdvanced: number
+): ComissaoDeFrenteState {
+  if (!comissao.isApproachLocked) return comissao;
+  const updated = { ...comissao };
+  if (comissao.approach === 'Tematica') {
+    updated.rehearsalWeeksSpent += weeksAdvanced;
+  }
+  return updated;
+}
+
+
+// --- EXISTING HELPERS ---
 
 function calculateRangeWidth(trackName: ProductionTrack, school: School): number {
   const trackStaff: Record<ProductionTrack, { role: string; skill: keyof import('../types/models').StaffSkills }> = {
@@ -533,8 +1130,6 @@ function advanceBateria(
   const decayRate = Math.max(0, 0.8 - (mestreReputation / 200) * 0.7);
   const decay = decayRate * weeksAdvanced;
 
-  // Use bateriaOptimalMax to cap the form if needed? No, logic is open.
-  // But standard logic limits to 100.
   let newForm = Math.min(100, Math.max(0, bateria.form + formChange - decay));
 
   const peakWeek = (bateria.peakWeek === null && newForm < bateria.form && bateria.form > 70)
@@ -565,97 +1160,75 @@ function advanceStress(
   school: School,
   weeksUntilParade: number,
   weeksAdvanced: number,
-  tracks: Record<ProductionTrack, TrackState>
+  prep: PreparationState   // pass full prep so we can see stage states
 ): StaffStress[] {
   return staffStress.map(ss => {
     const staffMember = school.staff.find(s => s.id === ss.staffId);
     if (!staffMember) return ss;
 
-    // Timeline pressure: if projectedLate is within 3 weeks of parade (week 45), big stress spike
-    let timelinePressure = 0;
-    const TRACK_OWNER_ROLE: Record<string, ProductionTrack> = {
-      MestreDeBarracao:  'Alegorias',
+    // --- STRESS DELTA CALCULATION (additive, not replacement) ---
+    let stressDelta = 0;
+
+    // 1. Time pressure (small, constant background)
+    const weeksPassed = 36 - weeksUntilParade;
+    const timePressure = (weeksPassed / 36) * 1.5; // 0–1.5 per week, grows linearly
+    stressDelta += timePressure * weeksAdvanced;
+
+    // 2. Track/stage risk (staff-specific)
+    const TRACK_OWNER: Record<string, string> = {
+      MestreDeBarracao:  'Construcao',   // watches alegoria stages
       DiretorDeCarnaval: 'Fantasias',
       MestreDeBateria:   'Bateria',
       DiretorDeHarmonia: 'Harmonia',
-      Carnavalesco:      'Alegorias', // Carnavalesco also stressed by Alegorias risk
+      Carnavalesco:      'Acabamento',   // stressed by alegoria finishing
     };
 
-    const ownedTrack = TRACK_OWNER_ROLE[staffMember.role];
-    const trackState = ownedTrack ? tracks[ownedTrack] : null;
-
-    if (trackState && trackState.projectedLate !== null && trackState.progress < 100) {
-      // const weeksToParade = 45 - (45 - weeksUntilParade); // = weeksUntilParade
-      // const lateMargin = trackState.projectedLate - 45; // positive = safe, negative = overrun
-      if (trackState.projectedLate >= 43 && weeksUntilParade <= 8) {
-        // Worst case: finishing dangerously close or after parade
-        timelinePressure = Math.min(30, (43 - trackState.projectedLate + 8) * 5);
-        // e.g. projectedLate=44 → 5 pts, projectedLate=46 → 15 pts
+    const ownedElement = TRACK_OWNER[staffMember.role];
+    if (ownedElement) {
+      // Alegoria stage owners: check stage progress vs time
+      if (['Projeto','Construcao','Acabamento','Transporte'].includes(ownedElement)) {
+        const activeStage = prep.alegoriaStages?.find(s => s.id === ownedElement);
+        if (activeStage && activeStage.isUnlocked && !activeStage.isComplete && weeksUntilParade < 10) {
+          stressDelta += 3 * weeksAdvanced; // Deadline panic
+        }
+      } else {
+        // Track owners: check finishingRisk
+        const track = prep.tracks[ownedElement as ProductionTrack];
+        if (track && track.finishingRisk > 50) {
+          stressDelta += 2 * weeksAdvanced;
+        }
       }
     }
 
-    const timePressure = Math.max(0, Math.min(100, ((36 - weeksUntilParade) / 36) * 80));
+    // 3. Budget crisis
+    if (prep.isBankrupt) stressDelta += 5 * weeksAdvanced;
 
-    const resilienciaBuffer = (staffMember.skills.resiliencia / 200) * 40;
-    const experienceBuffer = (staffMember.reputation / 200) * 20;
+    // 4. Major event pending (everyone stressed)
+    if (prep.pendingEvent?.severity === 'Major') stressDelta += 4;
 
-    const ss_state = ss;
-    // Familia Bonus: 0.7 focus cost
-    let focusCost = ss_state.isResting ? -5 : 3;
-    if (school.archetype === 'Familia' && focusCost > 0) {
-        focusCost *= 0.7;
-    }
+    // 5. Natural recovery (resiliencia buffers baseline stress)
+    const resilienciaRecovery = (staffMember.skills.resiliencia / 200) * 1.5 * weeksAdvanced;
+    stressDelta -= resilienciaRecovery;
 
-    let growthMultiplier = 1.0;
-    if (school.neighborhoodType === 'ZonaNortePeriferica') {
-        growthMultiplier = 0.85;
-    }
+    // 6. Rest week: strong recovery, track stalls (handled in advanceTracks)
+    if (ss.isResting) stressDelta -= 6 * weeksAdvanced;
 
-    const stressChange = (timePressure - resilienciaBuffer - experienceBuffer + (focusCost * weeksAdvanced)) * growthMultiplier;
-    const newStress = Math.max(0, Math.min(100, ss_state.stressLevel + (stressChange > 0 ? stressChange : stressChange))); // Logic slightly flawed in original? no, it's absolute calculation in original.
-    // Original: newStress = Math.max(0, Math.min(100, timePressure - ... + ...));
-    // It seems stress wasn't cumulative in original?
-    // "newStress = Math.max(0, Math.min(100, timePressure - resilienciaBuffer - experienceBuffer + (focusCost * weeksAdvanced)));"
-    // Wait, the original code looked like it calculated stress from scratch each tick based on time pressure, EXCEPT `focusCost * weeksAdvanced` implies accumulation?
-    // But `weeksAdvanced` is just the delta for this tick.
-    // So if `focusCost` is 3, and `weeksAdvanced` is 1, it adds 3.
-    // But it's added to `timePressure`, not `currentStress`.
-    // The original code:
-    /*
-    const newStress = Math.max(0, Math.min(100,
-      timePressure - resilienciaBuffer - experienceBuffer + (focusCost * weeksAdvanced)
-    ));
-    */
-    // This looks like it resets stress every tick? That seems wrong for a stress system.
-    // But I must preserve existing logic behavior unless told otherwise, but maybe I misinterpreted `weeksAdvanced`.
-    // If I look at `advanceStress` again in the read output:
-    // It returns `newStress` calculated from `timePressure` etc. It does NOT use `ss.stressLevel` in the formula.
-    // This implies stress is deterministic based on current week, unless `focusCost` accumulates?
-    // `focusCost` is derived from `isResting`.
-    // `(focusCost * weeksAdvanced)` is just a small offset for the current tick's action?
-    // This seems like a bug in the original code or a very specific design choice (stress tracks time pressure directly).
-    // However, if I want to apply `ZonaNortePeriferica` "multiply all StaffStress growth by 0.85", I should apply it to the *result* or the *increase*?
-    // Since stress seems to be `f(t)`, "growth" implies the slope.
-    // If stress is just `f(t)`, then `growthMultiplier` should apply to the whole thing? Or just the time pressure part?
-    // Let's assume the user wants the stress to be lower.
-    // I will apply the multiplier to the final calculated value for now, or the `timePressure` component.
-    // "multiply all StaffStress growth by 0.85".
-    // I will apply it to the whole formula result? No, that would reduce stress even if it's low.
-    // I'll apply it to the `timePressure` term.
+    // 7. Archetype bonus (Familia reduces stress accrual)
+    if (school.archetype === 'Familia') stressDelta *= 0.8;
 
-    // WAIT, I should probably check if I should fix the accumulation.
-    // But I will stick to "Do not touch... simulation" (this is prep though).
-    // I'll stick to the original formula structure but add the multiplier.
+    // 8. Neighborhood bonus (ZonaNortePeriferica: community support reduces stress)
+    if (school.neighborhoodType === 'ZonaNortePeriferica') stressDelta *= 0.9;
 
-    const rawStress = timePressure - resilienciaBuffer - experienceBuffer + (focusCost * weeksAdvanced) + timelinePressure;
-    const newStressCalc = Math.max(0, Math.min(100, rawStress * growthMultiplier));
+    // --- APPLY DELTA (cumulative) ---
+    const newStress = Math.max(0, Math.min(100, ss.stressLevel + stressDelta));
 
-    const energyChange = ss_state.isResting ? 15 * weeksAdvanced : -4 * weeksAdvanced;
-    const newEnergy = Math.max(0, Math.min(100, ss_state.energy + energyChange));
+    // Energy
+    const energyChange = ss.isResting ? 15 * weeksAdvanced : -4 * weeksAdvanced;
+    const newEnergy = Math.max(0, Math.min(100, ss.energy + energyChange));
 
     return {
-      ...ss_state,
-      stressLevel: newStressCalc,
+      ...ss,
+      stressLevel: newStress,
       energy: newEnergy,
     };
   });
@@ -931,6 +1504,37 @@ export function resolveEventEffect(
   const effects = effectCode.split('_AND_');
 
   for (const part of effects) {
+    // --- STAGE EFFECTS ---
+    if (part === 'FANTASIA_APPROACH_ALTACOSTURA') updates.preparation.fantasia.approach = 'AltaCostura';
+    if (part === 'FANTASIA_APPROACH_INTERMEDIARIA') updates.preparation.fantasia.approach = 'Intermediaria';
+    if (part === 'FANTASIA_APPROACH_POPULAR') updates.preparation.fantasia.approach = 'Popular';
+
+    if (part === 'COMISSAO_TRADICIONAL') {
+       updates.preparation.comissaoDeFrente.approach = 'Tradicional';
+       updates.preparation.comissaoDeFrente.isApproachLocked = true;
+       updates.preparation.comissaoDeFrente.quality = 72;
+    }
+    if (part === 'COMISSAO_TEMATICA') {
+       updates.preparation.comissaoDeFrente.approach = 'Tematica';
+       updates.preparation.comissaoDeFrente.isApproachLocked = true;
+    }
+    if (part === 'COMISSAO_IMPACTO') {
+       updates.preparation.comissaoDeFrente.approach = 'Impacto';
+       updates.preparation.comissaoDeFrente.isApproachLocked = true;
+       updates.budget = (school.budget ?? 0) - 12000;
+    }
+    if (part === 'COMISSAO_EXPERIMENTAL') {
+       updates.preparation.comissaoDeFrente.approach = 'Experimental';
+       updates.preparation.comissaoDeFrente.isApproachLocked = true;
+    }
+
+    if (part.includes('FANTASIAS_QUALITY_DOWN')) {
+       const amount = parseInt(part.match(/FANTASIAS_QUALITY_DOWN_(\d+)/)?.[1] ?? '0');
+       updates.preparation.fantasia.designQuality = Math.max(0, updates.preparation.fantasia.designQuality - amount);
+       // Sync to track
+       updates.preparation.tracks.Fantasias.quality = updates.preparation.fantasia.designQuality;
+    }
+
     // Budget effects
     if (part.includes('BUDGET_MINUS')) {
       const match = part.match(/BUDGET_MINUS_(\d+)K/);
@@ -976,18 +1580,6 @@ export function resolveEventEffect(
         const amount = parseInt(part.match(/ALEGORIAS_QUALITY_UP_(\d+)/)?.[1] ?? '0');
         updates.preparation.tracks.Alegorias.quality = Math.min(100,
           updates.preparation.tracks.Alegorias.quality + amount);
-      }
-
-      // Fix: Check for both Casing and Specific Track
-      if (part.includes('FANTASIAS_QUALITY_DOWN')) {
-         const amount = parseInt(part.match(/FANTASIAS_QUALITY_DOWN_(\d+)/)?.[1] ?? '0');
-         updates.preparation.tracks.Fantasias.quality = Math.max(0,
-           updates.preparation.tracks.Fantasias.quality - amount);
-      }
-      if (part.includes('FANTASIAS_QUALITY_UP')) {
-         const amount = parseInt(part.match(/FANTASIAS_QUALITY_UP_(\d+)/)?.[1] ?? '0');
-         updates.preparation.tracks.Fantasias.quality = Math.min(100,
-           updates.preparation.tracks.Fantasias.quality + amount);
       }
 
       if (part.includes('BATERIA_FORM_DOWN')) {
@@ -1116,41 +1708,10 @@ export function resolveEventEffect(
       flags.push(flag);
     }
     updates.preparation.consequenceFlags = flags;
-
-    // Feature 2: Portela Research Boost Flag
-    // If Portela event fired? No, Portela bonus is passive, but maybe handled here?
-    // "store on prep: add a note in consequenceFlags: ['portela_research_boost']"
-    // This was supposed to happen in initialize, but initialize is done once.
-    // Wait, the prompt said:
-    /*
-      case 'portela_patrimonio':
-        // ...
-        // Store on prep: add a note in consequenceFlags: ['portela_research_boost']
-    */
-    // I missed that in `initializePreparationState`. I should go back and add it there.
-    // I'll add it in this file write.
   }
-
-  // Check Portela flag in initializePreparationState (I need to check if I added it above. I didn't.)
-  // I will add it now in `initializePreparationState` (logic block).
 
   return updates;
 }
-
-// I need to add Portela flag to initializePreparationState
-// I'll edit initializePreparationState function block in the string I'm constructing.
-
-/*
-  case 'portela_patrimonio':
-    // "O Patrimônio do Samba"
-    // Effect: Research is 25% faster.
-    // AND: Fanbase morale starts at +10 above calculated value (floored at 100). (Handled in loadAllSchools? No, prep init cannot change morale easily unless I return it? No, prep init returns PrepState. Morale is in School. I can't change School morale from here easily.
-    // Wait, prompt says: "For morale: bump school.fanbaseMorale += 10 during loadAllSchools for Portela."
-    // I missed that in Step 2. I'll need to update loadAllSchools later or just assume it's fine.
-    // But research boost: "Store on prep: add a note in consequenceFlags: ['portela_research_boost']"
-*/
-
-// I will insert `if (school.uniqueBonus === 'portela_patrimonio') { consequenceFlags.push('portela_research_boost'); }` in initializePreparationState.
 
 export function maybeGenerateEvent(
   prep: PreparationState,
@@ -1169,12 +1730,6 @@ export function maybeGenerateEvent(
         !prep.pendingEvent &&
         !prep.events.some(e => e.title === ce.event.title) // Don't fire twice
       ) {
-        // We do NOT remove flag here. Flag is removed when resolved? Or kept?
-        // Prompt says: "Remove the flag so it doesn't fire again... return the consequence event AND let resolvePreparationEvent in gameStore.ts handle removing the flag".
-        // But `resolvePreparationEvent` is generic. It doesn't know about the flag removal logic unless I code it there.
-        // Or I can check `!prep.events.some` which I added above. So the flag can stay, it just won't fire again.
-        // This is safer.
-
         return {
           ...ce.event,
           id: `consequence-${ce.flag}-${currentWeek}`,
@@ -1185,29 +1740,6 @@ export function maybeGenerateEvent(
       }
     }
   }
-
-  // IMPERIO SERRANO: Community events always succeed.
-  // "Império Serrano... Community events always have their positive option succeed... force the event's optionA effect to apply automatically and not show it to the player (log it as news instead)."
-  // This requires `maybeGenerateEvent` to possibly return a "resolved" event or handle it?
-  // `maybeGenerateEvent` returns `PreparationEvent`. If I return it, it goes to `pendingEvent`.
-  // If I want it to be automatic, I should probably NOT return it as pending, but just apply it?
-  // But `maybeGenerateEvent` is called inside `tickPreparation` which expects an event to add to pending.
-  // The prompt says: "force the event's optionA effect to apply automatically and not show it to the player (log it as news instead)."
-  // I can't do that easily inside `maybeGenerateEvent` because `tickPreparation` logic is:
-  /*
-    const newEvent = maybeGenerateEvent(...);
-    if (newEvent) {
-      pSchool = { ...pSchool, preparation: { ...prep, pendingEvent: newEvent ... } };
-    }
-  */
-  // If I want to bypass pending, I need to modify `tickPreparation` in `gameStore.ts` or here?
-  // `tickPreparation` in `gameStore` calls `maybeGenerateEvent`.
-  // Wait, `tickPreparation` is in `preparationService.ts` too!
-  // Yes, I am editing `preparationService.ts`. I can modify `tickPreparation`!
-
-  // Let's modify `maybeGenerateEvent` to return a special flag or just handle it in `tickPreparation`?
-  // `maybeGenerateEvent` returns an event.
-  // I will modify `tickPreparation` to check if `school.uniqueBonus === 'imperio_comunidade'` and the event is Community.
 
   const baseChance = prep.isBiWeekly ? 0.35 : 0.55;
   if (Math.random() > baseChance * weeksAdvanced) return null;

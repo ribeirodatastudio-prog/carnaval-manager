@@ -90,12 +90,15 @@ export function computeSchoolApuracao(
     };
 }
 
+import { Division } from '../types/models';
+
 export function runFullApuracao(
     schools: School[],
-    desfileResult: DesfileResult | null
+    desfileResult: DesfileResult | null,
+    playerDivision: Division
 ): SchoolApuracaoResult[] {
-    // Filter for Grupo Especial only
-    const divisionSchools = schools.filter(s => s.currentDivision === 'Grupo Especial');
+    // Filter for the player's division
+    const divisionSchools = schools.filter(s => s.currentDivision === playerDivision);
 
     const results: SchoolApuracaoResult[] = divisionSchools.map(school => {
         let qualityIndexes: Record<Quesito, number>;
