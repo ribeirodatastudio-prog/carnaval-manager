@@ -740,6 +740,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             pendingOffers: [...state.gameState.pendingOffers, offer]
         }
     }));
+
+    return 'Offer submitted successfully.';
   },
 
   acceptCounter: (offerId: string) => {

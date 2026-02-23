@@ -99,7 +99,6 @@ describe("GameStore Security", () => {
         }
 
         const result = updatedStore.submitTransferOffer(school.id, staffId, validSalary, 1);
-        // If it returns undefined, it means success in this store's implementation
-        expect(result).toBeUndefined();
+        expect(result).toBe('Offer submitted successfully.');
     });
 });
