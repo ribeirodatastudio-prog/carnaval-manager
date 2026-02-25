@@ -490,6 +490,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 1, budgetCost: 0,
       effectCodes: ['ALEGORIAS_QUALITY_UP_4'],
       availableWeeks: [9, 35],
+      affectsTrack: 'Alegorias',
     },
     {
       id: 'carn-acompanhar-barracao',
@@ -498,6 +499,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 1, budgetCost: 0,
       effectCodes: ['ALEGORIAS_ACTIVE_STAGE_PROGRESS_PLUS_8'],
       availableWeeks: [9, 40],
+      affectsTrack: 'Alegorias',
     },
     {
       id: 'carn-resolver-conflito-ala',
@@ -506,6 +508,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 1, budgetCost: 0,
       effectCodes: ['RESOLVE_COMMUNITY_CRISIS_IF_ACTIVE'],
       availableWeeks: [9, 44],
+      affectsTrack: 'Crises',
     },
     {
       id: 'carn-sprint-criativo',
@@ -514,6 +517,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 3, budgetCost: 0,
       effectCodes: ['ALEGORIAS_ACTIVE_STAGE_PROGRESS_PLUS_20', 'CARNAVALESCO_ENERGY_DOWN_20'],
       availableWeeks: [9, 38],
+      affectsTrack: 'Alegorias',
     },
     {
       id: 'carn-descanso',
@@ -532,6 +536,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 2, budgetCost: 4000,
       effectCodes: ['BATERIA_FORM_UP_8', 'BATERIA_ENERGY_DOWN_6'],
       availableWeeks: [9, 44],
+      affectsTrack: 'Bateria',
     },
     {
       id: 'mestre-ensaio-aberto',
@@ -540,6 +545,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 2, budgetCost: 2000,
       effectCodes: ['BATERIA_FORM_UP_5', 'BATERIA_ENERGY_DOWN_8', 'MORALE_UP_6'],
       availableWeeks: [9, 44],
+      affectsTrack: 'Bateria',
     },
     {
       id: 'mestre-ajuste-tecnico',
@@ -548,6 +554,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 1, budgetCost: 0,
       effectCodes: ['BATERIA_FORM_UP_4'],
       availableWeeks: [9, 44],
+      affectsTrack: 'Bateria',
     },
     {
       id: 'mestre-descanso',
@@ -566,6 +573,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 2, budgetCost: 0,
       effectCodes: ['HARMONIA_SAMBA_FIXADO_UP_10'],
       availableWeeks: [9, 40],
+      affectsTrack: 'Harmonia',
     },
     {
       id: 'harmonia-sincronia-marcha',
@@ -574,6 +582,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 2, budgetCost: 0,
       effectCodes: ['HARMONIA_MARCHA_UP_8'],
       availableWeeks: [9, 40],
+      affectsTrack: 'Harmonia',
     },
     {
       id: 'harmonia-equilibrado',
@@ -582,6 +591,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 1, budgetCost: 0,
       effectCodes: ['HARMONIA_ALL_UP_4'],
       availableWeeks: [9, 44],
+      affectsTrack: 'Harmonia',
     },
   ],
   DiretorDeCarnaval: [
@@ -592,6 +602,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 2, budgetCost: 0,
       effectCodes: ['RESOLVE_STAFF_CRISIS_IF_ACTIVE'],
       availableWeeks: [9, 44],
+      affectsTrack: 'Crises',
     },
     {
       id: 'diretor-pressionar-producao',
@@ -600,6 +611,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 2, budgetCost: 0,
       effectCodes: ['ALEGORIAS_ACTIVE_STAGE_PROGRESS_PLUS_6'],
       availableWeeks: [9, 38],
+      affectsTrack: 'Alegorias',
     },
   ],
   MestreDeBarracao: [
@@ -610,6 +622,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 2, budgetCost: 0,
       effectCodes: ['ALEGORIAS_ACTIVE_STAGE_PROGRESS_PLUS_10'],
       availableWeeks: [9, 40],
+      affectsTrack: 'Alegorias',
     },
     {
       id: 'barracao-qualidade',
@@ -618,6 +631,7 @@ export const STAFF_ACTION_POOL: Record<StaffRole, StaffAttentionAction[]> = {
       attentionCost: 1, budgetCost: 0,
       effectCodes: ['ALEGORIAS_QUALITY_UP_5'],
       availableWeeks: [20, 44],
+      affectsTrack: 'Alegorias',
     },
   ],
   // These roles are not in the attention system — empty arrays required for type safety
@@ -764,6 +778,16 @@ export const ACTION_CARD_DEFINITIONS: ActionCard[] = [
 ];
 
 // --- HELPER FUNCTIONS ---
+
+export function estimatedAlegoriaProgressPerWeek(burnRate: number, division: string): number {
+  const RECOMMENDED: Record<string, number> = {
+    'Grupo Especial': 45000, 'Série Ouro': 8000, 'Série Prata': 2200,
+    'Série Bronze': 650, 'Grupo de Avaliação': 165,
+  };
+  const rec = RECOMMENDED[division] ?? 1000;
+  const budgetMult = Math.min(1.5, burnRate / (rec * 1.5));
+  return ((60 / 200) * 5 + 2) * budgetMult; // Uses avg logistica=60
+}
 
 function calculateInitialQuimica(school: School): number {
   const mestre = school.staff.find(s => s.role === 'MestreSala');
@@ -915,6 +939,8 @@ export function initializePreparationState(school: School): PreparationState {
     weekPreview: null,
     actionsUsedThisWeek: 0,
     weeklyActionBudgetSpent: 0,
+    pendingStaffActions: [],
+    pendingActionCards: [],
 
     // Extended State
     alegoriaStages: [
@@ -1209,7 +1235,63 @@ export function tickPreparation(
   prep.weeksUntilParade = Math.max(0, weeksUntilParade);
   prep.isBiWeekly = (currentWeek + weeksAdvanced) <= 28;
 
-  // --- 0. Reset Staff Attention (Player Only) ---
+  // --- 0a. Apply Queued Staff Actions & Cards (Player Only) ---
+  if (school.isPlayerControlled) {
+    // Staff Actions
+    if (prep.pendingStaffActions?.length) {
+      for (const pending of prep.pendingStaffActions) {
+        const roleActions = STAFF_ACTION_POOL[pending.role] ?? [];
+        const action = roleActions.find(a => a.id === pending.actionId);
+        if (!action) continue;
+
+        for (const code of action.effectCodes) {
+          const tempSchool = { ...school, preparation: prep };
+          const result = resolveEventEffect(code, tempSchool, `StaffAction:${action.label}`);
+          if (result.preparation) prep = { ...prep, ...result.preparation };
+        }
+        // Handle meta-effects
+        if (action.effectCodes.includes('RESOLVE_COMMUNITY_CRISIS_IF_ACTIVE')) {
+          const crisis = prep.activeCrises.find(c => c.domain === 'Community' && !c.isResolved);
+          if (crisis) {
+            prep.activeCrises = prep.activeCrises.map(c =>
+              c.id === crisis.id ? { ...c, isResolved: true, resolvedAtWeek: currentWeek, chosenOptionIndex: -1 } : c
+            );
+          }
+        }
+        if (action.effectCodes.includes('RESOLVE_STAFF_CRISIS_IF_ACTIVE')) {
+          const crisis = prep.activeCrises.find(c => c.domain === 'Staff' && !c.isResolved);
+          if (crisis) {
+            prep.activeCrises = prep.activeCrises.map(c =>
+              c.id === crisis.id ? { ...c, isResolved: true, resolvedAtWeek: currentWeek, chosenOptionIndex: -1 } : c
+            );
+          }
+        }
+        news.push(`✅ ${action.label} (${pending.role}) — executado.`);
+      }
+      prep.pendingStaffActions = [];
+    }
+
+    // Action Cards
+    if (prep.pendingActionCards?.length) {
+      for (const pending of prep.pendingActionCards) {
+        const card = prep.unlockedActionCards.find(c => c.id === pending.cardId);
+        if (!card) continue;
+
+        for (const code of card.effectCodes) {
+          const tempSchool = { ...school, preparation: prep };
+          const result = resolveEventEffect(code, tempSchool, `ActionCard:${card.label}`);
+          if (result.preparation) prep = { ...prep, ...result.preparation };
+          // Apply top-level updates (e.g. morale from card)
+          if (result.fanbaseMorale !== undefined) school.fanbaseMorale = result.fanbaseMorale;
+          if (result.enredo) school.enredo = result.enredo;
+        }
+        news.push(`🎴 Carta "${card.label}" ativada!`);
+      }
+      prep.pendingActionCards = [];
+    }
+  }
+
+  // --- 0b. Reset Staff Attention (Player Only) ---
   if (school.isPlayerControlled && prep.staffAttention) {
     prep.staffAttention = prep.staffAttention.map(sa => {
       const stressEntry = prep.staffStress.find(s => s.staffId === sa.staffId);

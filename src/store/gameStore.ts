@@ -1579,55 +1579,44 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const action = roleActions.find(a => a.id === actionId);
       if (!action) return {};
 
+      // Prevent assigning the same action twice
+      if (staffAtt.assignedActions.includes(actionId)) return {};
+
+      // Check point budget
       if (staffAtt.usedPoints + action.attentionCost > staffAtt.totalPoints) return {};
+      // Check money budget
       if (school.budget < action.budgetCost) return {};
 
-      // Apply
-      const updates = { ...school, budget: school.budget - action.budgetCost };
-      let updatedPrep = { ...prep };
-
-      // Update Attention State
       const newStaffAtt = {
-          ...staffAtt,
-          usedPoints: staffAtt.usedPoints + action.attentionCost,
-          assignedActions: [...staffAtt.assignedActions, actionId],
-          energyWarning: (staffAtt.usedPoints + action.attentionCost) === staffAtt.totalPoints
+        ...staffAtt,
+        usedPoints: staffAtt.usedPoints + action.attentionCost,
+        assignedActions: [...staffAtt.assignedActions, actionId],
+        energyWarning: (staffAtt.usedPoints + action.attentionCost) >= staffAtt.totalPoints,
       };
-      updatedPrep.staffAttention = updatedPrep.staffAttention.map(sa => sa.staffId === staffId ? newStaffAtt : sa);
-      updatedPrep.actionsUsedThisWeek += 1;
-      updatedPrep.weeklyActionBudgetSpent += action.budgetCost;
 
-      // Apply Effects
-      action.effectCodes.forEach(code => {
-          const effectUpdate = resolveEventEffect(code, updates, `Action: ${action.label}`);
-          if (effectUpdate.preparation) updatedPrep = { ...updatedPrep, ...effectUpdate.preparation };
-          if (effectUpdate.budget !== undefined) updates.budget = effectUpdate.budget;
-          if (effectUpdate.fanbaseMorale !== undefined) updates.fanbaseMorale = effectUpdate.fanbaseMorale;
-      });
+      const updatedPrep = {
+        ...prep,
+        staffAttention: prep.staffAttention.map(sa => sa.staffId === staffId ? newStaffAtt : sa),
+        // Add to pending queue — effects fire in tickPreparation
+        pendingStaffActions: [
+          ...(prep.pendingStaffActions ?? []),
+          { staffId, actionId, role: staffAtt.role }
+        ],
+        actionsUsedThisWeek: prep.actionsUsedThisWeek + 1,
+        weeklyActionBudgetSpent: prep.weeklyActionBudgetSpent + action.budgetCost,
+      };
 
-      // Special Resolvers
-      if (action.effectCodes.includes('RESOLVE_COMMUNITY_CRISIS_IF_ACTIVE')) {
-           const crisis = updatedPrep.activeCrises.find(c => c.domain === 'Community' && !c.isResolved);
-           if (crisis) {
-               const resolvedCrisis = { ...crisis, isResolved: true, resolvedAtWeek: state.gameState.currentWeek, chosenOptionIndex: -1 };
-               updatedPrep.activeCrises = updatedPrep.activeCrises.map(c => c.id === crisis.id ? resolvedCrisis : c);
-               updatedPrep.crises = updatedPrep.crises.map(c => c.id === crisis.id ? resolvedCrisis : c);
-           }
-      }
-      if (action.effectCodes.includes('RESOLVE_STAFF_CRISIS_IF_ACTIVE')) {
-           const crisis = updatedPrep.activeCrises.find(c => c.domain === 'Staff' && !c.isResolved);
-           if (crisis) {
-               const resolvedCrisis = { ...crisis, isResolved: true, resolvedAtWeek: state.gameState.currentWeek, chosenOptionIndex: -1 };
-               updatedPrep.activeCrises = updatedPrep.activeCrises.map(c => c.id === crisis.id ? resolvedCrisis : c);
-               updatedPrep.crises = updatedPrep.crises.map(c => c.id === crisis.id ? resolvedCrisis : c);
-           }
-      }
+      // Deduct budget NOW (money commitment is immediate — can't plan with money you don't have)
+      const updatedSchool = {
+        ...school,
+        budget: school.budget - action.budgetCost,
+        preparation: updatedPrep,
+      };
+      updatedPrep.weekPreview = computeWeekPreview(updatedPrep, updatedSchool, state.gameState.currentWeek);
+      updatedSchool.preparation = updatedPrep;
 
-      updatedPrep.weekPreview = computeWeekPreview(updatedPrep, updates, state.gameState.currentWeek);
-      updates.preparation = updatedPrep;
       const updatedSchools = [...state.schools];
-      updatedSchools[pSchoolIdx] = updates;
-
+      updatedSchools[pSchoolIdx] = updatedSchool;
       return { schools: updatedSchools };
     }),
 
@@ -1640,83 +1629,41 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
       const prep = school.preparation;
       const staffAtt = prep.staffAttention.find(sa => sa.staffId === staffId);
-      if (!staffAtt) return {};
+      if (!staffAtt || !staffAtt.assignedActions.includes(actionId)) return {};
 
       const roleActions = STAFF_ACTION_POOL[staffAtt.role] || [];
       const action = roleActions.find(a => a.id === actionId);
       if (!action) return {};
 
-      if (!staffAtt.assignedActions.includes(actionId)) return {};
-
-      // Revert Logic is hard because effects are stateful (e.g. random rolls, counters).
-      // Ideally we shouldn't allow unassign if random effects happened.
-      // But the brief implies "Staff Attention Economy"... usually implies planning phase before commit?
-      // "key staff have action points the player assigns each week"
-      // "Preview Before Advance"
-      // The `assignStaffAction` implementation above applied effects IMMEDIATELY.
-      // If we want to allow unassign, we should probably defer effects until `advanceWeek`?
-      // BUT, the brief says: "effectCodes: string[]; // Applied immediately on resolve" for Crisis.
-      // For Staff Actions? "Deduct budget... Apply effectCodes immediately."
-      // So unassign is tricky.
-      // "unassignStaffAction: Reverse of assign. Restore usedPoints, remove from assignedActions, reverse simple effect codes where possible (otherwise just reverse budget)."
-      // Okay, let's try to reverse simple effects.
-
-      const updates = { ...school, budget: school.budget + action.budgetCost };
-      let updatedPrep = { ...prep };
-
       const newStaffAtt = {
-          ...staffAtt,
-          usedPoints: Math.max(0, staffAtt.usedPoints - action.attentionCost),
-          assignedActions: staffAtt.assignedActions.filter(id => id !== actionId),
-          energyWarning: false // Reset check logic later if needed
+        ...staffAtt,
+        usedPoints: Math.max(0, staffAtt.usedPoints - action.attentionCost),
+        assignedActions: staffAtt.assignedActions.filter(id => id !== actionId),
+        energyWarning: false,
       };
-      updatedPrep.staffAttention = updatedPrep.staffAttention.map(sa => sa.staffId === staffId ? newStaffAtt : sa);
-      updatedPrep.actionsUsedThisWeek -= 1;
-      updatedPrep.weeklyActionBudgetSpent -= action.budgetCost;
 
-      // Revert Effects (Simple Inverse)
-      action.effectCodes.forEach(code => {
-          if (code.includes('QUALITY_UP')) {
-              const amount = parseInt(code.match(/QUALITY_UP_(\d+)/)?.[1] ?? '0');
-              const track = code.split('_')[0] as any; // ALEGORIAS, FANTASIAS...
-              if (track === 'ALEGORIAS') updatedPrep.tracks.Alegorias.quality -= amount;
-              // ... others
-          }
-          if (code.includes('PROGRESS_PLUS')) {
-               const amount = parseInt(code.match(/PROGRESS_PLUS_(\d+)/)?.[1] ?? '0');
-               if (code.includes('ALEGORIAS_ACTIVE_STAGE')) {
-                   const stages = updatedPrep.alegoriaStages;
-                   const active = stages.find(s => s.isUnlocked && !s.isComplete);
-                   if (active) active.progress = Math.max(0, active.progress - amount);
-               }
-          }
-          // Note: This is imperfect. If a random roll happened, we can't revert perfectly without history.
-          // But most staff actions are deterministic bonuses.
-      });
+      const updatedPrep = {
+        ...prep,
+        staffAttention: prep.staffAttention.map(sa => sa.staffId === staffId ? newStaffAtt : sa),
+        // Remove from pending queue
+        pendingStaffActions: (prep.pendingStaffActions ?? []).filter(
+          pa => !(pa.staffId === staffId && pa.actionId === actionId)
+        ),
+        actionsUsedThisWeek: prep.actionsUsedThisWeek - 1,
+        weeklyActionBudgetSpent: prep.weeklyActionBudgetSpent - action.budgetCost,
+      };
 
-      // Special Reverters: Un-resolve crisis if action resolved it
-      if (action.effectCodes.includes('RESOLVE_COMMUNITY_CRISIS_IF_ACTIVE')) {
-           const crisis = updatedPrep.activeCrises.find(c => c.domain === 'Community' && c.isResolved && c.resolvedAtWeek === state.gameState.currentWeek && c.chosenOptionIndex === -1);
-           if (crisis) {
-               const unresolvedCrisis = { ...crisis, isResolved: false, resolvedAtWeek: null };
-               updatedPrep.activeCrises = updatedPrep.activeCrises.map(c => c.id === crisis.id ? unresolvedCrisis : c);
-               updatedPrep.crises = updatedPrep.crises.map(c => c.id === crisis.id ? unresolvedCrisis : c);
-           }
-      }
-      if (action.effectCodes.includes('RESOLVE_STAFF_CRISIS_IF_ACTIVE')) {
-           const crisis = updatedPrep.activeCrises.find(c => c.domain === 'Staff' && c.isResolved && c.resolvedAtWeek === state.gameState.currentWeek && c.chosenOptionIndex === -1);
-           if (crisis) {
-               const unresolvedCrisis = { ...crisis, isResolved: false, resolvedAtWeek: null };
-               updatedPrep.activeCrises = updatedPrep.activeCrises.map(c => c.id === crisis.id ? unresolvedCrisis : c);
-               updatedPrep.crises = updatedPrep.crises.map(c => c.id === crisis.id ? unresolvedCrisis : c);
-           }
-      }
+      // Refund budget
+      const updatedSchool = {
+        ...school,
+        budget: school.budget + action.budgetCost,
+        preparation: updatedPrep,
+      };
+      updatedPrep.weekPreview = computeWeekPreview(updatedPrep, updatedSchool, state.gameState.currentWeek);
+      updatedSchool.preparation = updatedPrep;
 
-      updatedPrep.weekPreview = computeWeekPreview(updatedPrep, updates, state.gameState.currentWeek);
-      updates.preparation = updatedPrep;
       const updatedSchools = [...state.schools];
-      updatedSchools[pSchoolIdx] = updates;
-
+      updatedSchools[pSchoolIdx] = updatedSchool;
       return { schools: updatedSchools };
     }),
 
@@ -1732,33 +1679,56 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       if (cardIdx === -1) return {};
       const card = prep.unlockedActionCards[cardIdx];
 
-      if (card.usesRemaining === 0) return {};
-      if (school.budget < card.budgetCost) return {};
+      // Check if already pending (Toggle Logic)
+      const isPending = prep.pendingActionCards?.some(pc => pc.cardId === cardId);
 
-      // Apply
-      const updates = { ...school, budget: school.budget - card.budgetCost };
-      let updatedPrep = { ...prep };
+      if (isPending) {
+        // Cancel logic
+        const updatedPrep = {
+          ...prep,
+          pendingActionCards: prep.pendingActionCards?.filter(pc => pc.cardId !== cardId),
+          // Restore usage
+          unlockedActionCards: prep.unlockedActionCards.map((c, i) =>
+            i === cardIdx ? { ...c, usesRemaining: c.usesPerSeason === -1 ? -1 : c.usesRemaining + 1 } : c
+          )
+        };
+        const updatedSchool = {
+          ...school,
+          budget: school.budget + card.budgetCost,
+          preparation: updatedPrep
+        };
+        updatedPrep.weekPreview = computeWeekPreview(updatedPrep, updatedSchool, state.gameState.currentWeek);
+        updatedSchool.preparation = updatedPrep;
 
-      card.effectCodes.forEach(code => {
-          const effectUpdate = resolveEventEffect(code, updates, `Card: ${card.label}`);
-          if (effectUpdate.preparation) updatedPrep = { ...updatedPrep, ...effectUpdate.preparation };
-          if (effectUpdate.budget !== undefined) updates.budget = effectUpdate.budget;
-          if (effectUpdate.fanbaseMorale !== undefined) updates.fanbaseMorale = effectUpdate.fanbaseMorale;
-          if (effectUpdate.enredo) updates.enredo = effectUpdate.enredo;
-      });
+        const updatedSchools = [...state.schools];
+        updatedSchools[pSchoolIdx] = updatedSchool;
+        return { schools: updatedSchools };
 
-      const newCard = {
-          ...card,
-          usesRemaining: card.usesPerSeason === -1 ? -1 : card.usesRemaining - 1
-      };
-      updatedPrep.unlockedActionCards = updatedPrep.unlockedActionCards.map((c, i) => i === cardIdx ? newCard : c);
+      } else {
+        // Assign logic
+        if (card.usesRemaining === 0) return {};
+        if (school.budget < card.budgetCost) return {};
 
-      updatedPrep.weekPreview = computeWeekPreview(updatedPrep, updates, state.gameState.currentWeek);
-      updates.preparation = updatedPrep;
-      const updatedSchools = [...state.schools];
-      updatedSchools[pSchoolIdx] = updates;
+        const updatedPrep = {
+          ...prep,
+          pendingActionCards: [...(prep.pendingActionCards ?? []), { cardId }],
+          // Deduct usage
+          unlockedActionCards: prep.unlockedActionCards.map((c, i) =>
+            i === cardIdx ? { ...c, usesRemaining: c.usesPerSeason === -1 ? -1 : c.usesRemaining - 1 } : c
+          )
+        };
+        const updatedSchool = {
+          ...school,
+          budget: school.budget - card.budgetCost,
+          preparation: updatedPrep
+        };
+        updatedPrep.weekPreview = computeWeekPreview(updatedPrep, updatedSchool, state.gameState.currentWeek);
+        updatedSchool.preparation = updatedPrep;
 
-      return { schools: updatedSchools };
+        const updatedSchools = [...state.schools];
+        updatedSchools[pSchoolIdx] = updatedSchool;
+        return { schools: updatedSchools };
+      }
     }),
 
   refreshWeekPreview: () =>
