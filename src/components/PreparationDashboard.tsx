@@ -411,7 +411,8 @@ function WeekPreviewPanel({
             O que vai acontecer:
             </div>
             {prep.pendingStaffActions?.map((pa: any, i: number) => {
-            const action = STAFF_ACTION_POOL[pa.role]?.find((a: any) => a.id === pa.actionId);
+            const role = pa.role as StaffRole;
+            const action = STAFF_ACTION_POOL[role]?.find((a: any) => a.id === pa.actionId);
             return action ? (
                 <div key={`sa-${i}`} className="text-[9px] text-[#2ECC71] flex items-center gap-1 mb-1">
                 <span>✓</span>
