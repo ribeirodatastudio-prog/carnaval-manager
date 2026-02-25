@@ -72,3 +72,27 @@ export const getKeySkills = (role: StaffRole, skills: StaffSkills): { name: stri
       return selectSkills(['Liderança']);
   }
 };
+
+/**
+ * Formats the Enredo potential score (0-100) into a qualitative label and color.
+ * In Brazilian Carnaval, scores are typically 9.0-10.0. Anything below 9.8 is poor.
+ */
+export function formatEnredoPotential(internalScore: number): { label: string; color: string } {
+  if (internalScore >= 90) return { label: 'Potencial Máximo',     color: '#2ECC71' };
+  if (internalScore >= 80) return { label: 'Potencial Muito Alto', color: '#C9A84C' };
+  if (internalScore >= 65) return { label: 'Potencial Alto',       color: '#F1C40F' };
+  if (internalScore >= 50) return { label: 'Potencial Moderado',   color: '#E67E22' };
+  return                          { label: 'Difícil Competir',     color: '#E74C3C' };
+}
+
+/**
+ * Formats an internal score (0-100) into a realistic Carnaval judge score (9.8-10.0 range mostly).
+ * This is for display purposes (e.g. potential ceilings), not the actual judging algorithm.
+ */
+export function formatJudgeDisplayScore(internalScore: number): string {
+  if (internalScore >= 90) return '10.0';
+  if (internalScore >= 80) return '9.9';
+  if (internalScore >= 70) return '9.85';
+  if (internalScore >= 60) return '9.8';
+  return 'N/A'; // Don't show raw low numbers
+}

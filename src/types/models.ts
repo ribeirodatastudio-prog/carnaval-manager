@@ -357,6 +357,129 @@ export interface PreparationEvent {
   resolved: boolean;
 }
 
+// --- MESA DE CRISE ---
+
+export type CrisisTier = 'Urgente' | 'Atencao' | 'Oportunidade' | 'Informacao';
+// Urgente = red, expires in 1-2 weeks, resolves badly if ignored
+// Atencao = yellow, 3-5 week window, escalates to Urgente if unaddressed
+// Oportunidade = green, closes permanently (does not escalate), different urgency
+// Informacao = blue, no action needed, context only
+
+export interface CrisisOption {
+  label: string;
+  description: string;           // One sentence: what happens if you choose this
+  budgetCost: number;            // R$ cost shown to player before confirming (negative = income)
+  attentionCost: number;         // How many staff attention points this consumes (0-3)
+  staffRequired: StaffRole | null; // If set, only that staff member can execute this option
+  effectCodes: string[];         // Applied immediately on resolve
+  consequenceFlags?: string[];   // Consequence flags set after resolve — seed follow-up crises
+}
+
+export interface CrisisCard {
+  id: string;
+  tier: CrisisTier;
+  domain: EventDomain;           // reuse existing: 'Production' | 'Staff' | 'Community' | 'External' | 'Bateria'
+  title: string;
+  description: string;           // 1-2 sentences. The situation.
+  inactionConsequence: string;   // Quantified cost of doing nothing, shown clearly to player
+  inactionEffectCodes: string[]; // Applied when timer expires without resolution
+  options: CrisisOption[];       // 2-3 options. Last option can be "Ignorar por agora" when Atencao.
+  weekCreated: number;
+  expiresAtWeek: number;         // Week when inaction effects fire automatically
+  expiresInWeeks?: number;       // Template field; converted to expiresAtWeek on instantiation
+  isResolved: boolean;
+  resolvedAtWeek: number | null;
+  chosenOptionIndex: number | null;
+  minWeek?: number;
+  maxWeek?: number;
+  requiresFlag?: string;         // Only fires if this consequenceFlag is set
+}
+
+// --- STAFF ATTENTION ECONOMY ---
+
+export interface StaffAttentionAction {
+  id: string;
+  label: string;
+  description: string;
+  attentionCost: number;         // 1, 2, or 3 points
+  budgetCost: number;
+  effectCodes: string[];
+  requiresFlag?: string;
+  resolvesCrisisId?: string;
+  availableWeeks?: [number, number];
+}
+
+export interface StaffAttentionState {
+  staffId: string;
+  role: StaffRole;
+  totalPoints: number;           // Max points this week (typically 3, reduced when stressed/low energy)
+  usedPoints: number;
+  assignedActions: string[];     // IDs of assigned StaffAttentionActions this week
+  energyWarning: boolean;        // true if using all points will cause energy penalty next week
+  burnoutRisk: boolean;          // true if stress >= 75
+}
+
+// --- WEEKLY BUDGET COMPASS ---
+
+export interface WeeklyBudgetCompass {
+  totalBudgetRemaining: number;
+  recommendedSpendThisWeek: number;
+  projectedSpendThisWeek: number;
+  runwayWeeksAtCurrentRate: number;
+  dangerThreshold: number;
+  isOverRecommended: boolean;
+  overspendAmount: number;
+}
+
+// --- ACTION CARDS (unlocked by creative choices) ---
+
+export type ActionCardUnlockSource =
+  | 'FantasiaAltaCostura'
+  | 'FantasiaPopular'
+  | 'FantasiaIntermediaria'
+  | 'MSPBOusada'
+  | 'MSPBClassica'
+  | 'ComissaoImpacto'
+  | 'ComissaoExperimental'
+  | 'ComissaoTematica'
+  | 'EnredoHighDifficulty'
+  | 'EnredoHighControversy'
+  | 'EnredoComunitario'
+  | 'EnredoAfroBrasileiro'
+  | 'EnredoPatrocinado';
+
+export interface ActionCard {
+  id: string;
+  label: string;
+  description: string;
+  unlockedBy: ActionCardUnlockSource;
+  budgetCost: number;
+  attentionCost: number;
+  staffRequired: StaffRole | null;
+  effectCodes: string[];
+  usesPerSeason: number;         // -1 = unlimited
+  usesRemaining: number;
+  availableFromWeek: number;
+  availableUntilWeek: number;
+  phase: 'Construcao' | 'RetaFinal' | 'Both';
+}
+
+// --- WEEK PREVIEW ---
+
+export interface WeekPreviewItem {
+  type: 'spend' | 'crisis-escalate' | 'crisis-expire' | 'opportunity-close' | 'track-progress' | 'staff-effect' | 'warning';
+  label: string;
+  severity: 'info' | 'warning' | 'danger' | 'positive';
+  quantifiedImpact?: string;
+}
+
+export interface WeekPreview {
+  items: WeekPreviewItem[];
+  projectedSpend: number;
+  unusedActionsRemaining: number;
+  unusedCrisesCount: number;
+}
+
 export interface PreparationState {
   tracks: Record<ProductionTrack, TrackState>;
   bateria: BateriaState;
@@ -389,6 +512,16 @@ export interface PreparationState {
   fantasia: FantasiaState;
   stageEvents: StageEvent[];              // events specific to stages, separate from PreparationEvent[]
   pendingStageEvent: StageEvent | null;
+
+  // NEW REDESIGN FIELDS
+  crises: CrisisCard[];                    // All crises this season (resolved + active)
+  activeCrises: CrisisCard[];              // Only unresolved crises — the mesa de crise
+  staffAttention: StaffAttentionState[];   // One entry per key staff member
+  unlockedActionCards: ActionCard[];       // Cards unlocked by creative choices this season
+  weeklyCompass: WeeklyBudgetCompass | null;
+  weekPreview: WeekPreview | null;
+  actionsUsedThisWeek: number;
+  weeklyActionBudgetSpent: number;
 }
 
 // --------------------------------

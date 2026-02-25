@@ -1,6 +1,7 @@
 import React from 'react';
 import { Enredo } from '../types/models';
 import { formatMoney } from '../utils/textUtils';
+import { formatEnredoPotential } from '../utils/helpers';
 
 interface EnredoSelectionModalProps {
   isOpen: boolean;
@@ -93,7 +94,13 @@ export default function EnredoSelectionModal({
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Potencial</span>
-                        {renderStat('Potential', enredo.potentialScore, 3, "text-[#C9A84C]")}
+                        {(() => {
+                            if (revealLevel >= 3) {
+                                const { label, color } = formatEnredoPotential(enredo.potentialScore);
+                                return <span className="font-bold font-mono text-[9px]" style={{ color }}>{label}</span>;
+                            }
+                            return <span className="text-[#4A5A7A] font-mono tracking-widest">???</span>;
+                        })()}
                     </div>
                     <div className="flex justify-between items-center">
                         <span className="text-[#8A9BB8] font-bold uppercase tracking-wider text-[10px]">Risco</span>
