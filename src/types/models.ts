@@ -407,6 +407,7 @@ export interface StaffAttentionAction {
   requiresFlag?: string;
   resolvesCrisisId?: string;
   availableWeeks?: [number, number];
+  affectsTrack?: 'Alegorias' | 'Harmonia' | 'Fantasias' | 'Bateria' | 'Crises';
 }
 
 export interface StaffAttentionState {
@@ -522,6 +523,9 @@ export interface PreparationState {
   weekPreview: WeekPreview | null;
   actionsUsedThisWeek: number;
   weeklyActionBudgetSpent: number;
+
+  pendingStaffActions?: Array<{ staffId: string; actionId: string; role: StaffRole }>;
+  pendingActionCards?: Array<{ cardId: string }>;
 }
 
 // --------------------------------

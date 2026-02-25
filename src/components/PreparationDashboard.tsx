@@ -16,7 +16,7 @@ import {
 } from '../types/models';
 import { formatMoney, formatRole } from '../utils/textUtils';
 import { evaluateConditions } from '../utils/eventUtils';
-import { STAFF_ACTION_POOL } from '../services/preparationService';
+import { STAFF_ACTION_POOL, estimatedAlegoriaProgressPerWeek } from '../services/preparationService';
 
 // Helper for contrast
 function getContrastColor(hex: string | undefined): string {
@@ -198,14 +198,19 @@ function StaffAttentionPanel({ staffAttention, playerSchool, currentWeek, onAssi
                   <div className="text-[9px] text-[#8A9BB8] uppercase">{formatRole(sa.role)}</div>
                 </div>
                 {/* Attention dots */}
-                <div className="flex gap-1">
-                  {Array.from({ length: sa.totalPoints }).map((_, i) => (
-                    <div key={i} className={`w-3 h-3 rounded-full border-2 ${
-                      i < sa.usedPoints
-                        ? 'bg-[#C9A84C] border-[#C9A84C]'
-                        : 'bg-transparent border-[#4A5A7A]'
-                    }`} />
-                  ))}
+                <div className="flex flex-col items-end">
+                  <div className="flex gap-1">
+                    {Array.from({ length: sa.totalPoints }).map((_, i) => (
+                      <div key={i} className={`w-3 h-3 rounded-full border-2 ${
+                        i < sa.usedPoints
+                          ? 'bg-[#C9A84C] border-[#C9A84C]'
+                          : 'bg-transparent border-[#4A5A7A]'
+                      }`} />
+                    ))}
+                  </div>
+                  <div className="text-[8px] text-[#4A5A7A] italic mt-0.5">
+                    Pontos resetam ao avançar
+                  </div>
                 </div>
               </div>
 
@@ -227,6 +232,10 @@ function StaffAttentionPanel({ staffAttention, playerSchool, currentWeek, onAssi
                   const canAffordBudget = playerSchool.budget >= action.budgetCost;
                   const isDisabled = !isAssigned && (!canAffordPoints || !canAffordBudget);
 
+                  const trackColors: Record<string, string> = {
+                    Alegorias: '#E67E22', Harmonia: '#3498DB', Fantasias: '#9B59B6', Bateria: '#E74C3C', Crises: '#F1C40F'
+                  };
+
                   return (
                     <button
                       key={action.id}
@@ -241,8 +250,17 @@ function StaffAttentionPanel({ staffAttention, playerSchool, currentWeek, onAssi
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-bold">{action.label}</span>
-                        <div className="flex items-center gap-1 text-[8px] shrink-0 ml-2">
+                        <span className="font-bold truncate pr-2">{action.label}</span>
+                        <div className="flex items-center gap-1 text-[8px] shrink-0">
+                          {action.affectsTrack && (
+                            <span className="px-1 rounded font-bold" style={{
+                              background: trackColors[action.affectsTrack] + '30',
+                              color: trackColors[action.affectsTrack],
+                              border: `1px solid ${trackColors[action.affectsTrack]}50`,
+                            }}>
+                              {action.affectsTrack}
+                            </span>
+                          )}
                           {action.attentionCost > 0 && (
                             <span className="text-[#8A9BB8]">{action.attentionCost}pt</span>
                           )}
@@ -251,7 +269,7 @@ function StaffAttentionPanel({ staffAttention, playerSchool, currentWeek, onAssi
                           )}
                         </div>
                       </div>
-                      <div className="text-[8px] text-[#8A9BB8] mt-0.5">{action.description}</div>
+                      <div className="text-[8px] text-[#8A9BB8] mt-0.5 leading-tight">{action.description}</div>
                     </button>
                   );
                 })}
@@ -313,7 +331,9 @@ function WeeklyCompassPanel({ compass, school }: {
   );
 }
 
-function ActionCardsPanel({ cards, budget, onUse }: { cards: any[], budget: number, onUse: (id: string) => void }) {
+function ActionCardsPanel({ cards, pendingActionCards, budget, onUse }: {
+    cards: any[], pendingActionCards: any[] | undefined, budget: number, onUse: (id: string) => void
+}) {
     if (cards.length === 0) return null;
 
     return (
@@ -322,31 +342,43 @@ function ActionCardsPanel({ cards, budget, onUse }: { cards: any[], budget: numb
                 🎴 Cartas de Ação
             </h3>
             <div className="space-y-2">
-                {cards.map(card => (
-                    <button
-                        key={card.id}
-                        onClick={() => onUse(card.id)}
-                        disabled={card.usesRemaining === 0 || budget < card.budgetCost}
-                        className={`w-full text-left p-2 rounded border relative overflow-hidden group ${
-                            card.usesRemaining === 0
-                            ? 'bg-[#161E35] border-[#1E2D50] opacity-50'
-                            : 'bg-[#2A3F6B]/20 border-[#2A3F6B] hover:bg-[#2A3F6B]/40 hover:border-[#60C0FF]'
-                        }`}
-                    >
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="font-bold text-[10px] text-[#60C0FF]">{card.label}</span>
-                            {card.usesPerSeason !== -1 && (
-                                <span className="text-[9px] bg-black/40 px-1.5 rounded text-[#8A9BB8]">
-                                    {card.usesRemaining}/{card.usesPerSeason}
+                {cards.map(card => {
+                    const isPending = pendingActionCards?.some(pc => pc.cardId === card.id);
+                    // If pending, budget is already deducted, so don't check budget for disable logic unless we assume refund
+                    // Actually refund is logic store side. Visuals:
+
+                    return (
+                        <button
+                            key={card.id}
+                            onClick={() => onUse(card.id)}
+                            disabled={!isPending && (card.usesRemaining === 0 || budget < card.budgetCost)}
+                            className={`w-full text-left p-2 rounded border relative overflow-hidden group transition-all ${
+                                isPending
+                                ? 'bg-[#2ECC71]/20 border-[#2ECC71] hover:bg-[#2ECC71]/30'
+                                : card.usesRemaining === 0
+                                ? 'bg-[#161E35] border-[#1E2D50] opacity-50'
+                                : 'bg-[#2A3F6B]/20 border-[#2A3F6B] hover:bg-[#2A3F6B]/40 hover:border-[#60C0FF]'
+                            }`}
+                        >
+                            <div className="flex justify-between items-center mb-1">
+                                <span className={`font-bold text-[10px] ${isPending ? 'text-[#2ECC71]' : 'text-[#60C0FF]'}`}>
+                                    {isPending ? '✓ Agendado' : card.label}
                                 </span>
+                                {card.usesPerSeason !== -1 && (
+                                    <span className="text-[9px] bg-black/40 px-1.5 rounded text-[#8A9BB8]">
+                                        {card.usesRemaining}/{card.usesPerSeason}
+                                    </span>
+                                )}
+                            </div>
+                            <div className={`text-[9px] mb-1 leading-tight ${isPending ? 'text-[#F0E6D3]' : 'text-[#8A9BB8]'}`}>
+                                {isPending ? `Será executado ao avançar. Clique para cancelar.` : card.description}
+                            </div>
+                            {card.budgetCost > 0 && !isPending && (
+                                <div className="text-[9px] text-[#E74C3C] font-mono">-{formatMoney(card.budgetCost)}</div>
                             )}
-                        </div>
-                        <div className="text-[9px] text-[#8A9BB8] mb-1 leading-tight">{card.description}</div>
-                        {card.budgetCost > 0 && (
-                            <div className="text-[9px] text-[#E74C3C] font-mono">-{formatMoney(card.budgetCost)}</div>
-                        )}
-                    </button>
-                ))}
+                        </button>
+                    );
+                })}
             </div>
         </section>
     );
@@ -367,10 +399,45 @@ function WeekPreviewPanel({
     info: '#8A9BB8', warning: '#F1C40F', danger: '#E74C3C', positive: '#2ECC71'
   };
 
+  const hasPending = (prep.pendingStaffActions?.length > 0) || (prep.pendingActionCards?.length > 0);
+
   return (
     <section className="bg-[#080C18] border border-[#1E2D50] rounded-xl p-4 shadow-lg mb-6">
+
+      {/* Planned Actions Section */}
+      {hasPending && (
+        <div className="mb-4 border-b border-[#1E2D50] pb-4">
+            <div className="text-[9px] text-[#8A9BB8] uppercase font-bold mb-2">
+            O que vai acontecer:
+            </div>
+            {prep.pendingStaffActions?.map((pa: any, i: number) => {
+            const role = pa.role as StaffRole;
+            const action = STAFF_ACTION_POOL[role]?.find((a: any) => a.id === pa.actionId);
+            return action ? (
+                <div key={`sa-${i}`} className="text-[9px] text-[#2ECC71] flex items-center gap-1 mb-1">
+                <span>✓</span>
+                <span className="font-bold">{action.label}</span>
+                {action.affectsTrack && (
+                    <span className="text-[#4A5A7A] ml-auto">→ {action.affectsTrack}</span>
+                )}
+                </div>
+            ) : null;
+            })}
+            {prep.pendingActionCards?.map((pc: any, i: number) => {
+                const card = prep.unlockedActionCards?.find((c: any) => c.id === pc.cardId);
+                return card ? (
+                    <div key={`ac-${i}`} className="text-[9px] text-[#60C0FF] flex items-center gap-1 mb-1">
+                    <span>✓</span>
+                    <span className="font-bold">{card.label}</span>
+                    <span className="text-[#4A5A7A] ml-auto">→ Carta</span>
+                    </div>
+                ) : null;
+            })}
+        </div>
+      )}
+
       <h3 className="text-[10px] font-black text-[#8A9BB8] uppercase tracking-widest mb-3">
-        Se você avançar agora:
+        Alertas & Previsões:
       </h3>
 
       {preview && (
@@ -598,9 +665,10 @@ export default function PreparationDashboard() {
                     <div className="flex justify-between items-start relative mb-6">
                         <div className="absolute top-6 left-0 right-0 h-1 bg-[#1E2D50] z-0" />
                         {prep.alegoriaStages?.map((stage, idx) => {
-                            const isActive = stage.isUnlocked && !stage.isComplete;
-                            const isDone = stage.isComplete;
-                            const isLocked = !stage.isUnlocked;
+                            const isDone = stage.isComplete || stage.progress >= 100;
+                            const isActive = stage.isUnlocked && !isDone;
+                            const isLocked = !stage.isUnlocked && !isDone;
+
                             return (
                                 <div key={stage.id} className={`relative flex flex-col items-center flex-1 ${isLocked ? 'opacity-30' : ''}`}>
                                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 z-10 transition-all duration-300 ${
@@ -616,6 +684,11 @@ export default function PreparationDashboard() {
                                         </div>
                                         {isActive && <div className="text-xs font-mono text-[#C9A84C]">{Math.floor(stage.progress)}%</div>}
                                     </div>
+                                    {isActive && stage.progress >= 100 && !stage.isComplete && (
+                                        <div className="absolute -bottom-8 w-max text-[9px] text-[#2ECC71] font-bold bg-[#080C18] border border-[#2ECC71] px-2 py-0.5 rounded">
+                                            ⏳ Pronto para avançar →
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -737,6 +810,7 @@ export default function PreparationDashboard() {
 
             <ActionCardsPanel
                 cards={prep.unlockedActionCards}
+                pendingActionCards={prep.pendingActionCards}
                 budget={playerSchool.budget}
                 onUse={useActionCard}
             />
@@ -820,13 +894,24 @@ export default function PreparationDashboard() {
                         let thumbColor = '#C9A84C';
                         if (ratio > 1.5) thumbColor = '#E67E22';
 
+                        // Estimate
+                        const activeStage = prep.alegoriaStages?.find(s => s.isUnlocked && !s.isComplete);
+                        const progressPerWeek = estimatedAlegoriaProgressPerWeek(track.weeklyBurnRate, playerSchool.currentDivision);
+                        const weeksToComplete = activeStage
+                            ? Math.ceil((100 - activeStage.progress) / progressPerWeek)
+                            : null;
+
                         return (
                             <div className="bg-[#080C18] rounded-lg p-4 border border-[#1E2D50] flex gap-4 items-center">
                                 <div className="flex-1">
                                     <div className="flex justify-between items-end mb-1">
-                                        <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Investimento Semanal</span>
+                                        <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">
+                                            💸 Investimento Semanal
+                                        </span>
                                         <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(track.weeklyBurnRate)}</span>
                                     </div>
+                                    <div className="text-[9px] text-[#4A5A7A] mb-2">(controla velocidade + qualidade)</div>
+
                                     <input type="range" min={100} max={maxBurn} step={100}
                                         value={track.weeklyBurnRate}
                                         onChange={(e) => {
@@ -836,6 +921,14 @@ export default function PreparationDashboard() {
                                         className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
                                         style={{ accentColor: thumbColor }}
                                     />
+
+                                    {weeksToComplete !== null && (
+                                        <div className="text-[9px] font-mono mt-1 text-center font-bold" style={{
+                                            color: weeksToComplete <= 4 ? '#2ECC71' : weeksToComplete <= 8 ? '#F1C40F' : '#E74C3C'
+                                        }}>
+                                            {activeStage ? `→ conclusão estimada em ~${weeksToComplete} semana(s)` : '✓ Etapa concluída'}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -1023,6 +1116,7 @@ export default function PreparationDashboard() {
 
                 <ActionCardsPanel
                     cards={prep.unlockedActionCards}
+                    pendingActionCards={prep.pendingActionCards}
                     budget={playerSchool.budget}
                     onUse={useActionCard}
                 />
