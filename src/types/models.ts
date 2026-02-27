@@ -206,17 +206,175 @@ export type ProductionTrack = 'Alegorias' | 'Fantasias' | 'Bateria' | 'Harmonia'
 
 export interface TrackState {
   track: ProductionTrack;
-  progress: number;          // 0–100. 100 = complete.
-  quality: number;           // 0–100. Affected by budget invested and staff skill.
-  budgetAllocated: number;   // Total R$ committed to this track so far this season.
-  staffFocused: boolean;     // Is the responsible staff member focused here this week?
-  projectedCompletion: number | null; // Week number it will finish at current pace. null = not started.
-  projectedEarly: number | null; // Best case completion week (tight management)
-  projectedLate: number | null; // Worst case completion week (loose management)
-  finishingRisk: number;     // 0–100. Risk of problems if completed within 2 weeks of parade.
-  weeklyBurnRate: number;    // R$ consumed per week at current allocation.
-  carCountBonus: number;     // Quality ceiling addition from cars
+  progress: number;                    // 0–100. 100 = complete.
+  quality: number;                     // 0–100.
+  budgetAllocated: number;             // Total R$ committed so far this season.
+  ppAllocatedThisWeek: number;         // How many PP the player allocated here this turn.
+  ppMinimum: number;                   // Minimum PP required this turn (varies by act + enredo complexity).
+  moneyPerPP: number;                  // R$ cost per PP (varies by division).
+  staffQualityMultiplier: number;      // Staff bonus on quality gain per PP (0.8–1.4).
+  staffProgressMultiplier: number;     // Staff bonus on progress gain per PP (0.8–1.4). Primarily for MestreDeBarracao on Alegorias.
+  enredoDifficultyMultiplier: number;  // Enredo difficulty effect on quality (0.75–1.15).
+  projectedCompletionWeek: number | null;
+  deadlineWeek: number;                // Last acceptable week to reach 100%.
+  carCountBonus: number;               // Keep existing — quality ceiling from cars.
 }
+
+export interface EnredoProductionEffects {
+  complexityTier: 'Simples' | 'Moderado' | 'Profundo' | 'Enciclopedico';
+  difficultyTier: 'Facil' | 'Normal' | 'Abstrato' | 'QuaseImpossivel';
+  alegoriaMinPPBonus: number;        // 0 or +1 (from complexity >= 61)
+  fantasiaMinPPBonus: number;        // 0 or +1 (from complexity >= 61)
+  alegoriaDifficultyMult: number;    // 0.75 to 1.15
+  fantasiaDifficultyMult: number;    // 0.80 to 1.10
+  crisisChanceBonus: number;         // 0.0 to 0.20 (from complexity)
+  communityChanceBonus: number;      // 0.0 to 0.15 (from controversy)
+  appealMoraleEffect: number;        // -2, 0, or positive bonus per turn
+  exclusiveCrisisIds: string[];      // IDs of crises unlocked by this enredo
+  enredoCeilingBonus: number;        // Bonus to desfile Enredo quesito if executed well
+}
+
+export interface WeekTurnState {
+  totalPP: number;
+  ppBreakdown: {
+    base: number;                   // Always 10
+    staffBonus: number;             // 0 to +6
+    moraleBonus: number;            // -1, 0, +1, or +2
+    archetypeBonus: number;         // 0 or +1 (Potencia)
+    burnoutPenalty: number;         // 0 to -N
+    crisisPenalty: number;          // 0, -1, or -2
+  };
+  allocations: Record<ProductionTrack, number>;
+  crisisAllocations: Record<string, { ppCost: number; optionIndex: number }>;
+  activeCards: string[];            // Card IDs, max 2 (3 for Guerreira)
+  maxCards: number;
+  isConfirmed: boolean;
+}
+
+export interface TurnPreview {
+  tracks: Record<ProductionTrack, TrackPreview>;
+  bateria: BateriaPreview;
+  harmonia: HarmoniaPreview;
+  finance: FinancePreview;
+  staff: StaffPreview[];
+  crises: CrisisPreviewItem[];
+  alerts: PreviewAlert[];
+  baselineComparison: BaselinePreview; // "if I only allocate minimums"
+}
+
+export interface TrackPreview {
+  progressBefore: number;
+  progressAfter: number;
+  progressDelta: number;
+  qualityBefore: number;
+  qualityAfter: number;
+  qualityDelta: number;
+  completionWeek: number | null;
+  deadlineWeek: number;
+  isOnSchedule: boolean;
+  isDecaying: boolean;              // true if at minimum and quality drops
+}
+
+export interface BateriaPreview {
+  formBefore: number;
+  formAfter: number;
+  formDelta: number;
+  energyBefore: number;
+  energyAfter: number;
+  energyDelta: number;
+  weeksUntilExhaustion: number | null;
+  isOvertraining: boolean;
+}
+
+export interface HarmoniaPreview {
+  sambaFixadoBefore: number;
+  sambaFixadoAfter: number;
+  marchaBefore: number;
+  marchaAfter: number;
+  vocalBefore: number;
+  vocalAfter: number;
+  cardEffectDescription: string | null;
+}
+
+export interface FinancePreview {
+  budgetBefore: number;
+  spendThisTurn: number;
+  budgetAfter: number;
+  weeksUntilParade: number;
+  avgBurnPerWeek: number;
+  weeksOfRunway: number;
+  isDangerous: boolean;
+}
+
+export interface StaffPreview {
+  staffId: string;
+  name: string;
+  role: StaffRole;
+  stressBefore: number;
+  stressAfter: number;
+  stressDelta: number;
+  bonusActive: boolean;
+  bonusDescription: string;
+  warningThreshold: boolean;        // stress will cross 70
+  burnoutThreshold: boolean;        // stress will cross 90
+}
+
+export interface CrisisPreviewItem {
+  crisisId: string;
+  title: string;
+  isBeingResolved: boolean;
+  ppCost: number;
+  moneyCost: number;
+  resolutionEffectText: string;
+  ignoreEffectText: string;
+  turnsUntilExpiry: number;
+}
+
+export interface PreviewAlert {
+  type: 'danger' | 'warning' | 'info' | 'positive';
+  message: string;
+  track?: ProductionTrack;
+}
+
+export interface BaselinePreview {
+  tracks: Record<ProductionTrack, { progressDelta: number; qualityDelta: number }>;
+  totalCost: number;
+}
+
+export type CardEffectType =
+  | 'MULTIPLY_QUALITY'     // PP quality output × N for a track
+  | 'MULTIPLY_PROGRESS'    // PP progress output × N for a track
+  | 'GENERATE_PP'          // +N PP this turn
+  | 'BYPASS_MINIMUM'       // A track's minimum PP is 0 this turn
+  | 'RUSH'                 // +flat progress, but quality risk if quality < this
+  | 'REDUCE_STRESS'        // -N stress on a specific role
+  | 'MORALE_BOOST'         // +N morale this turn
+  | 'MONEY_SAVE'          // Reduce R$ cost per PP by X% this turn
+  | 'special:BATERIA_ENERGY_DOWN'; // Special case
+
+export interface CardEffect {
+  type: CardEffectType;
+  target?: ProductionTrack;         // Which track this affects, if applicable
+  value: number;                    // Multiplier, PP amount, percentage, etc.
+  qualityThreshold?: number;        // For RUSH: risk fires if quality < this
+  riskPenalty?: number;             // For RUSH: quality lost if threshold not met
+  staffRole?: StaffRole;            // For REDUCE_STRESS
+}
+
+export interface ProductionCard {
+  id: string;
+  label: string;
+  description: string;
+  flavorText?: string;              // Thematic one-liner
+  budgetCost: number;
+  effects: CardEffect[];
+  usesPerSeason: number;            // -1 = unlimited
+  usesRemaining: number;
+  availableFromWeek: number;
+  availableUntilWeek: number;
+  unlockedBy: string;               // What unlocked this: 'enredo_afro', 'staff_carnavalesco_high', 'archetype_guerreira', 'crisis_resolved_X', etc.
+}
+
 
 export interface BateriaState {
   form: number;              // 0–100. The current performance level of the bateria.
@@ -369,7 +527,7 @@ export interface CrisisOption {
   label: string;
   description: string;           // One sentence: what happens if you choose this
   budgetCost: number;            // R$ cost shown to player before confirming (negative = income)
-  attentionCost: number;         // How many staff attention points this consumes (0-3)
+  ppCost: number;                // NEW: PP cost to resolve this option
   staffRequired: StaffRole | null; // If set, only that staff member can execute this option
   effectCodes: string[];         // Applied immediately on resolve
   consequenceFlags?: string[];   // Consequence flags set after resolve — seed follow-up crises
@@ -395,137 +553,47 @@ export interface CrisisCard {
   requiresFlag?: string;         // Only fires if this consequenceFlag is set
 }
 
-// --- STAFF ATTENTION ECONOMY ---
-
-export interface StaffAttentionAction {
-  id: string;
-  label: string;
-  description: string;
-  attentionCost: number;         // 1, 2, or 3 points
-  budgetCost: number;
-  effectCodes: string[];
-  requiresFlag?: string;
-  resolvesCrisisId?: string;
-  availableWeeks?: [number, number];
-  affectsTrack?: 'Alegorias' | 'Harmonia' | 'Fantasias' | 'Bateria' | 'Crises';
-}
-
-export interface StaffAttentionState {
-  staffId: string;
-  role: StaffRole;
-  totalPoints: number;           // Max points this week (typically 3, reduced when stressed/low energy)
-  usedPoints: number;
-  assignedActions: string[];     // IDs of assigned StaffAttentionActions this week
-  energyWarning: boolean;        // true if using all points will cause energy penalty next week
-  burnoutRisk: boolean;          // true if stress >= 75
-}
-
-// --- WEEKLY BUDGET COMPASS ---
-
-export interface WeeklyBudgetCompass {
-  totalBudgetRemaining: number;
-  recommendedSpendThisWeek: number;
-  projectedSpendThisWeek: number;
-  runwayWeeksAtCurrentRate: number;
-  dangerThreshold: number;
-  isOverRecommended: boolean;
-  overspendAmount: number;
-}
-
-// --- ACTION CARDS (unlocked by creative choices) ---
-
-export type ActionCardUnlockSource =
-  | 'FantasiaAltaCostura'
-  | 'FantasiaPopular'
-  | 'FantasiaIntermediaria'
-  | 'MSPBOusada'
-  | 'MSPBClassica'
-  | 'ComissaoImpacto'
-  | 'ComissaoExperimental'
-  | 'ComissaoTematica'
-  | 'EnredoHighDifficulty'
-  | 'EnredoHighControversy'
-  | 'EnredoComunitario'
-  | 'EnredoAfroBrasileiro'
-  | 'EnredoPatrocinado';
-
-export interface ActionCard {
-  id: string;
-  label: string;
-  description: string;
-  unlockedBy: ActionCardUnlockSource;
-  budgetCost: number;
-  attentionCost: number;
-  staffRequired: StaffRole | null;
-  effectCodes: string[];
-  usesPerSeason: number;         // -1 = unlimited
-  usesRemaining: number;
-  availableFromWeek: number;
-  availableUntilWeek: number;
-  phase: 'Construcao' | 'RetaFinal' | 'Both';
-}
-
-// --- WEEK PREVIEW ---
-
-export interface WeekPreviewItem {
-  type: 'spend' | 'crisis-escalate' | 'crisis-expire' | 'opportunity-close' | 'track-progress' | 'staff-effect' | 'warning';
-  label: string;
-  severity: 'info' | 'warning' | 'danger' | 'positive';
-  quantifiedImpact?: string;
-}
-
-export interface WeekPreview {
-  items: WeekPreviewItem[];
-  projectedSpend: number;
-  unusedActionsRemaining: number;
-  unusedCrisesCount: number;
-}
 
 export interface PreparationState {
   tracks: Record<ProductionTrack, TrackState>;
-  bateria: BateriaState;
-  staffStress: StaffStress[];
-  events: PreparationEvent[];          // All events fired this season
-  pendingEvent: PreparationEvent | null; // Event awaiting player decision
-  isBiWeekly: boolean;                 // true for weeks 9–28, false for 29–44
-  weeksUntilParade: number;            // Countdown. 36 at start, 0 at parade.
-  totalBudgetSpent: number;            // Total R$ spent across all tracks this season.
-  majorEventFiredThisSeason: boolean;  // Only one major per season.
+  bateria: BateriaState;               // Keep as-is
+  staffStress: StaffStress[];          // Keep as-is
+  events: PreparationEvent[];          // Keep — legacy event log
+  pendingEvent: PreparationEvent | null;
+  isBiWeekly: boolean;
+  weeksUntilParade: number;
+  totalBudgetSpent: number;
+  majorEventFiredThisSeason: boolean;
 
-  alegoriaCarCount: number | null;     // null = not yet chosen
+  // Kept from current
+  alegoriaCarCount: number | null;
   isBankrupt: boolean;
   bankruptAtWeek: number | null;
+  alegoriaStages: AlegoriaStage[];     // Keep stage system
+  passistas: PassistasState | null;
+  mspb: MSPBState | null;
+  comissaoDeFrente: ComissaoDeFrenteState;
+  harmoniaState: HarmoniaState;
+  fantasia: FantasiaState;
+  stageEvents: StageEvent[];
+  pendingStageEvent: StageEvent | null;
+  consequenceFlags: string[];
 
-  // New Fields
-  staffCostMultiplier: number;   // Default 1.0. Potencia = 1.15, Guerreira = 0.9 (cheaper staff possible)
-  qualityCeilingBonus: number;   // Default 0. Potencia = +10. Added to all track quality calculations.
-  hasImproviseOption: boolean;   // Default false. Guerreira schools get a 3rd event option sometimes.
-  consequenceFlags: string[];    // List of string flags from event choices that seed follow-up events.
+  // NEW — PP System
+  enredoEffects: EnredoProductionEffects;  // Calculated once at init
+  currentTurn: WeekTurnState | null;       // Active during player's turn, null after confirmed
+  productionCards: ProductionCard[];       // All available cards this season
+  crises: CrisisCard[];                   // All crises (resolved + active)
+  activeCrises: CrisisCard[];             // Unresolved crises
+  currentAct: 1 | 2 | 3;                 // Derived from week number
+
   bateriaOptimalMin: number;     // default 75
   bateriaOptimalMax: number;     // default 95
 
-  // EXTENDED PRODUCTION STATE
-  alegoriaStages: AlegoriaStage[];
-  passistas: PassistasState | null;       // null in Grupo de Avaliação
-  mspb: MSPBState | null;                 // null if school has no MestreSala+PortaBandeira pair
-  comissaoDeFrente: ComissaoDeFrenteState;
-  harmoniaState: HarmoniaState;           // renamed from harmonia to avoid conflict with track
-  fantasia: FantasiaState;
-  stageEvents: StageEvent[];              // events specific to stages, separate from PreparationEvent[]
-  pendingStageEvent: StageEvent | null;
-
-  // NEW REDESIGN FIELDS
-  crises: CrisisCard[];                    // All crises this season (resolved + active)
-  activeCrises: CrisisCard[];              // Only unresolved crises — the mesa de crise
-  staffAttention: StaffAttentionState[];   // One entry per key staff member
-  unlockedActionCards: ActionCard[];       // Cards unlocked by creative choices this season
-  weeklyCompass: WeeklyBudgetCompass | null;
-  weekPreview: WeekPreview | null;
-  actionsUsedThisWeek: number;
-  weeklyActionBudgetSpent: number;
-
-  pendingStaffActions?: Array<{ staffId: string; actionId: string; role: StaffRole }>;
-  pendingActionCards?: Array<{ cardId: string }>;
+  // DEPRECATED/REMOVED fields from old system (removed here):
+  // staffAttention, unlockedActionCards, weeklyCompass, weekPreview,
+  // actionsUsedThisWeek, weeklyActionBudgetSpent, pendingStaffActions, pendingActionCards
+  // staffCostMultiplier, qualityCeilingBonus, hasImproviseOption
 }
 
 // --------------------------------
