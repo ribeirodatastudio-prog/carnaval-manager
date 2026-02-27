@@ -297,7 +297,7 @@ export default function PreparationDashboard() {
                         min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Bateria}
                         max={turn.allocations.Bateria + remainingPP}
                         color="#E74C3C"
-                        onChange={(v) => allocatePP('Bateria', v)}
+                        onChange={(v: number) => allocatePP('Bateria', v)}
                       />
                   </div>
 
@@ -325,7 +325,7 @@ export default function PreparationDashboard() {
                         min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Harmonia}
                         max={turn.allocations.Harmonia + remainingPP}
                         color="#3498DB"
-                        onChange={(v) => allocatePP('Harmonia', v)}
+                        onChange={(v: number) => allocatePP('Harmonia', v)}
                       />
                   </div>
               </div>
