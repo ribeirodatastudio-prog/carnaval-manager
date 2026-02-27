@@ -38,10 +38,10 @@ const DIVISIONS: Division[] = [
 function calculateParadeScore(school: School): number {
     let score = 0;
 
-    // 1. Prestige: REDUCED from 0.5 to 0.2 (max 40 pts instead of 100)
+    // 1. Prestige
     score += school.prestige * 0.2;
 
-    // 2. Enredo Execution (unchanged logic, same max)
+    // 2. Enredo Execution
     const enredo = school.enredo;
     if (!enredo) return score - 50;
 
@@ -59,7 +59,6 @@ function calculateParadeScore(school: School): number {
         const prep = school.preparation;
 
         // Track Quality Bonuses
-        // Max: 20 (Aleg) + 12 (Fant) + 8 (Harm) = 40 pts
         const alegBonus = (prep.tracks.Alegorias.quality / 100) * 20;
         const fantBonus = (prep.tracks.Fantasias.quality / 100) * 12;
         const harmBonus = (prep.tracks.Harmonia.quality / 100) * 8;
@@ -69,70 +68,58 @@ function calculateParadeScore(school: School): number {
         const fantPenalty = prep.tracks.Fantasias.progress < 100 ? ((100 - prep.tracks.Fantasias.progress) / 100) * -10 : 0;
         const harmPenalty = prep.tracks.Harmonia.progress < 100 ? ((100 - prep.tracks.Harmonia.progress) / 100) * -8 : 0;
 
-        // Finishing Risk Penalty
-        const riskPenalty = (prep.tracks.Alegorias.finishingRisk / 100) * -10;
-
-        // Bateria Score (Max 25)
-        // Optimal form: 75-95.
+        // Bateria Score
         const form = prep.bateria.form;
         let bateriaScore = 0;
         if (form >= 75 && form <= 95) {
-            bateriaScore = (form / 100) * 25; // Good peak
+            bateriaScore = (form / 100) * 25;
         } else if (form < 75) {
-            bateriaScore = (form / 100) * 15; // Under-prepared
+            bateriaScore = (form / 100) * 15;
         } else {
-            bateriaScore = 15; // Over-peaked/Burnout (flat 15)
+            bateriaScore = 15;
         }
 
-        preparationScore = alegBonus + fantBonus + harmBonus + alegPenalty + fantPenalty + harmPenalty + riskPenalty + bateriaScore;
+        preparationScore = alegBonus + fantBonus + harmBonus + alegPenalty + fantPenalty + harmPenalty + bateriaScore;
 
     } else {
         // AI LOGIC (Synthetic)
-        // Estimate quality based on Prestige (40-70 base + variance)
-        const prestigeFactor = school.prestige / 200; // 0.25 - 1.0
+        const prestigeFactor = school.prestige / 200;
 
-        // Synthetic Quality (0-100)
-        const synQuality = 40 + (prestigeFactor * 40) + (Math.random() * 20); // 40-100 range
+        // Synthetic Quality (Adjusted for new range 60-95)
+        const synQuality = 60 + (prestigeFactor * 35) + (Math.random() * 10);
 
         const alegBonus = (synQuality / 100) * 20;
         const fantBonus = (synQuality / 100) * 12;
         const harmBonus = (synQuality / 100) * 8;
 
-        // AI assumed to finish everything (no penalty)
-
-        // Bateria: AI tends to be consistent
-        const synForm = 70 + (prestigeFactor * 20) + (Math.random() * 10); // 70-100
+        const synForm = 70 + (prestigeFactor * 25) + (Math.random() * 5);
         let bateriaScore = 0;
         if (synForm >= 75 && synForm <= 95) {
              bateriaScore = (synForm / 100) * 25;
         } else {
-             bateriaScore = 18; // AI decent average
+             bateriaScore = 18;
         }
 
         preparationScore = alegBonus + fantBonus + harmBonus + bateriaScore;
-
-        // Small randomization for AI variety
         preparationScore += (Math.random() - 0.5) * 5;
     }
     score += preparationScore;
 
     // 4. Harmonia Noise / Controversy
-    // All schools get some noise (not just high-controversy), but controversy amplifies it
-    const baseNoise = (Math.random() - 0.5) * 10;  // Reduced noise since preparation adds variance
+    const baseNoise = (Math.random() - 0.5) * 10;
     const controversyNoise = enredo.controversy > 70 ? (Math.random() - 0.5) * 15 : 0;
     score += baseNoise + controversyNoise;
 
-    // 5. Animação (unchanged)
-    const animacaoBonus = (enredo.appeal / 100) * (school.fanbaseMorale / 100) * 15; // Reduced max from 20 to 15
+    // 5. Animação
+    const animacaoBonus = (enredo.appeal / 100) * (school.fanbaseMorale / 100) * 15;
     score += animacaoBonus;
 
-    // 6. Staff aggregate skill bonus (NEW — rewards investing in good staff)
-    // Sum the top 4 staff reputation scores, normalized
+    // 6. Staff aggregate skill bonus
     const staffReps = school.staff.map(s => s.reputation).sort((a, b) => b - a).slice(0, 4);
     const avgTopRep = staffReps.length > 0 ? staffReps.reduce((a, b) => a + b, 0) / staffReps.length : 0;
-    score += (avgTopRep / 200) * 20; // Reduced from 30 to 20 to balance with prep
+    score += (avgTopRep / 200) * 20;
 
-    // 7. Samba-Enredo Score (existing, unchanged)
+    // 7. Samba-Enredo Score
     let sambaScoreValue = 0;
     if (school.sambaEnredo) {
         const s = school.sambaEnredo;
@@ -147,10 +134,8 @@ function calculateParadeScore(school: School): number {
             (s.aderenciaAoEnredo * 0.07) +
             (s.versatilidade * 0.05);
 
-        sambaScoreValue = weightedAvg * 0.4; // Scale to ~40 points max
+        sambaScoreValue = weightedAvg * 0.4;
     } else {
-        // Fallback for AI schools (simulated)
-        // Assume average 60-80
         sambaScoreValue = (60 + Math.random() * 20) * 0.4;
     }
     score += sambaScoreValue;
@@ -162,19 +147,16 @@ function calculateParadeScore(school: School): number {
  * Runs a multi-year simulation of school prestige, promotion, and relegation.
  */
 export function runSimulation(initialSchools: School[], startYear: number, totalYears: number): SimulationResult {
-  // Deep copy to avoid mutating the store directly during simulation steps
   let schools: School[] = JSON.parse(JSON.stringify(initialSchools));
 
   const historyLog: YearlyResult[] = [];
   const prestigeEvolution: Record<string, { year: number; prestige: number }[]> = {};
 
-  // Initialize evolution tracking
   schools.forEach(s => {
     prestigeEvolution[s.id] = [];
   });
 
   for (let year = startYear; year < startYear + totalYears; year++) {
-    // Group schools by division
     const schoolsByDivision: Record<Division, School[]> = {
       'Grupo Especial': [],
       'Série Ouro': [],
@@ -191,21 +173,17 @@ export function runSimulation(initialSchools: School[], startYear: number, total
 
     const rankedByDivision: Record<Division, School[]> = { ...schoolsByDivision };
 
-    // 1. Determine Results for Each Division
     for (const div of DIVISIONS) {
       const divisionSchools = schoolsByDivision[div];
       if (divisionSchools.length === 0) continue;
 
-      // A. Calculate Performance Scores
       const scoredSchools = divisionSchools.map(school => {
         const finalScore = calculateParadeScore(school);
         return { ...school, tempScore: finalScore };
       });
 
-      // Sort by Score Descending (Highest Score First)
       scoredSchools.sort((a, b) => b.tempScore - a.tempScore);
 
-      // B. Determine Relegation Candidates & Victims
       const numCandidates = div === 'Grupo Especial' ? 4 : 5;
       const numVictims = div === 'Grupo Especial' ? 1 : 2;
 
@@ -213,41 +191,19 @@ export function runSimulation(initialSchools: School[], startYear: number, total
       const candidates = scoredSchools.slice(candidateStartIndex);
       const safeSchoolsFromBottom = scoredSchools.slice(0, candidateStartIndex);
 
-      // Randomly select victims from the bottom candidates
       const shuffledCandidates = [...candidates].sort(() => Math.random() - 0.5);
       const victims = shuffledCandidates.slice(0, numVictims);
       const survivors = shuffledCandidates.slice(numVictims);
 
-      // C. Determine Winners (Top 3)
-      // Pool = Safe Schools + Survivors
       const nonRelegatedPool = [...safeSchoolsFromBottom, ...survivors];
-
-      // Top 3 should be based on Score, not Random (Prompt: "Champion... randomly... from non-relegated").
-      // Wait, memory said "selects the Champion... randomly... to prevent domination".
-      // But the new requirement says "theme quality and fit directly affect simulation scores".
-      // If I make it purely random again, the Enredo choice doesn't matter much.
-      // I should probably make it weighted random or just use the scores.
-      // "The system must be purely meritocratic..." (Memory).
-      // The previous implementation used random selection from Top 3.
-      // I will respect the score, but maybe add randomness in `calculateParadeScore` (already added noise).
-      // So I will sort by `tempScore`.
-
       nonRelegatedPool.sort((a, b) => b.tempScore - a.tempScore);
-
-      // If I strictly follow memory "Champion... randomly selected from non-relegated", I undermine the Enredo feature.
-      // I will assume the Enredo feature update supersedes the "random champion" rule to make Enredo matter.
-      // However, to keep some unpredictability, I'll stick to the Score sorting.
 
       const top3 = nonRelegatedPool.slice(0, 3);
       const middlePack = nonRelegatedPool.slice(3);
 
-      // D. Construct Final Ranked List
       const finalRankedList = [...top3, ...middlePack, ...victims];
-
-      // Update the main map
       rankedByDivision[div] = finalRankedList;
 
-      // E. Update History
       finalRankedList.forEach((s, index) => {
         const rank = index + 1;
         const entry: SchoolHistoryEntry = { divisao: div, ano: year };
@@ -278,7 +234,6 @@ export function runSimulation(initialSchools: School[], startYear: number, total
       });
     }
 
-    // 2. Promotions and Relegations
     const moveSchool = (schoolId: string, newDiv: Division) => {
       const s = schools.find(sc => sc.id === schoolId);
       if (s) s.currentDivision = newDiv;
@@ -307,11 +262,9 @@ export function runSimulation(initialSchools: School[], startYear: number, total
     processInterDivisionMoves('Série Prata', 'Série Bronze', 2, 2);
     processInterDivisionMoves('Série Bronze', 'Grupo de Avaliação', 2, 2);
 
-    // 3. Recalculate Prestige
     schools = recalculatePrestige(schools, year);
     schools = schools.map(s => ({ ...s, prestige: Math.round(s.prestige) }));
 
-    // 4. Log Evolution
     schools.forEach(s => {
       if (prestigeEvolution[s.id]) {
         prestigeEvolution[s.id].push({ year, prestige: s.prestige });
@@ -351,18 +304,14 @@ export function finalizeSeason(
 
     const rankedByDivision: Record<Division, School[]> = { ...schoolsByDivision };
 
-    // 1. Player Division (From Apuracao Results)
-    // playerDivisionResults is already sorted by rank
     const playerDivisionRanked = playerDivisionResults.map(r => {
         return schoolsByDivision[playerDivision].find(s => s.id === r.schoolId);
     }).filter((s): s is School => !!s);
 
-    // Ensure we caught everyone (in case of ID mismatch, fallback to existing list)
     if (playerDivisionRanked.length === schoolsByDivision[playerDivision].length) {
         rankedByDivision[playerDivision] = playerDivisionRanked;
     }
 
-    // 2. Other Divisions (Simulated)
     const otherDivisions: Division[] = (
       ['Grupo Especial', 'Série Ouro', 'Série Prata', 'Série Bronze', 'Grupo de Avaliação'] as Division[]
     ).filter(d => d !== playerDivision);
@@ -378,9 +327,8 @@ export function finalizeSeason(
 
       scoredSchools.sort((a, b) => b.tempScore - a.tempScore);
 
-      // Relegation/Promotion Logic (Simplified from runSimulation)
       const numCandidates = 5;
-      const numVictims = 2; // Standard for lower divisions in this logic
+      const numVictims = 2;
 
       const candidateStartIndex = Math.max(0, scoredSchools.length - numCandidates);
       const candidates = scoredSchools.slice(candidateStartIndex);
@@ -393,12 +341,10 @@ export function finalizeSeason(
       const nonRelegatedPool = [...safeSchoolsFromBottom, ...survivors];
       nonRelegatedPool.sort((a, b) => b.tempScore - a.tempScore);
 
-      // Construct Final Ranked List
       const finalRankedList = [...nonRelegatedPool, ...victims];
       rankedByDivision[div] = finalRankedList;
     }
 
-    // 3. Update History
     for (const div of DIVISIONS) {
         const list = rankedByDivision[div];
         list.forEach((s, index) => {
@@ -430,7 +376,6 @@ export function finalizeSeason(
         });
     }
 
-    // 4. Promotions and Relegations
     const moveSchool = (schoolId: string, newDiv: Division) => {
       const s = schools.find(sc => sc.id === schoolId);
       if (s) s.currentDivision = newDiv;
@@ -452,7 +397,6 @@ export function finalizeSeason(
     processInterDivisionMoves('Série Prata', 'Série Bronze', 2, 2);
     processInterDivisionMoves('Série Bronze', 'Grupo de Avaliação', 2, 2);
 
-    // 5. Recalculate Prestige
     schools = recalculatePrestige(schools, year);
     schools = schools.map(s => ({ ...s, prestige: Math.round(s.prestige) }));
 

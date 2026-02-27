@@ -4,19 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import {
   ProductionTrack,
-  AlegoriaStageId,
-  StageEvent,
-  PreparationEvent,
-  CrisisCard,
-  StaffAttentionState,
-  WeeklyBudgetCompass,
-  WeekPreview,
-  School,
-  StaffRole
-} from '../types/models';
-import { formatMoney, formatRole } from '../utils/textUtils';
-import { evaluateConditions } from '../utils/eventUtils';
-import { STAFF_ACTION_POOL, estimatedAlegoriaProgressPerWeek } from '../services/preparationService';
+  StaffRole,
+  WeekTurnState,
+  getQualityLabel
+} from '../services/preparationService';
+import {
+  formatMoney
+} from '../utils/textUtils';
 
 // Helper for contrast
 function getContrastColor(hex: string | undefined): string {
@@ -30,1195 +24,496 @@ function getContrastColor(hex: string | undefined): string {
     return (yiq >= 128) ? '#080C18' : '#F0E6D3';
 }
 
+function calculateTurnPreview(school: any, turnState: any, currentWeek: number): any {
+    // This logic resides in service/preparationService.ts but we need the output here.
+    // The store should provide a computed preview or we call the service function.
+    // Since we can't import the service logic directly into a client component easily if it depends on store state not passed...
+    // Actually we can import the service function.
+    const { calculateTurnPreview } = require('../services/preparationService');
+    return calculateTurnPreview(school, turnState, currentWeek);
+}
+
 // --- SUB-COMPONENTS ---
 
-function MesaDeCrise({ crises, currentWeek, onResolve, schoolBudget }: {
-  crises: CrisisCard[];
-  currentWeek: number;
-  onResolve: (crisisId: string, optionIndex: number) => void;
-  schoolBudget: number;
-}) {
-  const active = crises.filter(c => !c.isResolved);
-
-  const tierConfig: Record<string, { color: string; label: string; border: string }> = {
-    Urgente:     { color: '#E74C3C', label: '🔴 URGENTE',    border: 'border-[#E74C3C]/50' },
-    Atencao:     { color: '#F1C40F', label: '🟡 ATENÇÃO',    border: 'border-[#F1C40F]/50' },
-    Oportunidade:{ color: '#2ECC71', label: '🟢 OPORTUNIDADE',border: 'border-[#2ECC71]/50' },
-    Informacao:  { color: '#3498DB', label: '🔵 INFO',        border: 'border-[#3498DB]/50' },
-  };
-
-  return (
-    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-4 shadow-lg mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-widest">
-          📋 Mesa de Crise
-        </h3>
-        {active.length > 0 && (
-          <span className="bg-[#E74C3C] text-white text-xs font-black px-2 py-0.5 rounded-full">
-            {active.length}
-          </span>
-        )}
-      </div>
-
-      {active.length === 0 && (
-        <p className="text-center text-[#4A5A7A] text-xs py-6 font-mono">
-          Nenhuma crise ativa. Por enquanto.
-        </p>
-      )}
-
-      <div className="space-y-3">
-        {active.map(crisis => {
-          const cfg = tierConfig[crisis.tier];
-          const weeksLeft = crisis.expiresAtWeek - currentWeek;
-          const isExpiringSoon = weeksLeft <= 1;
-
-          return (
-            <CrisisCardItem
-              key={crisis.id}
-              crisis={crisis}
-              cfg={cfg}
-              weeksLeft={weeksLeft}
-              isExpiringSoon={isExpiringSoon}
-              onResolve={onResolve}
-              schoolBudget={schoolBudget}
-            />
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function CrisisCardItem({ crisis, cfg, weeksLeft, isExpiringSoon, onResolve, schoolBudget }: any) {
-    const [expanded, setExpanded] = useState(false);
+function CrisisCardItem({ crisis, onResolve, turnState, schoolBudget }: any) {
+    const isResolved = turnState.crisisAllocations[crisis.id] !== undefined;
+    const alloc = turnState.crisisAllocations[crisis.id];
 
     return (
-        <div className={`bg-[#080C18] border ${cfg.border} rounded-lg overflow-hidden transition-all duration-300`}>
-            <button
-                onClick={() => setExpanded(!expanded)}
-                className="w-full px-3 py-2 flex items-center justify-between hover:bg-[#161E35] transition-colors"
-            >
-                <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-black/30" style={{ color: cfg.color }}>
-                        {cfg.label}
-                    </span>
-                    <span className="text-xs font-bold text-[#F0E6D3] text-left leading-tight truncate max-w-[150px] lg:max-w-[200px]">
-                        {crisis.title}
-                    </span>
-                </div>
-                {crisis.tier !== 'Informacao' && (
-                    <span className={`text-[10px] font-mono font-bold ${isExpiringSoon ? 'text-[#E74C3C] animate-pulse' : 'text-[#8A9BB8]'}`}>
-                        {weeksLeft} sem.
-                    </span>
-                )}
-            </button>
-
-            {expanded && (
-                <div className="p-3 border-t border-[#1E2D50] bg-[#0F1629]">
-                    <p className="text-[11px] text-[#8A9BB8] mb-3 leading-relaxed">
-                        {crisis.description}
-                    </p>
-
-                    {crisis.tier !== 'Informacao' && (
-                        <div className="bg-[#1A0505] border border-[#E74C3C]/30 p-2 rounded mb-3">
-                            <div className="text-[9px] text-[#E74C3C] font-bold uppercase mb-1">Se ignorar:</div>
-                            <div className="text-[10px] text-[#F0E6D3]">{crisis.inactionConsequence}</div>
-                        </div>
-                    )}
-
-                    <div className="space-y-2">
-                        {crisis.options.map((opt: any, idx: number) => {
-                            const canAfford = schoolBudget >= opt.budgetCost;
-                            // TODO: Check staff attention here too if we passed attention state down
-                            // For simplicity, just checking budget for disabled state visual
-                            const isDisabled = !canAfford;
-
-                            return (
-                                <button
-                                    key={idx}
-                                    disabled={isDisabled}
-                                    onClick={() => onResolve(crisis.id, idx)}
-                                    className={`w-full text-left p-2 rounded border transition-all ${
-                                        isDisabled
-                                        ? 'bg-[#161E35] border-[#1E2D50] opacity-50 cursor-not-allowed'
-                                        : 'bg-[#080C18] border-[#2A3F6B] hover:border-[#F0E6D3] hover:bg-[#161E35]'
-                                    }`}
-                                >
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-[10px] font-bold text-[#F0E6D3]">{opt.label}</span>
-                                        <div className="flex gap-2 text-[9px] font-mono">
-                                            {opt.budgetCost !== 0 && (
-                                                <span className={opt.budgetCost > 0 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'}>
-                                                    {opt.budgetCost > 0 ? '-' : '+'}{formatMoney(Math.abs(opt.budgetCost))}
-                                                </span>
-                                            )}
-                                            {opt.attentionCost > 0 && (
-                                                <span className="text-[#F1C40F]">{opt.attentionCost}★</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="text-[9px] text-[#4A5A7A]">{opt.description}</div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-function StaffAttentionPanel({ staffAttention, playerSchool, currentWeek, onAssign, onUnassign }: {
-  staffAttention: StaffAttentionState[];
-  playerSchool: School;
-  currentWeek: number;
-  onAssign: (staffId: string, actionId: string) => void;
-  onUnassign: (staffId: string, actionId: string) => void;
-}) {
-  return (
-    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-4 shadow-lg mb-6">
-      <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-widest mb-4">
-        👥 Atenção da Equipe
-      </h3>
-      <div className="space-y-4">
-        {staffAttention.map(sa => {
-          const actions = (STAFF_ACTION_POOL[sa.role] ?? []).filter(a => {
-            if (!a.availableWeeks) return true;
-            return currentWeek >= a.availableWeeks[0] && currentWeek <= a.availableWeeks[1];
-          });
-          const staffMember = playerSchool.staff.find(s => s.id === sa.staffId);
-          if (!staffMember) return null;
-
-          return (
-            <div key={sa.staffId} className="bg-[#080C18] rounded-lg p-3 border border-[#1E2D50]">
-              {/* Name + Role */}
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <div className="text-xs font-bold text-[#F0E6D3]">{staffMember.name}</div>
-                  <div className="text-[9px] text-[#8A9BB8] uppercase">{formatRole(sa.role)}</div>
-                </div>
-                {/* Attention dots */}
-                <div className="flex flex-col items-end">
-                  <div className="flex gap-1">
-                    {Array.from({ length: sa.totalPoints }).map((_, i) => (
-                      <div key={i} className={`w-3 h-3 rounded-full border-2 ${
-                        i < sa.usedPoints
-                          ? 'bg-[#C9A84C] border-[#C9A84C]'
-                          : 'bg-transparent border-[#4A5A7A]'
-                      }`} />
-                    ))}
-                  </div>
-                  <div className="text-[8px] text-[#4A5A7A] italic mt-0.5">
-                    Pontos resetam ao avançar
-                  </div>
-                </div>
-              </div>
-
-              {/* Warnings */}
-              {sa.burnoutRisk && (
-                <div className="text-[9px] text-[#E74C3C] font-bold mb-2">⚠️ Risco de burnout</div>
-              )}
-              {sa.energyWarning && !sa.burnoutRisk && (
-                <div className="text-[9px] text-[#F1C40F] font-bold mb-2">
-                  ⚡ Usar tudo → penalidade de energia
-                </div>
-              )}
-
-              {/* Available actions */}
-              <div className="space-y-1">
-                {actions.map(action => {
-                  const isAssigned = sa.assignedActions.includes(action.id);
-                  const canAffordPoints = sa.usedPoints + action.attentionCost <= sa.totalPoints || isAssigned;
-                  const canAffordBudget = playerSchool.budget >= action.budgetCost;
-                  const isDisabled = !isAssigned && (!canAffordPoints || !canAffordBudget);
-
-                  const trackColors: Record<string, string> = {
-                    Alegorias: '#E67E22', Harmonia: '#3498DB', Fantasias: '#9B59B6', Bateria: '#E74C3C', Crises: '#F1C40F'
-                  };
-
-                  return (
-                    <button
-                      key={action.id}
-                      disabled={isDisabled}
-                      onClick={() => isAssigned ? onUnassign(sa.staffId, action.id) : onAssign(sa.staffId, action.id)}
-                      className={`w-full text-left px-2 py-1.5 rounded text-[10px] transition-all border ${
-                        isAssigned
-                          ? 'bg-[#C9A84C]/20 border-[#C9A84C]/50 text-[#C9A84C]'
-                          : isDisabled
-                          ? 'bg-[#080C18] border-[#1E2D50] text-[#4A5A7A] opacity-50 cursor-not-allowed'
-                          : 'bg-[#161E35] border-[#1E2D50] text-[#F0E6D3] hover:border-[#C9A84C]/30'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold truncate pr-2">{action.label}</span>
-                        <div className="flex items-center gap-1 text-[8px] shrink-0">
-                          {action.affectsTrack && (
-                            <span className="px-1 rounded font-bold" style={{
-                              background: trackColors[action.affectsTrack] + '30',
-                              color: trackColors[action.affectsTrack],
-                              border: `1px solid ${trackColors[action.affectsTrack]}50`,
-                            }}>
-                              {action.affectsTrack}
-                            </span>
-                          )}
-                          {action.attentionCost > 0 && (
-                            <span className="text-[#8A9BB8]">{action.attentionCost}pt</span>
-                          )}
-                          {action.budgetCost > 0 && (
-                            <span className="text-[#E74C3C]">{formatMoney(action.budgetCost)}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-[8px] text-[#8A9BB8] mt-0.5 leading-tight">{action.description}</div>
-                    </button>
-                  );
-                })}
-              </div>
+        <div className={`bg-[#080C18] border border-[#E74C3C]/50 rounded-lg overflow-hidden mb-3 shadow-lg ${isResolved ? 'opacity-70 grayscale' : ''}`}>
+            <div className="p-3 border-b border-[#1E2D50] flex justify-between items-center bg-[#1A0505]">
+                <span className="text-[10px] font-black text-[#E74C3C] uppercase tracking-wider">
+                    🔥 {crisis.tier}
+                </span>
+                <span className="text-[9px] text-[#8A9BB8] font-mono">
+                    Expira em {crisis.expiresAtWeek - crisis.weekCreated} sem
+                </span>
             </div>
-          );
-        })}
-      </div>
-    </section>
-  );
+            <div className="p-3">
+                <h4 className="text-sm font-bold text-[#F0E6D3] mb-2">{crisis.title}</h4>
+                <p className="text-[10px] text-[#8A9BB8] mb-3 leading-relaxed">
+                    {crisis.description}
+                </p>
+
+                <div className="space-y-2">
+                    {crisis.options.map((opt: any, idx: number) => {
+                        const isSelected = alloc?.optionIndex === idx;
+                        const canAffordMoney = schoolBudget >= opt.budgetCost;
+                        const canAffordPP = true; // Handled by store validation mostly, visuals here
+
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => {
+                                    if (isSelected) {
+                                        // Deallocate (need action for this) - Assuming toggle or separate X button?
+                                        // For now, allow switching. To deselect, maybe a separate "Cancel" button or toggle?
+                                        // Using onResolve to toggle/set.
+                                    } else {
+                                        onResolve(crisis.id, idx);
+                                    }
+                                }}
+                                disabled={!isSelected && (!canAffordMoney)}
+                                className={`w-full text-left p-2 rounded border transition-all flex justify-between items-center ${
+                                    isSelected
+                                    ? 'bg-[#E74C3C] border-[#E74C3C] text-white'
+                                    : 'bg-[#161E35] border-[#2A3F6B] hover:border-[#F0E6D3] text-[#8A9BB8]'
+                                }`}
+                            >
+                                <span className="text-[10px] font-bold truncate max-w-[60%]">{opt.label}</span>
+                                <div className="flex gap-2 text-[9px] font-mono">
+                                    {opt.ppCost > 0 && <span>{opt.ppCost} PP</span>}
+                                    {opt.budgetCost > 0 && <span>{formatMoney(opt.budgetCost)}</span>}
+                                </div>
+                            </button>
+                        )
+                    })}
+                </div>
+                {isResolved && (
+                    <div className="mt-2 text-center">
+                        <button className="text-[9px] text-[#E74C3C] underline">Cancelar Resolução</button>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
 }
 
-function WeeklyCompassPanel({ compass, school }: {
-  compass: WeeklyBudgetCompass;
-  school: School;
-}) {
-  return (
-    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-4 shadow-lg mb-6">
-      <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-widest mb-3">
-        💰 Orçamento
-      </h3>
-
-      <div className="font-mono text-2xl font-black mb-0.5"
-           style={{ color: school.budget < compass.dangerThreshold ? '#E74C3C' : '#C9A84C' }}>
-        {formatMoney(compass.totalBudgetRemaining)}
-      </div>
-      <div className="text-[9px] text-[#8A9BB8] uppercase mb-4">Caixa total</div>
-
-      <div className="space-y-2 text-[10px]">
-        <div className="flex justify-between">
-          <span className="text-[#8A9BB8]">Gasto projetado</span>
-          <span className="font-mono font-bold"
-                style={{ color: compass.isOverRecommended ? '#E74C3C' : '#F0E6D3' }}>
-            {formatMoney(compass.projectedSpendThisWeek)}
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-[#8A9BB8]">Custo recomendado</span>
-          <span className="font-mono text-[#C9A84C]">
-            {formatMoney(compass.recommendedSpendThisWeek)}
-          </span>
-        </div>
-        {compass.isOverRecommended && (
-          <div className="text-[#E74C3C] font-bold text-[9px]">
-            ⚠️ +{formatMoney(compass.overspendAmount)} acima do recomendado
-          </div>
-        )}
-        <div className="border-t border-[#1E2D50] pt-2 flex justify-between">
-          <span className="text-[#8A9BB8]">Reserva estimada</span>
-          <span className="font-mono font-bold"
-                style={{ color: compass.runwayWeeksAtCurrentRate < 6 ? '#E74C3C'
-                               : compass.runwayWeeksAtCurrentRate < 12 ? '#F1C40F'
-                               : '#2ECC71' }}>
-            {compass.runwayWeeksAtCurrentRate} semanas
-          </span>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function ActionCardsPanel({ cards, pendingActionCards, budget, onUse }: {
-    cards: any[], pendingActionCards: any[] | undefined, budget: number, onUse: (id: string) => void
-}) {
-    if (cards.length === 0) return null;
-
+function ProductionCardItem({ card, isActive, canActivate, onToggle }: any) {
     return (
-        <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-4 shadow-lg mb-6">
-            <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-widest mb-3">
-                🎴 Cartas de Ação
-            </h3>
-            <div className="space-y-2">
-                {cards.map(card => {
-                    const isPending = pendingActionCards?.some(pc => pc.cardId === card.id);
-                    // If pending, budget is already deducted, so don't check budget for disable logic unless we assume refund
-                    // Actually refund is logic store side. Visuals:
-
-                    return (
-                        <button
-                            key={card.id}
-                            onClick={() => onUse(card.id)}
-                            disabled={!isPending && (card.usesRemaining === 0 || budget < card.budgetCost)}
-                            className={`w-full text-left p-2 rounded border relative overflow-hidden group transition-all ${
-                                isPending
-                                ? 'bg-[#2ECC71]/20 border-[#2ECC71] hover:bg-[#2ECC71]/30'
-                                : card.usesRemaining === 0
-                                ? 'bg-[#161E35] border-[#1E2D50] opacity-50'
-                                : 'bg-[#2A3F6B]/20 border-[#2A3F6B] hover:bg-[#2A3F6B]/40 hover:border-[#60C0FF]'
-                            }`}
-                        >
-                            <div className="flex justify-between items-center mb-1">
-                                <span className={`font-bold text-[10px] ${isPending ? 'text-[#2ECC71]' : 'text-[#60C0FF]'}`}>
-                                    {isPending ? '✓ Agendado' : card.label}
-                                </span>
-                                {card.usesPerSeason !== -1 && (
-                                    <span className="text-[9px] bg-black/40 px-1.5 rounded text-[#8A9BB8]">
-                                        {card.usesRemaining}/{card.usesPerSeason}
-                                    </span>
-                                )}
-                            </div>
-                            <div className={`text-[9px] mb-1 leading-tight ${isPending ? 'text-[#F0E6D3]' : 'text-[#8A9BB8]'}`}>
-                                {isPending ? `Será executado ao avançar. Clique para cancelar.` : card.description}
-                            </div>
-                            {card.budgetCost > 0 && !isPending && (
-                                <div className="text-[9px] text-[#E74C3C] font-mono">-{formatMoney(card.budgetCost)}</div>
-                            )}
-                        </button>
-                    );
-                })}
+        <div className={`p-3 rounded-lg border transition-all cursor-pointer ${
+            isActive
+            ? 'bg-[#C9A84C]/20 border-[#C9A84C]'
+            : canActivate
+            ? 'bg-[#080C18] border-[#2A3F6B] hover:border-[#60C0FF]'
+            : 'bg-[#080C18] border-[#1E2D50] opacity-50'
+        }`}
+        onClick={() => {
+            if (isActive || canActivate) onToggle(card.id);
+        }}>
+            <div className="flex justify-between items-center mb-1">
+                <span className={`text-[10px] font-bold ${isActive ? 'text-[#C9A84C]' : 'text-[#60C0FF]'}`}>
+                    {card.label}
+                </span>
+                {isActive && <span className="text-[8px] bg-[#C9A84C] text-[#080C18] px-1 rounded font-bold">ATIVO</span>}
             </div>
-        </section>
-    );
+            <p className="text-[9px] text-[#8A9BB8] leading-tight mb-2">{card.description}</p>
+            <div className="flex justify-between text-[9px] font-mono text-[#4A5A7A]">
+                <span>{card.budgetCost > 0 ? `-${formatMoney(card.budgetCost)}` : 'Grátis'}</span>
+                <span>Restam: {card.usesRemaining}</span>
+            </div>
+        </div>
+    )
 }
-
-function WeekPreviewPanel({
-  preview, prep, currentWeek, canAdvance, advanceText, onAdvance
-}: {
-  preview: WeekPreview | null;
-  prep: any;
-  currentWeek: number;
-  canAdvance: boolean;
-  advanceText: string;
-  onAdvance: () => void;
-}) {
-  const severityIcon = { info: '→', warning: '⚠️', danger: '🔴', positive: '✅' };
-  const severityColor = {
-    info: '#8A9BB8', warning: '#F1C40F', danger: '#E74C3C', positive: '#2ECC71'
-  };
-
-  const hasPending = (prep.pendingStaffActions?.length > 0) || (prep.pendingActionCards?.length > 0);
-
-  return (
-    <section className="bg-[#080C18] border border-[#1E2D50] rounded-xl p-4 shadow-lg mb-6">
-
-      {/* Planned Actions Section */}
-      {hasPending && (
-        <div className="mb-4 border-b border-[#1E2D50] pb-4">
-            <div className="text-[9px] text-[#8A9BB8] uppercase font-bold mb-2">
-            O que vai acontecer:
-            </div>
-            {prep.pendingStaffActions?.map((pa: any, i: number) => {
-            const role = pa.role as StaffRole;
-            const action = STAFF_ACTION_POOL[role]?.find((a: any) => a.id === pa.actionId);
-            return action ? (
-                <div key={`sa-${i}`} className="text-[9px] text-[#2ECC71] flex items-center gap-1 mb-1">
-                <span>✓</span>
-                <span className="font-bold">{action.label}</span>
-                {action.affectsTrack && (
-                    <span className="text-[#4A5A7A] ml-auto">→ {action.affectsTrack}</span>
-                )}
-                </div>
-            ) : null;
-            })}
-            {prep.pendingActionCards?.map((pc: any, i: number) => {
-                const card = prep.unlockedActionCards?.find((c: any) => c.id === pc.cardId);
-                return card ? (
-                    <div key={`ac-${i}`} className="text-[9px] text-[#60C0FF] flex items-center gap-1 mb-1">
-                    <span>✓</span>
-                    <span className="font-bold">{card.label}</span>
-                    <span className="text-[#4A5A7A] ml-auto">→ Carta</span>
-                    </div>
-                ) : null;
-            })}
-        </div>
-      )}
-
-      <h3 className="text-[10px] font-black text-[#8A9BB8] uppercase tracking-widest mb-3">
-        Alertas & Previsões:
-      </h3>
-
-      {preview && (
-        <div className="space-y-2 mb-4">
-          {preview.items.map((item, i) => (
-            <div key={i} className="flex items-start gap-2 text-[10px]">
-              <span style={{ color: severityColor[item.severity] }}>
-                {severityIcon[item.severity]}
-              </span>
-              <div className="flex-1">
-                <span className="text-[#F0E6D3]">{item.label}</span>
-                {item.quantifiedImpact && (
-                  <div className="font-mono font-bold mt-0.5"
-                        style={{ color: severityColor[item.severity] }}>
-                    {item.quantifiedImpact}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {preview && preview.unusedActionsRemaining > 3 && (
-        <div className="mb-2 p-2 rounded border border-[#F1C40F]/30 bg-[#F1C40F]/5
-                        text-[#F1C40F] text-[9px] font-bold">
-          ⚠️ {preview.unusedActionsRemaining} ações de equipe não utilizadas
-        </div>
-      )}
-
-      {preview && preview.unusedCrisesCount > 0 && (
-        <div className="mb-3 p-2 rounded border border-[#E74C3C]/30 bg-[#E74C3C]/5
-                        text-[#E74C3C] text-[9px] font-bold">
-          🔴 {preview.unusedCrisesCount} crise(s) vão sofrer consequências automáticas
-        </div>
-      )}
-
-      <button
-        onClick={onAdvance}
-        disabled={!canAdvance}
-        className={`w-full py-4 font-black uppercase text-sm rounded-lg transition-all duration-200
-                    transform shadow-lg ${canAdvance
-                      ? 'hover:scale-105 active:scale-95 text-[#080C18]'
-                      : 'opacity-50 cursor-not-allowed bg-[#161E35] text-[#8A9BB8]'
-                    }`}
-        style={canAdvance
-          ? { background: 'linear-gradient(135deg, #E8C96A 0%, #C9A84C 100%)' }
-          : {}}
-      >
-        {advanceText} →
-      </button>
-    </section>
-  );
-}
-
-// --- MAIN COMPONENT ---
 
 export default function PreparationDashboard() {
   const {
     gameState,
     schools,
-    advanceWeek,
-    setTrackFocus,
-    setTrackBudget,
-    setStaffRest,
-    resolvePreparationEvent,
-    resolveStageEvent,
-    initiateBateriaGig,
-    setAlegoriaCarCount,
+    startTurn,
+    allocatePP,
+    allocateCrisisPP,
+    deallocateCrisisPP,
+    activateCard,
+    deactivateCard,
+    confirmTurn,
     setHarmoniaFocus,
-    setPassistasRehearsal,
-    setComissaoApproach,
-    resolveCrisis,
-    assignStaffAction,
-    unassignStaffAction,
-    useActionCard,
-    refreshWeekPreview
+    advanceWeek
   } = useGameStore();
 
   const { playerSchoolId, preparationSubPhase } = gameState;
   const playerSchool = schools.find(s => s.id === playerSchoolId);
-  const prep = playerSchool?.preparation;
 
-  const [selectedCarCount, setSelectedCarCount] = useState<number | null>(null);
-
-  // Refresh preview on mount
+  // Ensure turn is started
   useEffect(() => {
-      refreshWeekPreview();
-  }, [gameState.currentWeek]);
+      if (playerSchool && playerSchool.preparation && !playerSchool.preparation.currentTurn) {
+          startTurn();
+      }
+  }, [playerSchool?.preparation, startTurn]);
 
-  if (!playerSchool || !prep) return <div className="p-10 text-white">Carregando Preparação...</div>;
+  if (!playerSchool || !playerSchool.preparation) return <div className="p-10 text-white">Carregando...</div>;
 
-  // Header Colors
+  const prep = playerSchool.preparation;
+  const turn = prep.currentTurn;
+
+  if (!turn) return <div className="p-10 text-white">Iniciando Turno...</div>;
+
+  // Calculate Preview
+  const preview = calculateTurnPreview(playerSchool, turn, gameState.currentWeek);
+
+  // Validate Minimums
+  const minimumsMet = Object.keys(preview.tracks).every(k => {
+      const t = k as ProductionTrack;
+      // Logic: allocated >= min? The preview doesn't explicitly flag this boolean,
+      // but we can check if `qualityDelta` is not severe penalty or pass min info.
+      // Better: Re-calculate mins or check prepService.
+      // We will assume `allocatePP` caps or UI handles visuals.
+      // The button check:
+      // We need `computeTrackMinimums` here?
+      // Or just trust the player sees alerts?
+      // Requirement: "Confirmar Semana button is disabled if any track has less than its minimum".
+      // We need the minimums.
+      // Let's import the function.
+      const { computeTrackMinimums } = require('../services/preparationService');
+      const mins = computeTrackMinimums(prep, gameState.currentWeek, playerSchool);
+      return turn.allocations[t] >= mins[t];
+  });
+
+  // Calculate PP Pool
+  let usedPP = 0;
+  Object.values(turn.allocations).forEach((v: any) => usedPP += v);
+  Object.values(turn.crisisAllocations).forEach((v: any) => usedPP += v.ppCost);
+  const remainingPP = turn.totalPP - usedPP;
+
   const headerBg = playerSchool.colors[0] || '#1F2937';
   const headerText = getContrastColor(playerSchool.colors[0]);
 
-  // Countdown Logic
-  const weeksLeft = prep.weeksUntilParade;
-  const isUrgent = weeksLeft <= 8;
-  const isCritical = weeksLeft <= 3;
-
-  // Advance Logic
-  let advanceText = prep.isBiWeekly ? 'Avançar 2 Semanas' : 'Avançar 1 Semana';
-  if (weeksLeft <= 1) advanceText = 'IR PARA O DESFILE';
-
-  // Modal Logic
-  // Only Stage Events and Car Selection block advance
-  const pendingStageEvent = prep.pendingStageEvent;
-  const showCarModal = prep.alegoriaCarCount === null && gameState.currentWeek >= 9;
-
-  const canAdvance = !showCarModal && !pendingStageEvent;
-
-  // Guidelines
-  const guidelines: Record<string, Record<ProductionTrack, number>> = {
-      'Grupo Especial': { Alegorias: 45000, Fantasias: 25000, Bateria: 15000, Harmonia: 15000 },
-      'Série Ouro':     { Alegorias: 8000,  Fantasias: 4000,  Bateria: 2500,  Harmonia: 2500 },
-      'Série Prata':    { Alegorias: 2200,  Fantasias: 1200,  Bateria: 800,   Harmonia: 800 },
-      'Série Bronze':   { Alegorias: 650,   Fantasias: 350,   Bateria: 250,   Harmonia: 250 },
-      'Grupo de Avaliação': { Alegorias: 165, Fantasias: 85,  Bateria: 65,    Harmonia: 65 },
-  };
-  const divisionGuidelines = guidelines[playerSchool.currentDivision] || guidelines['Grupo de Avaliação'];
-  const maxBurn = divisionGuidelines.Alegorias * 4;
-
-  const carLimits = {
-    'Grupo Especial': { min: 5, max: 8 },
-    'Série Ouro': { min: 3, max: 6 },
-    'Série Prata': { min: 2, max: 5 },
-    'Série Bronze': { min: 1, max: 4 },
-    'Grupo de Avaliação': { min: 1, max: 3 },
-  }[playerSchool.currentDivision] || { min: 1, max: 3 };
-
   return (
-    <div className="flex flex-col h-screen bg-[#080C18] text-[#F0E6D3] relative font-sans overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#080C18] text-[#F0E6D3] font-sans overflow-hidden">
 
-      {/* HEADER */}
-      <header
-        className="relative z-20 flex justify-between items-center px-6 py-4 shadow-2xl overflow-hidden shrink-0"
-        style={{
-          background: `linear-gradient(135deg, ${headerBg} 0%, ${headerBg}CC 60%, #080C18 100%)`,
-          borderBottom: `2px solid ${playerSchool.colors[0] || '#C9A84C'}60`,
-        }}
-      >
-         {playerSchool.flag && (
-            <div className="absolute right-0 top-0 bottom-0 w-96 opacity-10 pointer-events-none"
-            style={{
-                backgroundImage: `url(${playerSchool.flag})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, transparent 100%)',
-            }}
-            />
-        )}
+      {/* TOP BAR */}
+      <header className="px-6 py-3 flex justify-between items-center bg-[#0F1629] border-b border-[#1E2D50] shadow-md z-20">
+          <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-cover bg-center border-2 border-[#C9A84C]"
+                   style={{ backgroundImage: `url(${playerSchool.logo})` }} />
+              <div>
+                  <h1 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wider">{playerSchool.name}</h1>
+                  <div className="text-[10px] text-[#8A9BB8] font-mono">
+                      Semana {gameState.currentWeek} • Ato {prep.currentAct} • {preparationSubPhase === 'BiWeekly' ? 'Bi-Semanal' : 'Reta Final'}
+                  </div>
+              </div>
+          </div>
 
-        <div className="flex items-center gap-6 relative z-10">
-            <div>
-                <h1 className="text-3xl font-black leading-none tracking-wide" style={{ color: headerText }}>
-                    {playerSchool.name}
-                </h1>
-                <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs uppercase tracking-widest opacity-80 font-bold" style={{ color: headerText }}>
-                        Preparação {preparationSubPhase === 'BiWeekly' ? '(Bi-Semanal)' : '(Reta Final)'}
-                    </span>
-                    <span className="text-xs opacity-60 ml-2 font-mono" style={{ color: headerText }}>
-                        Semana {gameState.currentWeek}
-                    </span>
-                </div>
-            </div>
-        </div>
+          <div className="flex items-center gap-8">
+              {/* PP POOL */}
+              <div className="flex flex-col items-center">
+                  <div className="text-[9px] uppercase font-bold text-[#8A9BB8] tracking-widest mb-1">Pontos de Produção</div>
+                  <div className="flex items-center gap-2">
+                      <div className="flex gap-0.5">
+                          {Array.from({ length: turn.totalPP }).map((_, i) => (
+                              <div key={i} className={`w-2 h-4 rounded-sm transition-all ${
+                                  i < usedPP ? 'bg-[#1E2D50]' : 'bg-[#C9A84C] shadow-[0_0_8px_#C9A84C]'
+                              }`} />
+                          ))}
+                      </div>
+                      <span className="text-xl font-black font-mono text-[#F0E6D3]">{remainingPP}</span>
+                  </div>
+              </div>
 
-        {/* CENTER COUNTDOWN */}
-        <div className={`text-center transition-all absolute left-1/2 -translate-x-1/2 ${isCritical ? 'animate-pulse' : ''}`}>
-            <div className={`font-black uppercase tracking-widest transition-all ${
-                isCritical ? 'text-4xl text-[#E74C3C]' :
-                isUrgent ? 'text-2xl text-[#E67E22]' :
-                'text-lg text-[#F0E6D3]'
-            }`}>
-                {weeksLeft === 1 ? '⚠️ ÚLTIMA SEMANA' :
-                 weeksLeft === 0 ? '🎭 É HOJE!' :
-                 `${weeksLeft} semanas até a Sapucaí`}
-            </div>
-        </div>
+              {/* BUDGET */}
+              <div className="text-right">
+                  <div className="text-[9px] uppercase font-bold text-[#8A9BB8] tracking-widest mb-1">Caixa Disponível</div>
+                  <div className={`text-xl font-black font-mono ${preview.finance.isDangerous ? 'text-[#E74C3C]' : 'text-[#2ECC71]'}`}>
+                      {formatMoney(preview.finance.budgetAfter)}
+                  </div>
+                  <div className="text-[9px] text-[#E74C3C] font-mono">-{formatMoney(preview.finance.spendThisTurn)} esta rodada</div>
+              </div>
 
-        <div className="relative z-10">
-             {/* Simple Budget Display (Full details in Compass) */}
-             <div className="px-5 py-2 rounded-xl text-right backdrop-blur-md border border-white/10 bg-black/20">
-                <div className="text-[10px] uppercase tracking-widest text-[#C9A84C] opacity-80 font-bold">Orçamento</div>
-                <div className="text-xl font-black font-mono" style={{ color: playerSchool.budget < 500000 ? '#E74C3C' : '#C9A84C' }}>
-                    {formatMoney(playerSchool.budget)}
-                </div>
-             </div>
-        </div>
+              <button
+                onClick={confirmTurn}
+                disabled={!minimumsMet}
+                className={`px-6 py-3 rounded-lg font-black uppercase tracking-widest text-xs transition-all ${
+                    minimumsMet
+                    ? 'bg-[#C9A84C] text-[#080C18] hover:bg-[#E0C060] hover:scale-105 shadow-[0_0_15px_rgba(201,168,76,0.3)]'
+                    : 'bg-[#161E35] text-[#4A5A7A] cursor-not-allowed border border-[#1E2D50]'
+                }`}
+              >
+                  {minimumsMet ? 'Confirmar Semana' : 'Atenda os Mínimos'}
+              </button>
+          </div>
       </header>
 
-      {/* MAIN CONTENT GRID */}
-      <main className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        {/* MOBILE LAYOUT (Specific Order) */}
-        <div className="flex flex-col gap-6 lg:hidden">
-            <MesaDeCrise
-                crises={prep.crises}
-                currentWeek={gameState.currentWeek}
-                onResolve={resolveCrisis}
-                schoolBudget={playerSchool.budget}
-            />
-            {prep.weeklyCompass && (
-                <WeeklyCompassPanel
-                    compass={prep.weeklyCompass}
-                    school={playerSchool}
-                />
-            )}
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex overflow-hidden">
 
-            {/* TRACKS GROUP */}
-            <div className="flex flex-col gap-6">
-                {/* ALEGORIAS */}
-                <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg relative">
-                    <div className="flex justify-between items-center mb-6 relative z-10">
-                        <h3 className="text-xl font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-3">
-                            🏰 Alegorias
-                            <span className="text-xs bg-[#161E35] text-[#8A9BB8] px-2 py-1 rounded font-normal border border-[#1E2D50]">
-                                {prep.alegoriaCarCount ? `${prep.alegoriaCarCount} Carros` : 'Planejamento'}
-                            </span>
-                        </h3>
-                        <div className="text-2xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.tracks.Alegorias.quality)}</div>
-                    </div>
-                    <div className="flex justify-between items-start relative mb-6">
-                        <div className="absolute top-6 left-0 right-0 h-1 bg-[#1E2D50] z-0" />
-                        {prep.alegoriaStages?.map((stage, idx) => {
-                            const isDone = stage.isComplete || stage.progress >= 100;
-                            const isActive = stage.isUnlocked && !isDone;
-                            const isLocked = !stage.isUnlocked && !isDone;
+          {/* LEFT: PRODUCTION TABLE (60%) */}
+          <div className="w-[60%] p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6">
 
-                            return (
-                                <div key={stage.id} className={`relative flex flex-col items-center flex-1 ${isLocked ? 'opacity-30' : ''}`}>
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 z-10 transition-all duration-300 ${
-                                        isDone ? 'bg-[#2ECC71] border-[#2ECC71] text-[#080C18]' :
-                                        isActive ? 'bg-[#C9A84C] border-[#F1C40F] text-[#080C18] scale-110 shadow-[0_0_15px_rgba(241,196,15,0.5)]' :
-                                        'bg-[#080C18] border-[#1E2D50] text-[#4A5A7A]'
-                                    }`}>
-                                        {isDone ? '✓' : idx + 1}
-                                    </div>
-                                    <div className="mt-3 text-center">
-                                        <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isActive ? 'text-[#F1C40F]' : 'text-[#8A9BB8]'}`}>
-                                            {stage.label}
-                                        </div>
-                                        {isActive && <div className="text-xs font-mono text-[#C9A84C]">{Math.floor(stage.progress)}%</div>}
-                                    </div>
-                                    {isActive && stage.progress >= 100 && !stage.isComplete && (
-                                        <div className="absolute -bottom-8 w-max text-[9px] text-[#2ECC71] font-bold bg-[#080C18] border border-[#2ECC71] px-2 py-0.5 rounded">
-                                            ⏳ Pronto para avançar →
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {(() => {
-                        const track = prep.tracks.Alegorias;
-                        const guideline = divisionGuidelines.Alegorias;
-                        const ratio = track.weeklyBurnRate / guideline;
-                        let thumbColor = '#C9A84C';
-                        if (ratio > 1.5) thumbColor = '#E67E22';
-                        return (
-                            <div className="bg-[#080C18] rounded-lg p-4 border border-[#1E2D50] flex gap-4 items-center">
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-end mb-1">
-                                        <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">Investimento Semanal</span>
-                                        <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(track.weeklyBurnRate)}</span>
-                                    </div>
-                                    <input type="range" min={100} max={maxBurn} step={100}
-                                        value={track.weeklyBurnRate}
-                                        onChange={(e) => {
-                                            setTrackBudget('Alegorias', Number(e.target.value));
-                                            refreshWeekPreview();
-                                        }}
-                                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
-                                        style={{ accentColor: thumbColor }}
-                                    />
-                                </div>
-                            </div>
-                        );
-                    })()}
-                </section>
-                {/* HARMONIA, FANTASIA, ETC. (Simulated Component Blocks for brevity in Mobile View - duplicating structure) */}
-                {/* ... Just replicating tracks structure ... */}
-                {/* For brevity, I will render the Desktop "Center Column" content here too, but flat */}
-                {/* Or I can componentize the Tracks Section. Let's do inline for now to ensure correctness. */}
-
-                {/* HARMONIA */}
-                <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
-                    {/* ... Harmonia content ... */}
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide">🎤 Harmonia</h3>
-                        <div className="text-xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.tracks.Harmonia.quality)}</div>
-                    </div>
-                    {/* ... (Controls) ... */}
-                    <div className="pt-2 border-t border-[#1E2D50]">
-                        <div className="flex justify-between items-end mb-1">
-                            <span className="text-[9px] uppercase text-[#8A9BB8] font-bold">Invest.</span>
-                            <span className="text-[9px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Harmonia.weeklyBurnRate)}</span>
-                        </div>
-                        <input type="range" min={100} max={maxBurn} step={100}
-                            value={prep.tracks.Harmonia.weeklyBurnRate}
-                            onChange={(e) => {
-                                setTrackBudget('Harmonia', Number(e.target.value));
-                                refreshWeekPreview();
-                            }}
-                            className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
-                        />
-                    </div>
-                </section>
-
-                {/* FANTASIA */}
-                <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide">✂️ Fantasias</h3>
-                        <div className="text-xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.fantasia.designQuality)}</div>
-                    </div>
-                    {/* ... Controls ... */}
-                    <div className="pt-2 border-t border-[#1E2D50]">
-                        <div className="flex justify-between items-end mb-1">
-                            <span className="text-[9px] uppercase text-[#8A9BB8] font-bold">Invest.</span>
-                            <span className="text-[9px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Fantasias.weeklyBurnRate)}</span>
-                        </div>
-                        <input type="range" min={100} max={maxBurn} step={100}
-                            value={prep.tracks.Fantasias.weeklyBurnRate}
-                            onChange={(e) => {
-                                setTrackBudget('Fantasias', Number(e.target.value));
-                                refreshWeekPreview();
-                            }}
-                            className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
-                        />
-                    </div>
-                </section>
-
-                {/* BATERIA */}
-                <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-2">
-                            🥁 Bateria
-                        </h3>
-                        <div className="text-right">
-                             <div className="text-xs font-mono text-[#2ECC71]">{formatMoney(prep.bateria.gigIncome)}</div>
-                        </div>
-                    </div>
-                    {/* ... Controls ... */}
-                    <div className="pt-2 border-t border-[#1E2D50]">
-                        <div className="flex justify-between items-end mb-1">
-                            <span className="text-[9px] uppercase text-[#8A9BB8] font-bold">Invest.</span>
-                            <span className="text-[9px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Bateria.weeklyBurnRate)}</span>
-                        </div>
-                        <input type="range" min={100} max={maxBurn} step={100}
-                            value={prep.tracks.Bateria.weeklyBurnRate}
-                            onChange={(e) => {
-                                setTrackBudget('Bateria', Number(e.target.value));
-                                refreshWeekPreview();
-                            }}
-                            className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
-                        />
-                    </div>
-                </section>
-            </div>
-
-            <StaffAttentionPanel
-                staffAttention={prep.staffAttention}
-                playerSchool={playerSchool}
-                currentWeek={gameState.currentWeek}
-                onAssign={assignStaffAction}
-                onUnassign={unassignStaffAction}
-            />
-
-            <ActionCardsPanel
-                cards={prep.unlockedActionCards}
-                pendingActionCards={prep.pendingActionCards}
-                budget={playerSchool.budget}
-                onUse={useActionCard}
-            />
-
-            <WeekPreviewPanel
-                preview={prep.weekPreview}
-                prep={prep}
-                currentWeek={gameState.currentWeek}
-                canAdvance={canAdvance}
-                advanceText={advanceText}
-                onAdvance={advanceWeek}
-            />
-        </div>
-
-        {/* DESKTOP LAYOUT (3 Columns) */}
-        <div className="hidden lg:grid grid-cols-12 gap-6 max-w-[1920px] mx-auto">
-
-            {/* LEFT COLUMN: CRISIS & STAFF (30%) */}
-            <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-6 order-1">
-                <MesaDeCrise
-                    crises={prep.crises}
-                    currentWeek={gameState.currentWeek}
-                    onResolve={resolveCrisis}
-                    schoolBudget={playerSchool.budget}
-                />
-                <StaffAttentionPanel
-                    staffAttention={prep.staffAttention}
-                    playerSchool={playerSchool}
-                    currentWeek={gameState.currentWeek}
-                    onAssign={assignStaffAction}
-                    onUnassign={unassignStaffAction}
-                />
-            </div>
-
-            {/* CENTER COLUMN: PRODUCTION TRACKS (40%) */}
-            <div className="lg:col-span-5 xl:col-span-6 flex flex-col gap-6 order-2">
-                {/* 1. ALEGORIA PIPELINE */}
-                <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-6 shadow-lg relative">
-                    <div className="flex justify-between items-center mb-6 relative z-10">
-                        <h3 className="text-xl font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-3">
-                            🏰 Alegorias
-                            <span className="text-xs bg-[#161E35] text-[#8A9BB8] px-2 py-1 rounded font-normal border border-[#1E2D50]">
-                                {prep.alegoriaCarCount ? `${prep.alegoriaCarCount} Carros` : 'Planejamento'}
-                            </span>
-                        </h3>
-                        <div className="text-2xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.tracks.Alegorias.quality)}</div>
-                    </div>
-
-                    {/* Pipeline Visualization */}
-                    <div className="flex justify-between items-start relative mb-6">
-                        <div className="absolute top-6 left-0 right-0 h-1 bg-[#1E2D50] z-0" />
-                        {prep.alegoriaStages?.map((stage, idx) => {
-                            const isActive = stage.isUnlocked && !stage.isComplete;
-                            const isDone = stage.isComplete;
-                            const isLocked = !stage.isUnlocked;
-                            return (
-                                <div key={stage.id} className={`relative flex flex-col items-center flex-1 ${isLocked ? 'opacity-30' : ''}`}>
-                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 z-10 transition-all duration-300 ${
-                                        isDone ? 'bg-[#2ECC71] border-[#2ECC71] text-[#080C18]' :
-                                        isActive ? 'bg-[#C9A84C] border-[#F1C40F] text-[#080C18] scale-110 shadow-[0_0_15px_rgba(241,196,15,0.5)]' :
-                                        'bg-[#080C18] border-[#1E2D50] text-[#4A5A7A]'
-                                    }`}>
-                                        {isDone ? '✓' : idx + 1}
-                                    </div>
-                                    <div className="mt-3 text-center">
-                                        <div className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isActive ? 'text-[#F1C40F]' : 'text-[#8A9BB8]'}`}>
-                                            {stage.label}
-                                        </div>
-                                        {isActive && <div className="text-xs font-mono text-[#C9A84C]">{Math.floor(stage.progress)}%</div>}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Controls */}
-                    {(() => {
-                        const track = prep.tracks.Alegorias;
-                        const guideline = divisionGuidelines.Alegorias;
-                        const ratio = track.weeklyBurnRate / guideline;
-                        let thumbColor = '#C9A84C';
-                        if (ratio > 1.5) thumbColor = '#E67E22';
-
-                        // Estimate
-                        const activeStage = prep.alegoriaStages?.find(s => s.isUnlocked && !s.isComplete);
-                        const progressPerWeek = estimatedAlegoriaProgressPerWeek(track.weeklyBurnRate, playerSchool.currentDivision);
-                        const weeksToComplete = activeStage
-                            ? Math.ceil((100 - activeStage.progress) / progressPerWeek)
-                            : null;
-
-                        return (
-                            <div className="bg-[#080C18] rounded-lg p-4 border border-[#1E2D50] flex gap-4 items-center">
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-end mb-1">
-                                        <span className="text-[10px] uppercase text-[#8A9BB8] font-bold">
-                                            💸 Investimento Semanal
-                                        </span>
-                                        <span className="text-[10px] font-mono" style={{ color: thumbColor }}>{formatMoney(track.weeklyBurnRate)}</span>
-                                    </div>
-                                    <div className="text-[9px] text-[#4A5A7A] mb-2">(controla velocidade + qualidade)</div>
-
-                                    <input type="range" min={100} max={maxBurn} step={100}
-                                        value={track.weeklyBurnRate}
-                                        onChange={(e) => {
-                                            setTrackBudget('Alegorias', Number(e.target.value));
-                                            refreshWeekPreview();
-                                        }}
-                                        className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer"
-                                        style={{ accentColor: thumbColor }}
-                                    />
-
-                                    {weeksToComplete !== null && (
-                                        <div className="text-[9px] font-mono mt-1 text-center font-bold" style={{
-                                            color: weeksToComplete <= 4 ? '#2ECC71' : weeksToComplete <= 8 ? '#F1C40F' : '#E74C3C'
-                                        }}>
-                                            {activeStage ? `→ conclusão estimada em ~${weeksToComplete} semana(s)` : '✓ Etapa concluída'}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })()}
-                </section>
-
-                {/* HARMONIA & FANTASIA ROW */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* HARMONIA */}
-                    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide">🎤 Harmonia</h3>
-                            <div className="text-xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.tracks.Harmonia.quality)}</div>
-                        </div>
-                        <div className="grid grid-cols-3 gap-1 mb-4">
-                            {[
-                                { l: 'Canto', v: prep.harmoniaState.sambaFixado, c: '#3498DB' },
-                                { l: 'Marcha', v: prep.harmoniaState.marchaSincronizada, c: '#E67E22' },
-                                { l: 'Voz', v: prep.harmoniaState.densidadeVocal, c: '#2ECC71' }
-                            ].map(s => (
-                                <div key={s.l} className="bg-[#080C18] p-1.5 rounded text-center border border-[#1E2D50]">
-                                    <div className="text-[8px] text-[#8A9BB8] uppercase font-bold mb-1">{s.l}</div>
-                                    <div className="h-1 bg-[#161E35] rounded-full overflow-hidden">
-                                        <div className="h-full" style={{ width: `${s.v}%`, background: s.c }} />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="grid grid-cols-2 gap-1 mb-4">
-                            {(['Samba', 'Marcha', 'Vocal', 'Equilibrado'] as const).map(focus => (
-                                <button key={focus} onClick={() => setHarmoniaFocus(focus)}
-                                    className={`px-2 py-1.5 rounded text-[9px] font-bold uppercase transition-all ${
-                                        prep.harmoniaState.diretorFocus === focus
-                                        ? 'bg-[#C9A84C] text-[#080C18]' : 'bg-[#161E35] text-[#8A9BB8] hover:bg-[#1E2D50]'
-                                    }`}>
-                                    {focus}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="pt-2 border-t border-[#1E2D50]">
-                            <div className="flex justify-between items-end mb-1">
-                                <span className="text-[9px] uppercase text-[#8A9BB8] font-bold">Invest.</span>
-                                <span className="text-[9px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Harmonia.weeklyBurnRate)}</span>
-                            </div>
-                            <input type="range" min={100} max={maxBurn} step={100}
-                                value={prep.tracks.Harmonia.weeklyBurnRate}
-                                onChange={(e) => {
-                                    setTrackBudget('Harmonia', Number(e.target.value));
-                                    refreshWeekPreview();
-                                }}
-                                className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
-                            />
-                        </div>
-                    </section>
-
-                    {/* FANTASIA */}
-                    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide">✂️ Fantasias</h3>
-                            <div className="text-xl font-mono font-black text-[#C9A84C]">{Math.floor(prep.fantasia.designQuality)}</div>
-                        </div>
-                        <div className="flex items-center justify-between bg-[#080C18] p-2 rounded border border-[#1E2D50] mb-4">
-                            <div>
-                                <div className="text-[8px] text-[#8A9BB8] uppercase font-bold">Abordagem</div>
-                                <div className="text-xs font-bold text-[#F0E6D3]">{prep.fantasia.approach || 'A Definir'}</div>
-                            </div>
-                            <div>
-                                <div className="text-[8px] text-[#8A9BB8] uppercase font-bold text-right">Risco</div>
-                                <div className={`text-xs font-mono font-black text-right ${prep.fantasia.deliveryRisk > 50 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'}`}>
-                                    {Math.floor(prep.fantasia.deliveryRisk)}%
-                                </div>
-                            </div>
-                        </div>
-                        <div className="pt-2 border-t border-[#1E2D50]">
-                            <div className="flex justify-between items-end mb-1">
-                                <span className="text-[9px] uppercase text-[#8A9BB8] font-bold">Invest.</span>
-                                <span className="text-[9px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Fantasias.weeklyBurnRate)}</span>
-                            </div>
-                            <input type="range" min={100} max={maxBurn} step={100}
-                                value={prep.tracks.Fantasias.weeklyBurnRate}
-                                onChange={(e) => {
-                                    setTrackBudget('Fantasias', Number(e.target.value));
-                                    refreshWeekPreview();
-                                }}
-                                className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
-                            />
-                        </div>
-                    </section>
-                </div>
-
-                {/* BATERIA */}
-                <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-sm font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-2">
-                            🥁 Bateria
-                            {prep.bateria.outsideGigActive && (
-                                <span className="text-[9px] bg-[#E67E22] text-[#080C18] px-2 py-0.5 rounded font-bold animate-pulse">SHOW</span>
-                            )}
-                        </h3>
-                        <div className="text-right">
-                             <div className="text-[8px] text-[#4A5A7A] uppercase tracking-wider font-bold">Renda</div>
-                             <div className="text-xs font-mono text-[#2ECC71]">{formatMoney(prep.bateria.gigIncome)}</div>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-4">
-                        <div>
-                            <div className="flex justify-between mb-1">
-                                <span className="text-[9px] font-bold uppercase tracking-wider text-[#8A9BB8]">Forma</span>
-                                <span className="text-[9px] font-mono font-bold text-[#F0E6D3]">{Math.floor(prep.bateria.form)}/100</span>
-                            </div>
-                            <div className="h-2 bg-[#161E35] rounded-full overflow-hidden border border-[#1E2D50] relative">
-                                 <div className="absolute top-0 bottom-0 bg-[#2ECC71]/20 border-l border-r border-[#2ECC71]/30"
-                                      style={{ left: `${prep.bateriaOptimalMin}%`, right: `${100 - prep.bateriaOptimalMax}%` }} />
-                                <div className="h-full rounded-full transition-all duration-500"
-                                    style={{
-                                        width: `${prep.bateria.form}%`,
-                                        background: prep.bateria.form > prep.bateriaOptimalMax ? '#E74C3C' : prep.bateria.form >= prep.bateriaOptimalMin ? '#2ECC71' : '#C9A84C'
-                                    }}
-                                />
-                            </div>
-                        </div>
-                        <div className="pt-2 border-t border-[#1E2D50]">
-                            <div className="flex justify-between items-end mb-1">
-                                <span className="text-[9px] uppercase text-[#8A9BB8] font-bold">Invest.</span>
-                                <span className="text-[9px] font-mono text-[#C9A84C]">{formatMoney(prep.tracks.Bateria.weeklyBurnRate)}</span>
-                            </div>
-                            <input type="range" min={100} max={maxBurn} step={100}
-                                value={prep.tracks.Bateria.weeklyBurnRate}
-                                onChange={(e) => {
-                                    setTrackBudget('Bateria', Number(e.target.value));
-                                    refreshWeekPreview();
-                                }}
-                                className="w-full h-1.5 bg-[#161E35] rounded-lg appearance-none cursor-pointer accent-[#C9A84C]"
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* MSPB, COMISSAO, PASSISTAS ROW */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-4 shadow-lg">
-                        <h3 className="text-xs font-black text-[#F0E6D3] uppercase tracking-wide mb-2">👑 Casal</h3>
-                        {prep.mspb ? (
-                            <div className="text-center">
-                                <div className="text-lg font-mono text-[#E91E63] font-black">{Math.floor(prep.mspb.quimica)}%</div>
-                                <div className="text-[8px] text-[#8A9BB8] uppercase">Química</div>
-                            </div>
-                        ) : <div className="text-[9px] text-[#4A5A7A] text-center">N/A</div>}
-                    </section>
-                    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-4 shadow-lg">
-                        <h3 className="text-xs font-black text-[#F0E6D3] uppercase tracking-wide mb-2">🎭 Comissão</h3>
-                        <div className="text-center">
-                            <div className="text-lg font-mono text-[#3498DB] font-black">{Math.floor(prep.comissaoDeFrente.quality)}</div>
-                            <div className="text-[8px] text-[#8A9BB8] uppercase">Qualidade</div>
-                        </div>
-                    </section>
-                    <section className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-4 shadow-lg">
-                        <h3 className="text-xs font-black text-[#F0E6D3] uppercase tracking-wide mb-2">💃 Passistas</h3>
-                        {prep.passistas ? (
-                            <div className="text-center">
-                                <div className="text-lg font-mono text-[#E67E22] font-black">{Math.floor(prep.passistas.form)}</div>
-                                <div className="text-[8px] text-[#8A9BB8] uppercase">Forma</div>
-                                <select value={prep.passistas.rehearsalIntensity}
-                                    onChange={(e) => setPassistasRehearsal(e.target.value as any)}
-                                    className="w-full bg-[#080C18] border border-[#1E2D50] text-[9px] p-1 rounded text-[#F0E6D3] mt-2">
-                                    <option value="Descanso">Descanso</option>
-                                    <option value="Leve">Leve</option>
-                                    <option value="Aberto">Aberto</option>
-                                    <option value="Completo">Completo</option>
-                                </select>
-                            </div>
-                        ) : <div className="text-[9px] text-[#4A5A7A] text-center">N/A</div>}
-                    </section>
-                </div>
-            </div>
-
-            {/* RIGHT COLUMN: COMPASS & PREVIEW (30%) */}
-            <div className="lg:col-span-3 xl:col-span-3 flex flex-col gap-6 order-3">
-                {prep.weeklyCompass && (
-                    <WeeklyCompassPanel
-                        compass={prep.weeklyCompass}
-                        school={playerSchool}
-                    />
-                )}
-
-                <ActionCardsPanel
-                    cards={prep.unlockedActionCards}
-                    pendingActionCards={prep.pendingActionCards}
-                    budget={playerSchool.budget}
-                    onUse={useActionCard}
-                />
-
-                <WeekPreviewPanel
-                    preview={prep.weekPreview}
+              {/* TRACKS */}
+              <div className="grid grid-cols-1 gap-6">
+                  {/* ALEGORIAS */}
+                  <TrackControl
+                    track="Alegorias"
                     prep={prep}
-                    currentWeek={gameState.currentWeek}
-                    canAdvance={canAdvance}
-                    advanceText={advanceText}
-                    onAdvance={advanceWeek}
-                />
-            </div>
+                    preview={preview.tracks.Alegorias}
+                    alloc={turn.allocations.Alegorias}
+                    min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Alegorias}
+                    remainingPP={remainingPP}
+                    onChange={(v: number) => allocatePP('Alegorias', v)}
+                  />
 
-        </div>
-      </main>
+                  {/* FANTASIAS */}
+                  <TrackControl
+                    track="Fantasias"
+                    prep={prep}
+                    preview={preview.tracks.Fantasias}
+                    alloc={turn.allocations.Fantasias}
+                    min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Fantasias}
+                    remainingPP={remainingPP}
+                    onChange={(v: number) => allocatePP('Fantasias', v)}
+                  />
 
-      {/* BLOCKING STAGE EVENT MODAL */}
-      {pendingStageEvent && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-fade-in">
-            <div className="rounded-xl p-8 max-w-lg w-full border-2 border-[#2A3F6B] bg-[#0F1629] shadow-2xl transform transition-all">
-              <h2 className="text-2xl font-black text-[#F0E6D3] mb-4 leading-tight">{pendingStageEvent.title}</h2>
-              <p className="text-[#8A9BB8] text-sm leading-relaxed mb-8 border-l-2 border-[#1E2D50] pl-4">
-                  {pendingStageEvent.description}
-              </p>
+                  {/* BATERIA */}
+                  <div className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-[#E74C3C]" />
+                      <div className="flex justify-between items-center mb-4 pl-3">
+                          <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide">🥁 Bateria</h3>
+                          <div className="flex items-center gap-4">
+                              <div className="text-right">
+                                  <div className="text-[9px] uppercase text-[#8A9BB8] font-bold">Forma</div>
+                                  <div className="text-xl font-mono font-black text-[#E74C3C]">{Math.floor(prep.bateria.form)}</div>
+                              </div>
+                              <div className="text-right">
+                                  <div className="text-[9px] uppercase text-[#8A9BB8] font-bold">Energia</div>
+                                  <div className="text-xl font-mono font-black text-[#F1C40F]">{Math.floor(prep.bateria.energy)}</div>
+                              </div>
+                          </div>
+                      </div>
 
-              <div className="flex flex-col gap-3">
-                {pendingStageEvent.options
-                        .filter(opt => evaluateConditions(opt.conditions, playerSchool))
-                        .map((opt, idx) => {
-                            const originalIdx = pendingStageEvent.options.indexOf(opt);
-                            return (
-                                <button key={idx} onClick={() => resolveStageEvent(pendingStageEvent.id, originalIdx)}
-                                    className="w-full p-5 rounded-xl bg-[#1E2D50] hover:bg-[#2A3F6B] border border-[#2A3F6B] text-left transition-all group relative overflow-hidden">
-                                    <div className="relative z-10">
-                                        <div className="font-black text-[#F0E6D3] mb-1 text-lg">{opt.label}</div>
-                                        <div className="text-xs text-[#4A5A7A] font-mono group-hover:text-[#8A9BB8] transition-colors">
-                                            {opt.effect.replace(/_/g, ' ').toLowerCase()}
-                                        </div>
-                                    </div>
-                                </button>
-                            );
-                        })
-                }
-              </div>
-            </div>
-          </div>
-      )}
-
-      {/* CAR SELECTION MODAL */}
-      {showCarModal && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-xl p-4 animate-fade-in">
-              <div className="rounded-xl p-8 max-w-2xl w-full border border-[#C9A84C] shadow-2xl bg-[#080C18] relative">
-                  <div className="text-[#C9A84C] text-xs font-black uppercase tracking-widest mb-2 text-center">
-                    Planejamento Artístico
-                  </div>
-                  <h2 className="text-3xl font-black text-[#F0E6D3] mb-6 text-center leading-none">
-                    Defina a Grandiosidade
-                  </h2>
-                  <p className="text-[#8A9BB8] text-center mb-8 max-w-lg mx-auto">
-                      Quantos carros alegóricos sua escola levará para a avenida? Mais carros aumentam o potencial de notas, mas custam muito mais caro para manter.
-                  </p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                     {Array.from({ length: carLimits.max - carLimits.min + 1 }, (_, i) => carLimits.min + i).map(count => {
-                         const isSelected = selectedCarCount === count;
-                         const isRecommended = count === (carLimits.min + 1);
-                         const burnIncrease = Math.round((1 + Math.max(0, count - carLimits.min) * 0.15) * 100 - 100);
-
-                         return (
-                             <button key={count} onClick={() => setSelectedCarCount(count)}
-                                className={`p-6 rounded-xl border-2 transition-all relative ${
-                                    isSelected ? 'border-[#C9A84C] bg-[#161E35] scale-105 shadow-xl' : 'border-[#1E2D50] bg-[#0F1629] hover:border-[#4A5A7A] opacity-70 hover:opacity-100'
-                                }`}>
-                                 {isRecommended && (
-                                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#C9A84C] text-[#080C18] text-[9px] font-black uppercase px-2 py-0.5 rounded">Recomendado</div>
-                                 )}
-                                 <div className="text-4xl font-black mb-2 text-[#F0E6D3]">{count}</div>
-                                 <div className="text-xs uppercase tracking-widest font-bold text-[#8A9BB8] mb-4">Carros</div>
-                                 {count > carLimits.min && (
-                                     <div className="text-xs text-[#E74C3C] font-mono bg-black/30 p-1 rounded">+{burnIncrease}% Custo</div>
-                                 )}
-                                 {count === carLimits.min && (
-                                     <div className="text-xs text-[#2ECC71] font-mono bg-black/30 p-1 rounded">Custo Base</div>
-                                 )}
-                             </button>
-                         )
-                     })}
+                      <SliderControl
+                        value={turn.allocations.Bateria}
+                        min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Bateria}
+                        max={turn.allocations.Bateria + remainingPP}
+                        color="#E74C3C"
+                        onChange={(v) => allocatePP('Bateria', v)}
+                      />
                   </div>
 
-                  <div className="flex justify-center gap-4">
-                     <button onClick={() => selectedCarCount && setAlegoriaCarCount(selectedCarCount)} disabled={!selectedCarCount}
-                        className={`px-10 py-4 rounded-xl font-black uppercase tracking-widest text-lg transition-all ${
-                            selectedCarCount ? 'bg-[#C9A84C] text-[#080C18] hover:scale-105' : 'bg-[#161E35] text-[#4A5A7A] cursor-not-allowed'
-                        }`}>
-                         Confirmar Planejamento
-                     </button>
+                  {/* HARMONIA */}
+                  <div className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg relative overflow-hidden group">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-[#3498DB]" />
+                      <div className="flex justify-between items-center mb-4 pl-3">
+                          <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide">🎤 Harmonia</h3>
+                          <div className="flex gap-2">
+                              {(['Samba', 'Marcha', 'Vocal', 'Equilibrado'] as const).map(f => (
+                                  <button key={f} onClick={() => setHarmoniaFocus(f)}
+                                    className={`text-[9px] font-bold uppercase px-2 py-1 rounded transition-all ${
+                                        prep.harmoniaState.diretorFocus === f
+                                        ? 'bg-[#3498DB] text-white'
+                                        : 'bg-[#161E35] text-[#4A5A7A] hover:bg-[#1E2D50]'
+                                    }`}>
+                                      {f}
+                                  </button>
+                              ))}
+                          </div>
+                      </div>
+
+                      <SliderControl
+                        value={turn.allocations.Harmonia}
+                        min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Harmonia}
+                        max={turn.allocations.Harmonia + remainingPP}
+                        color="#3498DB"
+                        onChange={(v) => allocatePP('Harmonia', v)}
+                      />
                   </div>
               </div>
-          </div>
-      )}
 
+              {/* CRISES INLINE */}
+              {prep.activeCrises.length > 0 && (
+                  <div className="grid grid-cols-2 gap-4">
+                      {prep.activeCrises.filter((c: any) => !c.isResolved).map((c: any) => (
+                          <CrisisCardItem
+                            key={c.id}
+                            crisis={c}
+                            onResolve={allocateCrisisPP}
+                            turnState={turn}
+                            schoolBudget={playerSchool.budget}
+                          />
+                      ))}
+                  </div>
+              )}
+
+          </div>
+
+          {/* RIGHT: TURN PREVIEW (40%) */}
+          <div className="w-[40%] bg-[#0B101E] border-l border-[#1E2D50] p-6 overflow-y-auto custom-scrollbar">
+              <h2 className="text-xs font-black text-[#8A9BB8] uppercase tracking-widest mb-6 border-b border-[#1E2D50] pb-2">
+                  Previsão da Semana
+              </h2>
+
+              <div className="space-y-6">
+
+                  {/* ALERTS */}
+                  {preview.alerts.length > 0 && (
+                      <div className="space-y-2">
+                          {preview.alerts.map((a: any, i: number) => (
+                              <div key={i} className={`p-3 rounded border text-[10px] font-bold flex items-center gap-2 ${
+                                  a.type === 'danger' ? 'bg-[#E74C3C]/10 border-[#E74C3C] text-[#E74C3C]' :
+                                  a.type === 'warning' ? 'bg-[#F1C40F]/10 border-[#F1C40F] text-[#F1C40F]' :
+                                  'bg-[#3498DB]/10 border-[#3498DB] text-[#3498DB]'
+                              }`}>
+                                  <span>{a.type === 'danger' ? '🔴' : a.type === 'warning' ? '⚠️' : 'ℹ️'}</span>
+                                  {a.message}
+                              </div>
+                          ))}
+                      </div>
+                  )}
+
+                  {/* TRACKS PREVIEW */}
+                  <div className="space-y-4">
+                      {['Alegorias', 'Fantasias'].map(t => {
+                          const p = preview.tracks[t as ProductionTrack];
+                          const label = getQualityLabel(p.qualityAfter);
+                          return (
+                              <div key={t} className="bg-[#161E35] p-3 rounded-lg border border-[#1E2D50]">
+                                  <div className="flex justify-between mb-1">
+                                      <span className="text-xs font-bold text-[#F0E6D3]">{t}</span>
+                                      <span className="text-[10px] font-mono" style={{ color: label.color }}>{label.label}</span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4 text-[10px]">
+                                      <div>
+                                          <div className="text-[#8A9BB8]">Qualidade</div>
+                                          <div className="font-mono font-bold text-[#F0E6D3]">
+                                              {Math.floor(p.qualityBefore)} → <span style={{ color: p.qualityDelta > 0 ? '#2ECC71' : '#E74C3C' }}>{Math.floor(p.qualityAfter)}</span>
+                                          </div>
+                                      </div>
+                                      <div>
+                                          <div className="text-[#8A9BB8]">Progresso</div>
+                                          <div className="font-mono font-bold text-[#F0E6D3]">
+                                              {Math.floor(p.progressBefore)}% → <span className="text-[#2ECC71]">{Math.floor(p.progressAfter)}%</span>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          )
+                      })}
+                  </div>
+
+                  {/* STAFF STRESS */}
+                  <div>
+                      <h3 className="text-[10px] uppercase font-bold text-[#8A9BB8] mb-2">Estresse da Equipe</h3>
+                      <div className="space-y-2">
+                          {preview.staff.map((s: any) => (
+                              <div key={s.staffId} className="flex justify-between items-center text-[10px] bg-[#161E35] p-2 rounded">
+                                  <span className="text-[#F0E6D3]">{s.name}</span>
+                                  <div className="flex items-center gap-2">
+                                      <div className="w-16 h-1 bg-[#080C18] rounded-full overflow-hidden">
+                                          <div className={`h-full ${s.stressAfter > 70 ? 'bg-[#E74C3C]' : 'bg-[#2ECC71]'}`}
+                                               style={{ width: `${s.stressAfter}%` }} />
+                                      </div>
+                                      <span className={`font-mono ${s.stressDelta > 0 ? 'text-[#E74C3C]' : 'text-[#2ECC71]'}`}>
+                                          {s.stressBefore}→{s.stressAfter}
+                                      </span>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+
+                  {/* CARDS */}
+                  <div>
+                      <h3 className="text-[10px] uppercase font-bold text-[#8A9BB8] mb-2">Cartas Disponíveis</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                          {prep.productionCards.map((c: any) => (
+                              <ProductionCardItem
+                                key={c.id}
+                                card={c}
+                                isActive={turn.activeCards.includes(c.id)}
+                                canActivate={turn.activeCards.length < turn.maxCards}
+                                onToggle={(id: string) => turn.activeCards.includes(id) ? deactivateCard(id) : activateCard(id)}
+                              />
+                          ))}
+                      </div>
+                  </div>
+
+              </div>
+          </div>
+
+      </div>
     </div>
   );
+}
+
+// --- HELPER COMPONENTS ---
+
+function TrackControl({ track, prep, preview, alloc, min, remainingPP, onChange }: any) {
+    const colorMap: any = { Alegorias: '#C9A84C', Fantasias: '#9B59B6' };
+    const color = colorMap[track];
+
+    return (
+        <div className="bg-[#0F1629] border border-[#1E2D50] rounded-xl p-5 shadow-lg relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full" style={{ background: color }} />
+            <div className="flex justify-between items-center mb-4 pl-3">
+                <h3 className="text-lg font-black text-[#F0E6D3] uppercase tracking-wide flex items-center gap-3">
+                    {track}
+                    {preview.isDecaying && <span className="text-[9px] text-[#E74C3C] bg-[#E74C3C]/10 px-1 rounded animate-pulse">DECAINDO</span>}
+                </h3>
+                <div className="text-2xl font-mono font-black" style={{ color }}>{Math.floor(preview.qualityAfter)}</div>
+            </div>
+
+            {/* PIPELINE VISUALIZATION (Simplified) */}
+            <div className="h-1.5 bg-[#161E35] rounded-full overflow-hidden mb-4 relative">
+                <div className="absolute top-0 left-0 h-full transition-all duration-300"
+                     style={{ width: `${preview.progressAfter}%`, background: color }} />
+                <div className="absolute top-0 left-0 h-full w-[1px] bg-white/20" style={{ left: '25%' }} />
+                <div className="absolute top-0 left-0 h-full w-[1px] bg-white/20" style={{ left: '50%' }} />
+                <div className="absolute top-0 left-0 h-full w-[1px] bg-white/20" style={{ left: '75%' }} />
+            </div>
+
+            <SliderControl
+                value={alloc}
+                min={min}
+                max={alloc + remainingPP}
+                color={color}
+                onChange={onChange}
+            />
+        </div>
+    )
+}
+
+function SliderControl({ value, min, max, color, onChange }: any) {
+    return (
+        <div className="relative pt-6 pb-2 pl-3">
+            {/* Ticks */}
+            <div className="absolute top-2 left-3 right-0 flex justify-between px-1 pointer-events-none">
+                {Array.from({ length: 11 }).map((_, i) => (
+                    <div key={i} className={`w-px h-2 ${i <= max ? 'bg-[#4A5A7A]' : 'bg-[#1E2D50]'}`} />
+                ))}
+            </div>
+
+            {/* Min Marker */}
+            {min > 0 && (
+                <div className="absolute top-0 h-full bg-[#E74C3C]/10 border-r border-[#E74C3C]/50 pointer-events-none z-0"
+                     style={{ width: `${(min / 10) * 100}%`, left: '12px' }}>
+                    <div className="absolute top-0 right-0 text-[8px] text-[#E74C3C] font-bold -mt-3 transform translate-x-1/2">MÍN</div>
+                </div>
+            )}
+
+            <input
+                type="range"
+                min={0}
+                max={10} // Cap UI at 10 for simplicity, logic handles rest
+                value={value}
+                onChange={(e) => onChange(parseInt(e.target.value))}
+                className="w-full h-2 bg-[#161E35] rounded-lg appearance-none cursor-pointer relative z-10"
+                style={{ accentColor: color }}
+            />
+
+            <div className="flex justify-between mt-2 text-[9px] font-mono text-[#8A9BB8]">
+                <span>0 PP</span>
+                <span style={{ color }}>{value} PP ALOCADOS</span>
+                <span>MAX</span>
+            </div>
+        </div>
+    )
 }

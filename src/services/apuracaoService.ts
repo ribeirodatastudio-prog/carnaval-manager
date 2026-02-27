@@ -16,21 +16,44 @@ function boxMullerRandom(): number {
 }
 
 export function rollJudgeScore(qualityIndex: number): number {
-    // qualityIndex 0–100 → judge score 9.0–10.0
-    // Distribution: higher quality = higher mean, tighter spread
+    // qualityIndex 0-100 → judge score 9.0-10.0
+    // NON-LINEAR: compressed at the top to simulate real carnival scoring
+    //
+    // Real carnival scoring distribution (Grupo Especial):
+    //   Quality 95-100 → 10.0 (campeão territory)
+    //   Quality 85-94  → 9.8-9.9 (competitivo)
+    //   Quality 70-84  → 9.5-9.7 (meio de tabela)
+    //   Quality 50-69  → 9.2-9.4 (zona de rebaixamento)
+    //   Quality 0-49   → 9.0-9.1 (desastre)
 
-    // Mean: 9.0 at 0, 10.0 at 100
-    const mean = 9.0 + (qualityIndex / 100) * 1.0;
+    let mean: number;
 
-    // StdDev: Tighter at high quality to ensure 10s are common for top schools
-    // at 100: 0.07 (very tight)
-    // at 0: 0.15 (more variance)
-    const stdDev = 0.15 - (qualityIndex / 100) * 0.08;
+    if (qualityIndex >= 95) {
+        // Elite zone: 9.95 to 10.0
+        mean = 9.95 + (qualityIndex - 95) * 0.01;  // 95→9.95, 100→10.0
+    } else if (qualityIndex >= 85) {
+        // Competitive zone: 9.8 to 9.95
+        mean = 9.8 + (qualityIndex - 85) * 0.015;   // 85→9.8, 94→9.935
+    } else if (qualityIndex >= 70) {
+        // Middle zone: 9.5 to 9.8
+        mean = 9.5 + (qualityIndex - 70) * 0.02;    // 70→9.5, 84→9.78
+    } else if (qualityIndex >= 50) {
+        // Danger zone: 9.2 to 9.5
+        mean = 9.2 + (qualityIndex - 50) * 0.015;   // 50→9.2, 69→9.485
+    } else {
+        // Disaster zone: 9.0 to 9.2
+        mean = 9.0 + (qualityIndex / 50) * 0.2;     // 0→9.0, 49→9.196
+    }
+
+    // StdDev: Very tight at the top (0.03), more variance at bottom (0.12)
+    // This means quality 98 almost guarantees 10.0, but quality 92 might get a 9.8
+    const stdDev = qualityIndex >= 90
+        ? 0.03 + (100 - qualityIndex) * 0.003   // 90→0.06, 100→0.03
+        : 0.06 + (90 - qualityIndex) * 0.001;   // 50→0.10, 0→0.15
 
     const z = boxMullerRandom();
     const raw = mean + z * stdDev;
 
-    // Round to nearest tenth, clamp 9.0–10.0
     return Math.round(Math.max(9.0, Math.min(10.0, raw)) * 10) / 10;
 }
 
