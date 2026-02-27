@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore';
 import {
-  ProductionTrack,
-  StaffRole,
-  WeekTurnState,
   getQualityLabel
 } from '../services/preparationService';
+import {
+  ProductionTrack,
+  StaffRole,
+  WeekTurnState
+} from '../types/models';
 import {
   formatMoney
 } from '../utils/textUtils';
