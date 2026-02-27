@@ -67,7 +67,8 @@ export function calculateTrackQuality(
       base += bonus;
   }
 
-  const ceilingBonus = school.preparation?.qualityCeilingBonus ?? 0;
+  // Removed reference to qualityCeilingBonus since it was deleted from models
+  const ceilingBonus = 0;
 
   return Math.min(100 + ceilingBonus, Math.floor(base));
 }
