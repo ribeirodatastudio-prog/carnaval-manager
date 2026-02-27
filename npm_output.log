@@ -107,3 +107,4 @@ Import traces:
  GET /flags/acad%C3%83%C2%AAmicos_do_grande_rio.png 404 in 1179ms (compile: 900ms, render: 278ms)
  GET /flags/acad%C3%83%C2%AAmicos_do_salgueiro.jpg 404 in 1186ms (compile: 957ms, render: 229ms)
  GET /flags/Bandeira_Beija-Flor_de_Nil%C3%83%C2%B3polis.png 404 in 1197ms (compile: 1024ms, render: 173ms)
+✓ Compiled in 1887ms
