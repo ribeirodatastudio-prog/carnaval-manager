@@ -26,14 +26,7 @@ function getContrastColor(hex: string | undefined): string {
     return (yiq >= 128) ? '#080C18' : '#F0E6D3';
 }
 
-function calculateTurnPreview(school: any, turnState: any, currentWeek: number): any {
-    // This logic resides in service/preparationService.ts but we need the output here.
-    // The store should provide a computed preview or we call the service function.
-    // Since we can't import the service logic directly into a client component easily if it depends on store state not passed...
-    // Actually we can import the service function.
-    const { calculateTurnPreview } = require('../services/preparationService');
-    return calculateTurnPreview(school, turnState, currentWeek);
-}
+import { calculateTurnPreview, computeTrackMinimums } from '../services/preparationService';
 
 // --- SUB-COMPONENTS ---
 
@@ -163,22 +156,12 @@ export default function PreparationDashboard() {
   // Calculate Preview
   const preview = calculateTurnPreview(playerSchool, turn, gameState.currentWeek);
 
+  const trackMins = computeTrackMinimums(prep, gameState.currentWeek, playerSchool);
+
   // Validate Minimums
   const minimumsMet = Object.keys(preview.tracks).every(k => {
       const t = k as ProductionTrack;
-      // Logic: allocated >= min? The preview doesn't explicitly flag this boolean,
-      // but we can check if `qualityDelta` is not severe penalty or pass min info.
-      // Better: Re-calculate mins or check prepService.
-      // We will assume `allocatePP` caps or UI handles visuals.
-      // The button check:
-      // We need `computeTrackMinimums` here?
-      // Or just trust the player sees alerts?
-      // Requirement: "Confirmar Semana button is disabled if any track has less than its minimum".
-      // We need the minimums.
-      // Let's import the function.
-      const { computeTrackMinimums } = require('../services/preparationService');
-      const mins = computeTrackMinimums(prep, gameState.currentWeek, playerSchool);
-      return turn.allocations[t] >= mins[t];
+      return turn.allocations[t] >= trackMins[t];
   });
 
   // Calculate PP Pool
@@ -259,7 +242,7 @@ export default function PreparationDashboard() {
                     prep={prep}
                     preview={preview.tracks.Alegorias}
                     alloc={turn.allocations.Alegorias}
-                    min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Alegorias}
+                    min={trackMins.Alegorias}
                     remainingPP={remainingPP}
                     onChange={(v: number) => allocatePP('Alegorias', v)}
                   />
@@ -270,7 +253,7 @@ export default function PreparationDashboard() {
                     prep={prep}
                     preview={preview.tracks.Fantasias}
                     alloc={turn.allocations.Fantasias}
-                    min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Fantasias}
+                    min={trackMins.Fantasias}
                     remainingPP={remainingPP}
                     onChange={(v: number) => allocatePP('Fantasias', v)}
                   />
@@ -294,7 +277,7 @@ export default function PreparationDashboard() {
 
                       <SliderControl
                         value={turn.allocations.Bateria}
-                        min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Bateria}
+                        min={trackMins.Bateria}
                         max={turn.allocations.Bateria + remainingPP}
                         color="#E74C3C"
                         onChange={(v: number) => allocatePP('Bateria', v)}
@@ -322,7 +305,7 @@ export default function PreparationDashboard() {
 
                       <SliderControl
                         value={turn.allocations.Harmonia}
-                        min={require('../services/preparationService').computeTrackMinimums(prep, gameState.currentWeek, playerSchool).Harmonia}
+                        min={trackMins.Harmonia}
                         max={turn.allocations.Harmonia + remainingPP}
                         color="#3498DB"
                         onChange={(v: number) => allocatePP('Harmonia', v)}
@@ -484,19 +467,20 @@ function TrackControl({ track, prep, preview, alloc, min, remainingPP, onChange 
 }
 
 function SliderControl({ value, min, max, color, onChange }: any) {
+    const visualMax = Math.max(10, max);
     return (
         <div className="relative pt-6 pb-2 pl-3">
             {/* Ticks */}
             <div className="absolute top-2 left-3 right-0 flex justify-between px-1 pointer-events-none">
-                {Array.from({ length: 11 }).map((_, i) => (
+                {Array.from({ length: visualMax + 1 }).map((_, i) => (
                     <div key={i} className={`w-px h-2 ${i <= max ? 'bg-[#4A5A7A]' : 'bg-[#1E2D50]'}`} />
                 ))}
             </div>
 
             {/* Min Marker */}
-            {min > 0 && (
+            {min > 0 && visualMax > 0 && (
                 <div className="absolute top-0 h-full bg-[#E74C3C]/10 border-r border-[#E74C3C]/50 pointer-events-none z-0"
-                     style={{ width: `${(min / 10) * 100}%`, left: '12px' }}>
+                     style={{ width: `${(min / visualMax) * 100}%`, left: '12px' }}>
                     <div className="absolute top-0 right-0 text-[8px] text-[#E74C3C] font-bold -mt-3 transform translate-x-1/2">MÍN</div>
                 </div>
             )}
@@ -504,9 +488,14 @@ function SliderControl({ value, min, max, color, onChange }: any) {
             <input
                 type="range"
                 min={0}
-                max={10} // Cap UI at 10 for simplicity, logic handles rest
+                max={visualMax}
                 value={value}
-                onChange={(e) => onChange(parseInt(e.target.value))}
+                onChange={(e) => {
+                    const parsed = parseInt(e.target.value);
+                    if (parsed >= 0 && parsed <= max) {
+                        onChange(parsed);
+                    }
+                }}
                 className="w-full h-2 bg-[#161E35] rounded-lg appearance-none cursor-pointer relative z-10"
                 style={{ accentColor: color }}
             />

@@ -37,9 +37,7 @@ import {
   calculateTurnPreview,
   confirmTurn,
   resolveEventEffect,
-  chooseAlegoriaCarCount,
-  computeWeekPreview,
-  maybeGenerateEvent
+  chooseAlegoriaCarCount
 } from '../services/preparationService';
 
 const initializeGameData = () => {
@@ -125,8 +123,7 @@ const { schools: initialSchools, availableStaff: initialStaff } = initializeGame
 
 // Helper to get cost multiplier based on DNA
 const getStaffCostMultiplier = (school: School): number => {
-    if (school.preparation) return school.preparation.staffCostMultiplier;
-    // Fallback for Market Phase
+    // Determine cost multiplier based on DNA
     let mult = 1.0;
     if (school.archetype === 'Potencia') mult = 1.15;
     if (school.archetype === 'Guerreira') mult = 0.9;
@@ -312,7 +309,6 @@ interface GameStoreState {
   assignStaffAction: (staffId: string, actionId: string) => void;
   unassignStaffAction: (staffId: string, actionId: string) => void;
   useActionCard: (cardId: string) => void;
-  refreshWeekPreview: () => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -821,42 +817,14 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
   setTrackFocus: (track, focused) =>
     set((state) => {
-      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
-      if (pSchoolIdx === -1) return {};
-      const school = state.schools[pSchoolIdx];
-      if (!school.preparation) return {};
-
-      const newTracks = { ...school.preparation.tracks };
-      newTracks[track] = { ...newTracks[track], staffFocused: focused };
-
-      const updatedSchool = {
-        ...school,
-        preparation: { ...school.preparation, tracks: newTracks }
-      };
-
-      const updatedSchools = [...state.schools];
-      updatedSchools[pSchoolIdx] = updatedSchool;
-      return { schools: updatedSchools };
+      // Stubbed out - PP system replaces boolean track focus
+      return state;
     }),
 
   setTrackBudget: (track, weeklyBurnRate) =>
     set((state) => {
-      const pSchoolIdx = state.schools.findIndex(s => s.id === state.gameState.playerSchoolId);
-      if (pSchoolIdx === -1) return {};
-      const school = state.schools[pSchoolIdx];
-      if (!school.preparation) return {};
-
-      const newTracks = { ...school.preparation.tracks };
-      newTracks[track] = { ...newTracks[track], weeklyBurnRate };
-
-      const updatedSchool = {
-        ...school,
-        preparation: { ...school.preparation, tracks: newTracks }
-      };
-
-      const updatedSchools = [...state.schools];
-      updatedSchools[pSchoolIdx] = updatedSchool;
-      return { schools: updatedSchools };
+      // Stubbed out - PP system replaces manual budget burn rate setting
+      return state;
     }),
 
   setStaffRest: (staffId, resting) =>
@@ -1528,7 +1496,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   // Legacy stubs
   assignStaffAction: () => {},
   unassignStaffAction: () => {},
-  useActionCard: () => {},
-  refreshWeekPreview: () => {}
+  useActionCard: () => {}
 
 }));

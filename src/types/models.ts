@@ -528,7 +528,6 @@ export interface CrisisOption {
   description: string;           // One sentence: what happens if you choose this
   budgetCost: number;            // R$ cost shown to player before confirming (negative = income)
   ppCost: number;                // NEW: PP cost to resolve this option
-  attentionCost: number;         // Deprecated, keeping for compatibility if needed or removed? Removing as per instructions.
   staffRequired: StaffRole | null; // If set, only that staff member can execute this option
   effectCodes: string[];         // Applied immediately on resolve
   consequenceFlags?: string[];   // Consequence flags set after resolve — seed follow-up crises
